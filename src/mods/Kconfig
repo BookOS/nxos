@@ -17,3 +17,7 @@ endmenu
 menu "Demo"
     source "$NXOS_SRC_DIR/mods/demo/Kconfig"
 endmenu
+
+menu "Thirdpart"
+    source "$NXOS_SRC_DIR/mods/thirdpart/Kconfig"
+endmenu
