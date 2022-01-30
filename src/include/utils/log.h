@@ -54,6 +54,14 @@
 #endif /* CONFIG_NX_LOG_LEVEL */
 #endif /* NX_LOG_LEVEL */
 
+#ifdef CONFIG_NX_DEBUG_LINENUMBER
+#define __NX_LOG_BEGIN_FMT "[%s-%s] (%s:%d) "
+#define __NX_LOG_LINENUMBER_ARG , __func__, __LINE__
+#else
+#define __NX_LOG_BEGIN_FMT "[%s-%s] "
+#define __NX_LOG_LINENUMBER_ARG
+#endif
+
 /**
  * terminal color
  * BLACK    30
@@ -67,11 +75,11 @@
  */
 #ifdef NX_LOG_COLOR
 #define __NX_LOG_COLOR(n) NX_Printf("\033[%sm", #n)
-#define __NX_LOG_BEGIN(logName, color) NX_Printf("\033[%sm[%s-%s] ", #color, logName, NX_LOG_MOD_NAME)
+#define __NX_LOG_BEGIN(logName, color) NX_Printf("\033[%sm" __NX_LOG_BEGIN_FMT, #color, logName, NX_LOG_MOD_NAME __NX_LOG_LINENUMBER_ARG)
 #define __NX_LOG_END NX_Printf("\033[0m" NX_CON_NEWLINE)
 #else
 #define __NX_LOG_COLOR(n)
-#define __NX_LOG_BEGIN(logName, color) NX_Printf("[%s-%s] ", logName, NX_LOG_MOD_NAME)
+#define __NX_LOG_BEGIN(logName, color) NX_Printf(__NX_LOG_BEGIN_FMT, logName, NX_LOG_MOD_NAME, __func__, __LINE__ __NX_LOG_LINENUMBER_ARG)
 #define __NX_LOG_END NX_Printf(NX_CON_NEWLINE)
 #endif /* NX_LOG_COLOR */
 

@@ -16,6 +16,10 @@ if NX_DEBUG
         bool "Log output with timeline"
         default y
 
+    config NX_DEBUG_LINENUMBER
+        bool "Log output with file line number"
+        default n
+
 endif
 endmenu
 
