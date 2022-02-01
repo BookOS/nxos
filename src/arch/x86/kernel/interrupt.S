@@ -114,9 +114,8 @@ CPU_TrapEntryNoErrCode 0x2c
 CPU_TrapEntryNoErrCode 0x2d
 CPU_TrapEntryNoErrCode 0x2e
 CPU_TrapEntryNoErrCode 0x2f
-CPU_TrapEntryNoErrCode 0x80
 
-/* .extern SyscallDispath */
+.extern HAL_ProcessSyscallDispatch
 
 .global CPU_SyscallEntry
 CPU_SyscallEntry:
@@ -137,11 +136,9 @@ CPU_SyscallEntry:
 
     sti /* enable interrupt */
 
-    /*
     pushl %esp
-    call SyscallDispath
+    call HAL_ProcessSyscallDispatch
     addl $4, %esp
-    */
 
     cli /* disable interrupt */
     

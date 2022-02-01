@@ -6,4 +6,3 @@ scripts/kconfiglib/kconfiglib.pyc
 src/platform/Kconfig
 src/include/nx_configure.h
 platform.mk
-rootfs.cpio

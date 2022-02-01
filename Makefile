@@ -48,12 +48,6 @@ KCONFIGLIB_DIR	:= scripts/kconfiglib
 G	?=n
 
 #
-# Rootfs
-#
-ROOTFS_SRC	:= rootfs/
-ROOTFS_IMG 	:= rootfs.cpio
-
-#
 # Get platform information about ARCH and PLATFORM from ARCH_PLATFORM variable.
 #
 ifeq ($(words $(subst -, , $(ARCH_PLATFORM))), 2)
@@ -106,7 +100,7 @@ CONFIG_IN_FILE = .config
 #
 # Compile only
 #
-all: cpio_rootfs
+all:
 ifeq ($(USE_BUILD_DIR), y)
 	@$(MAKE) -s -C src O=$(BUILD_DIR)
 else
@@ -130,14 +124,6 @@ else
 endif
 	@$(MAKE) -s -C src/platform/$(PLATFORM) -f cmd.mk clean
 
-#
-# cpio rootfs
-#
-cpio_rootfs:
-	cd $(ROOTFS_SRC) && \
-		find . | cpio -o -H newc > ../$(ROOTFS_IMG) && \
-		cd ..
-	python scripts/file2c.py $(ROOTFS_IMG) src/init
 #
 # Run OS
 #
