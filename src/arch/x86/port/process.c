@@ -15,7 +15,7 @@
 #include <utils/memory.h>
 #include <mm/page.h>
 #include <mm/mmu.h>
-#define NX_LOG_LEVEL NX_LOG_DBG
+#define NX_LOG_LEVEL NX_LOG_INFO
 #include <utils/log.h>
 #include <xbook/debug.h>
 #include <platform.h>
