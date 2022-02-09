@@ -21,3 +21,7 @@ endmenu
 menu "Thirdpart"
     source "$NXOS_SRC_DIR/mods/thirdpart/Kconfig"
 endmenu
+
+menu "File System"
+    source "$NXOS_SRC_DIR/mods/fs/Kconfig"
+endmenu

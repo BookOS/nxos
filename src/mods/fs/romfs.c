@@ -14,19 +14,30 @@
 #include <mm/alloc.h>
 #include <utils/memory.h>
 #include <utils/string.h>
+#define NX_LOG_NAME "romfs"
 #include <utils/log.h>
 #include <xbook/debug.h>
 #include <xbook/init_call.h>
 
 NX_PRIVATE NX_RomfsSystem romfsSystem = {NX_NULL};
 
+#ifdef CONFIG_NX_FILE_SYSTEM_ROMFS
 NX_IMPORT unsigned char __hex_file_rootfs[];
+#else
+NX_PRIVATE unsigned char *__hex_file_rootfs = NX_NULL;
+#endif /* #ifdef CONFIG_NX_FILE_SYSTEM_ROMFS
+ */
 
 #define ROOT_PATH       "/"
 #define ROOT_PATH_LEN   (sizeof(ROOT_PATH))
 
 NX_PRIVATE void NX_RomfsList(void)
 {
+    if (romfsSystem.archive == NX_NULL)
+    {
+        NX_LOG_W("invalid archive!");
+        return;
+    }
     struct cpio_info info;
     cpio_info(romfsSystem.archive, &info);
     char *path;
@@ -43,7 +54,7 @@ NX_PRIVATE void NX_RomfsList(void)
 
     for (i = 0; i < info.file_count; ++i)
     {
-        file_buf = cpio_get_entry(__hex_file_rootfs, i, (const char**)&filename, &file_sz);
+        file_buf = cpio_get_entry(romfsSystem.archive, i, (const char**)&filename, &file_sz);
         NX_StrCopy(path, ROOT_PATH);
         NX_StrCopy(path + ROOT_PATH_LEN - 1, filename);
         
@@ -68,7 +79,6 @@ NX_PUBLIC NX_Error NX_RomfsMount(const char *path, const char *devname, int flag
     }
 
     romfsSystem.archive = __hex_file_rootfs;
-    NX_RomfsList();
     return NX_EOK;
 }
 
@@ -105,6 +115,7 @@ NX_PUBLIC NX_Error NX_RomfsOpen(const char *path, int flags, NX_RomfsFile **outF
 
     if (romfsSystem.archive == NX_NULL)
     {
+        NX_LOG_W("invalid archive!");
         return NX_EFAULT;
     }
 
@@ -228,6 +239,8 @@ NX_PUBLIC NX_Error NX_RomfsSeek(NX_RomfsFile *file, NX_Offset off, int flags, NX
 NX_PRIVATE void InitRomfs(void)
 {
     NX_ASSERT(NX_RomfsMount("a", "b", 0) == NX_EOK);
+    
+    NX_RomfsList();
 }
 
 NX_MODS_CALL(InitRomfs);
