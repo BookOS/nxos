@@ -15,12 +15,12 @@
 #include <xbook.h>
 #include <utils/list.h>
 #include <sched/spin.h>
+#include <mm/mmu.h>
 
 struct NX_Process
 {
     NX_U32 flags;
-    /* MMU */
-    void *pageTable;
+    NX_Mmu mmu;
 
     NX_Atomic threadCount;  /* thread count in this process */
     NX_List threadPoolListHead;    /* all thread on this process */
@@ -39,9 +39,10 @@ typedef struct NX_Process NX_Process;
 
 struct NX_ProcessOps
 {
-    NX_Error (*initUserSpace)(NX_Process *process);
+    NX_Error (*initUserSpace)(NX_Process *process, NX_Addr virStart, NX_USize size);
     NX_Error (*switchPageTable)(void *pageTable);
     void *(*getKernelPageTable)(void);
+    void (*executeUser)(const void *text, void *userStack, void *kernelStack, void *args);
 };
 
 NX_INTERFACE NX_IMPORT struct NX_ProcessOps NX_ProcessOpsInterface; 
@@ -49,6 +50,7 @@ NX_INTERFACE NX_IMPORT struct NX_ProcessOps NX_ProcessOpsInterface;
 #define NX_ProcessInitUserSpace         NX_ProcessOpsInterface.initUserSpace
 #define NX_ProcessSwitchPageTable       NX_ProcessOpsInterface.switchPageTable
 #define NX_ProcessGetKernelPageTable    NX_ProcessOpsInterface.getKernelPageTable
+#define NX_ProcessExecuteUser           NX_ProcessOpsInterface.executeUser
 
 NX_PUBLIC NX_Process *NX_ProcessCreate(NX_U32 flags);
 NX_PUBLIC NX_Error NX_ProcessDestroy(NX_Process *process);

@@ -6,6 +6,7 @@
  * Change Logs:
  * Date           Author       Notes
  * 2021/10/1      JasonHu      The first version
+ * 2022/2/9       JasonHu      add HAL_ProcessEnterUserMode
  */
 
 .code32
@@ -168,3 +169,18 @@ HAL_InterruptExit:
     addl $4, %esp               /* skip error_code */
 
     iretl
+
+/*
+ * void HAL_ProcessEnterUserMode(frame);
+ */
+.global HAL_ProcessEnterUserMode
+HAL_ProcessEnterUserMode:
+    movl 0x4(%esp), %esp
+    addl $4,%esp    // skip intr no
+    popal
+    popl %gs
+    popl %fs
+    popl %es
+    popl %ds
+    addl $4, %esp   // skip error code
+    iret    // enter to user mode
