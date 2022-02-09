@@ -11,6 +11,7 @@
 
 #include <sched/syscall.h>
 #include <sched/thread.h>
+#define NX_LOG_NAME "syscall"
 #include <utils/log.h>
 
 NX_PRIVATE int SYS_InvalidCall(void)
