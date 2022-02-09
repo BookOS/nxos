@@ -28,6 +28,8 @@ typedef void (*NX_ExitCallHandler)(void);
 #define NX_INITCALL(fn)		        __DEFINE_INITCALL("0", fn, 0)
 #define NX_EXITCALL(fn)		        __DEFINE_EXITCALL("0", fn, 0)
 
+#define NX_MODS_CALL(fn)            __DEFINE_INITCALL("1", fn, 1)
+
 #define NX_INIT_TEST(fn)            __DEFINE_INITCALL("9", fn, 9)
 
 NX_PUBLIC void NX_CallInvoke(NX_InitCallHandler start[], NX_InitCallHandler end[]);

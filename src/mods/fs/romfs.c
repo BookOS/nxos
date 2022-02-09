@@ -15,6 +15,8 @@
 #include <utils/memory.h>
 #include <utils/string.h>
 #include <utils/log.h>
+#include <xbook/debug.h>
+#include <xbook/init_call.h>
 
 NX_PRIVATE NX_RomfsSystem romfsSystem = {NX_NULL};
 
@@ -51,7 +53,7 @@ NX_PRIVATE void NX_RomfsList(void)
         }
         else
         {
-            NX_LOG_I("file: %s file", path);
+            NX_LOG_I("file: %s file size:%d", path, file_sz);
             NX_LOG_I("file: %s", file_buf);
         }
     }
@@ -222,3 +224,10 @@ NX_PUBLIC NX_Error NX_RomfsSeek(NX_RomfsFile *file, NX_Offset off, int flags, NX
 
     return NX_EOK;
 }
+
+NX_PRIVATE void InitRomfs(void)
+{
+    NX_ASSERT(NX_RomfsMount("a", "b", 0) == NX_EOK);
+}
+
+NX_MODS_CALL(InitRomfs);
