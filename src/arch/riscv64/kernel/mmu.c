@@ -25,6 +25,8 @@ NX_INLINE NX_Error __UnmapPage(MMU *mmu, NX_Addr virAddr, NX_USize pages);
 
 NX_PRIVATE MMU_PTE *PageWalk(MMU_PDE *pageTable, NX_Addr virAddr, NX_Bool allocPage)
 {
+    NX_ASSERT(pageTable);
+    
     /* The page table in sv39 mode has 3 levels */
     int level;
     for (level = 2; level > 0; level--)
@@ -34,6 +36,7 @@ NX_PRIVATE MMU_PTE *PageWalk(MMU_PDE *pageTable, NX_Addr virAddr, NX_Bool allocP
         if (PTE_USED(*pte))
         {
             pageTable = (MMU_PDE *)PTE2PADDR(*pte);
+            NX_ASSERT(pageTable);
         }
         else
         {
@@ -50,6 +53,7 @@ NX_PRIVATE MMU_PTE *PageWalk(MMU_PDE *pageTable, NX_Addr virAddr, NX_Bool allocP
 
             /* increase last level page table reference */
             void *levelPageTable = (void *)(NX_Virt2Phy((NX_Addr)pte) & NX_PAGE_ADDR_MASK);
+            NX_ASSERT(pageTable);
             NX_PageIncrease(levelPageTable);
             
             *pte = PADDR2PTE(pageTable) | PTE_V;
@@ -131,8 +135,8 @@ NX_PRIVATE NX_Error MapOnePage(MMU *mmu, NX_Addr virAddr, NX_Addr phyAddr, NX_UA
 
 NX_PRIVATE void *__MapPageWithPhy(MMU *mmu, NX_Addr virAddr, NX_Addr phyAddr, NX_USize size, NX_UArch attr)
 {
-    NX_Addr addrStart = phyAddr;
-    NX_Addr addrEnd = phyAddr + size - 1;
+    NX_Addr addrStart = virAddr;
+    NX_Addr addrEnd = virAddr + size - 1;
 
     NX_ISize pages = GET_PF_ID(addrEnd) - GET_PF_ID(addrStart) + 1;
     NX_USize mappedPages = 0;
@@ -183,12 +187,22 @@ NX_PRIVATE void *__MapPage(MMU *mmu, NX_Addr virAddr, NX_USize size, NX_UArch at
     }
     return (void *)addrStart;
 err:
+    if (phyAddr != NX_NULL)
+    {
+        NX_PageFree(phyAddr);
+    }
     __UnmapPage(mmu, addrStart, mappedPages);
     return NX_NULL;
 }
 
 NX_PUBLIC void *MMU_MapPage(MMU *mmu, NX_Addr virAddr, NX_USize size, NX_UArch attr)
 {
+    NX_ASSERT(mmu);
+    if (!attr)
+    {
+        return NX_NULL;
+    }
+
     virAddr = virAddr & NX_PAGE_ADDR_MASK;
     size = NX_PAGE_ALIGNUP(size);
     
@@ -200,6 +214,12 @@ NX_PUBLIC void *MMU_MapPage(MMU *mmu, NX_Addr virAddr, NX_USize size, NX_UArch a
 
 NX_PUBLIC void *MMU_MapPageWithPhy(MMU *mmu, NX_Addr virAddr, NX_Addr phyAddr, NX_USize size, NX_UArch attr)
 {
+    NX_ASSERT(mmu);
+    if (!attr)
+    {
+        return NX_NULL;
+    }
+
     virAddr = virAddr & NX_PAGE_ADDR_MASK;
     phyAddr = phyAddr & NX_PAGE_ADDR_MASK;
     size = NX_PAGE_ALIGNUP(size);
@@ -265,6 +285,8 @@ NX_INLINE NX_Error __UnmapPage(MMU *mmu, NX_Addr virAddr, NX_USize pages)
 
 NX_PUBLIC NX_Error MMU_UnmapPage(MMU *mmu, NX_Addr virAddr, NX_USize size)
 {
+    NX_ASSERT(mmu);
+
     virAddr = virAddr & NX_PAGE_ADDR_MASK;
     size = NX_PAGE_ALIGNUP(size);
     
@@ -280,6 +302,8 @@ NX_PUBLIC NX_Error MMU_UnmapPage(MMU *mmu, NX_Addr virAddr, NX_USize size)
 
 NX_PUBLIC void *MMU_Vir2Phy(MMU *mmu, NX_Addr virAddr)
 {
+    NX_ASSERT(mmu);
+
     NX_Addr pagePhy;
     NX_Addr pageOffset;
     
