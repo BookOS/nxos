@@ -18,9 +18,11 @@
 #define ARCH_USER_MAP_VADDR     0xA0000000UL             /* map start */
 #define ARCH_USER_HEAP_TOP      ARCH_USER_MAP_VADDR      /* heap end */
 #define ARCH_USER_HEAP_VADDR    0x80000000UL             /* heap start */
-#define ARCH_USER_LOAD_VADDR    0x40000000UL             /* code & data */
+#define ARCH_USER_IMAGE_TOP     ARCH_USER_HEAP_VADDR     /* code & data */
+#define ARCH_USER_IMAGE_VADDR   0x40000000UL             /* code & data */
 
-#define ARCH_USER_BASE_ADDR     ARCH_USER_LOAD_VADDR
-#define ARCH_USER_SPACE_SIZE    (ARCH_USER_STACK_TOP - ARCH_USER_LOAD_VADDR)
+#define ARCH_USER_SPACE_VADDR   ARCH_USER_IMAGE_VADDR
+#define ARCH_USER_SPACE_TOP     ARCH_USER_STACK_TOP
+#define ARCH_USER_SPACE_SIZE    (ARCH_USER_SPACE_TOP - ARCH_USER_SPACE_VADDR)
 
 #endif /* __ARCH_PROCESS___ */

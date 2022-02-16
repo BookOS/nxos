@@ -34,7 +34,7 @@ NX_INLINE void SchedSwithProcess(NX_Thread *thread)
     }
     else
     {
-        pageTable = process->mmu.table;
+        pageTable = process->vmspace.mmu.table;
     }
 
     NX_ASSERT(pageTable != NX_NULL);

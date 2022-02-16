@@ -15,12 +15,12 @@
 #include <xbook.h>
 #include <utils/list.h>
 #include <sched/spin.h>
-#include <mm/mmu.h>
+#include <mm/vmspace.h>
 
 struct NX_Process
 {
     NX_U32 flags;
-    NX_Mmu mmu;
+    NX_Vmspace vmspace;
 
     NX_Atomic threadCount;  /* thread count in this process */
     NX_List threadPoolListHead;    /* all thread on this process */

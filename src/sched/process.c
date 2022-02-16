@@ -24,6 +24,8 @@
 #define NX_LOG_LEVEL NX_LOG_INFO
 #include <utils/log.h>
 
+#include <xbook/debug.h>
+
 NX_PRIVATE void ProcessAppendThread(NX_Process *process, NX_Thread *thread)
 {
     NX_UArch level;
@@ -52,7 +54,23 @@ NX_PUBLIC NX_Process *NX_ProcessCreate(NX_U32 flags)
         return NX_NULL;
     }
 
-    if (NX_ProcessInitUserSpace(process, ARCH_USER_BASE_ADDR, ARCH_USER_SPACE_SIZE) != NX_EOK)
+    if(NX_VmspaceInit(&process->vmspace,
+        ARCH_USER_SPACE_VADDR,
+        ARCH_USER_SPACE_TOP,
+        ARCH_USER_IMAGE_VADDR,
+        ARCH_USER_IMAGE_TOP,
+        ARCH_USER_HEAP_VADDR,
+        ARCH_USER_HEAP_TOP,
+        ARCH_USER_MAP_VADDR,
+        ARCH_USER_MAP_TOP,
+        ARCH_USER_STACK_VADDR,
+        ARCH_USER_STACK_TOP) != NX_EOK)
+    {
+        NX_MemFree(process);
+        return NX_NULL;
+    }
+
+    if (NX_ProcessInitUserSpace(process, ARCH_USER_SPACE_VADDR, ARCH_USER_SPACE_SIZE) != NX_EOK)
     {
         NX_MemFree(process);
         return NX_NULL;
@@ -75,8 +93,8 @@ NX_PUBLIC NX_Error NX_ProcessDestroy(NX_Process *process)
         return NX_EINVAL;
     }
     
-    NX_ASSERT(process->mmu.table != NX_NULL);
-    NX_MemFree(process->mmu.table);
+    NX_ASSERT(process->vmspace.mmu.table != NX_NULL);
+    NX_MemFree(process->vmspace.mmu.table);
 
     NX_MemFree(process);
     return NX_EOK;
@@ -87,7 +105,7 @@ NX_PRIVATE void ProcessThreadEntry(void *arg)
     NX_Thread *thread = NX_ThreadSelf();
     NX_LOG_I("Process %s/%d running...", thread->name, thread->tid);
     /* Jump into userspace to run app */
-    NX_ProcessExecuteUser((void *)ARCH_USER_LOAD_VADDR, (void *)ARCH_USER_STACK_TOP, thread->stackBase + thread->stackSize, NX_NULL);
+    NX_ProcessExecuteUser((void *)ARCH_USER_IMAGE_VADDR, (void *)ARCH_USER_STACK_TOP, thread->stackBase + thread->stackSize, NX_NULL);
 }
 
 /**
@@ -95,7 +113,7 @@ NX_PRIVATE void ProcessThreadEntry(void *arg)
  */
 NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
 {
-    NX_ASSERT(process->mmu.table);
+    NX_ASSERT(process->vmspace.mmu.table);
     NX_RomfsFile *file = NX_NULL;
     NX_Error err;
     NX_Offset len;
@@ -127,7 +145,7 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
     }
 
     /* map code & data memory */
-    addr = NX_MmuMapPage(&process->mmu, ARCH_USER_LOAD_VADDR, 4096, ARCH_PAGE_ATTR_USER);
+    addr = NX_MmuMapPage(&process->vmspace.mmu, ARCH_USER_IMAGE_VADDR, 4096, ARCH_PAGE_ATTR_USER);
     if (addr == NX_NULL)
     {
         NX_RomfsClose(file);
@@ -135,7 +153,7 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
     }
 
     /* read file */
-    NX_Addr vaddr = ARCH_USER_LOAD_VADDR;
+    NX_Addr vaddr = ARCH_USER_IMAGE_VADDR;
     NX_Addr paddr;
     NX_Addr vaddrSelf;
     NX_USize chunk;
@@ -143,7 +161,7 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
     
     while (len > 0)
     {
-        paddr = (NX_Addr)NX_MmuVir2Phy(&process->mmu, vaddr);
+        paddr = (NX_Addr)NX_MmuVir2Phy(&process->vmspace.mmu, vaddr);
         NX_ASSERT(paddr);
         vaddrSelf = NX_Phy2Virt(paddr);
 
@@ -202,7 +220,7 @@ NX_PUBLIC NX_Error NX_ProcessExecute(char *name, char *path, NX_U32 flags)
     }
 
     /* map user stack */
-    void *ustack = NX_MmuMapPage(&process->mmu, ARCH_USER_STACK_TOP - NX_PAGE_SIZE, NX_PAGE_SIZE, ARCH_PAGE_ATTR_USER);
+    void *ustack = NX_MmuMapPage(&process->vmspace.mmu, ARCH_USER_STACK_TOP - NX_PAGE_SIZE, NX_PAGE_SIZE, ARCH_PAGE_ATTR_USER);
     if (ustack == NX_NULL)
     {
         /* TODO: unmap process image */
@@ -215,7 +233,7 @@ NX_PUBLIC NX_Error NX_ProcessExecute(char *name, char *path, NX_U32 flags)
 
     if (NX_ThreadRun(thread) != NX_EOK)
     {
-        NX_MmuUnmapPage(&process->mmu, ARCH_USER_STACK_TOP - NX_PAGE_SIZE, NX_PAGE_SIZE);
+        NX_MmuUnmapPage(&process->vmspace.mmu, ARCH_USER_STACK_TOP - NX_PAGE_SIZE, NX_PAGE_SIZE);
         /* TODO: unmap process image */
         NX_ProcessDestroy(process);
         NX_ThreadDestroy(thread);

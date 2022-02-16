@@ -157,9 +157,9 @@ NX_PUBLIC void HAL_InterruptDispatch(void *stackFrame)
         NX_Process *process = cur->resource.process;
         if (process)
         {
-            NX_LOG_E("mmu table:%p", process->mmu.table);
+            NX_LOG_E("mmu table:%p", process->vmspace.mmu.table);
             
-            void *phy = NX_MmuVir2Phy(&process->mmu, CPU_ReadCR2());
+            void *phy = NX_MmuVir2Phy(&process->vmspace.mmu, CPU_ReadCR2());
             NX_LOG_E("fault phy addr:%p", phy);
         }
         else
