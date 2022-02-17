@@ -61,6 +61,7 @@ NX_Error NX_VmspaceInit(NX_Vmspace *space,
     NX_Addr mapEnd,
     NX_Addr stackStart,
     NX_Addr stackEnd);
+NX_Error NX_VmspaceExit(NX_Vmspace *space);
 
 NX_Error NX_VmspaceMap(NX_Vmspace *space,
     NX_Addr addr,

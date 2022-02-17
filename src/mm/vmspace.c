@@ -18,6 +18,9 @@
 #define NX_LOG_NAME "vmspace"
 #include <utils/log.h>
 
+/* remove node with destroy node */
+#define VMNODE_REMOVE_WITH_DESTORY 0x01
+
 NX_Error NX_VmspaceInit(NX_Vmspace *space,
     NX_Addr spaceBase,
     NX_Addr spaceTop,
@@ -145,26 +148,30 @@ NX_PRIVATE void VmspaceInsertLinearOrder(NX_Vmspace *space, NX_Vmnode *node)
     }
 }
 
-NX_PRIVATE NX_Error VmspaceInsertNode(NX_Vmspace *space, NX_Vmnode *node)
+NX_PRIVATE NX_Error VmspaceInsertNodeLocked(NX_Vmspace *space, NX_Vmnode *node)
 {
-    NX_UArch level;
-
     if (!space || !node)
     {
         return NX_EINVAL;
     }
 
-    NX_SpinLockIRQ(&space->spinLock, &level);
     VmspaceInsertLinearOrder(space, node);
     node->space = space;
-    NX_SpinUnlockIRQ(&space->spinLock, level);
     return NX_EOK;
 }
 
-NX_PRIVATE NX_Error VmspaceRemoveNode(NX_Vmspace *space, NX_Vmnode *node)
+NX_PRIVATE NX_Error VmspaceInsertNode(NX_Vmspace *space, NX_Vmnode *node)
 {
     NX_UArch level;
+    NX_Error err;
+    NX_SpinLockIRQ(&space->spinLock, &level);
+    err = VmspaceInsertNodeLocked(space, node);
+    NX_SpinUnlockIRQ(&space->spinLock, level);
+    return err;
+}
 
+NX_PRIVATE NX_Error VmspaceRemoveNodeLocked(NX_Vmspace *space, NX_Vmnode *node, NX_U32 flags)
+{
     if (!space || !node)
     {
         return NX_EINVAL;
@@ -175,10 +182,165 @@ NX_PRIVATE NX_Error VmspaceRemoveNode(NX_Vmspace *space, NX_Vmnode *node)
         return NX_EFAULT;
     }
 
-    NX_SpinLockIRQ(&space->spinLock, &level);
     NX_ListDel(&node->list);
     node->space = NX_NULL;
+
+    if (flags & VMNODE_REMOVE_WITH_DESTORY)
+    {
+        NX_ASSERT(VmnodeDestroy(node) == NX_EOK);
+    }
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error VmspaceRemoveNode(NX_Vmspace *space, NX_Vmnode *node, NX_U32 flags)
+{
+    NX_UArch level;
+    NX_Error err;
+    NX_SpinLockIRQ(&space->spinLock, &level);
+    err = VmspaceRemoveNodeLocked(space, node, flags);
     NX_SpinUnlockIRQ(&space->spinLock, level);
+    return err;
+}
+
+/**
+ * merge condition:
+ * 1. near addr
+ * 2. same attr and flags
+ */
+NX_PRIVATE NX_Error VmspaceMergeNode(NX_Vmspace *space, NX_Vmnode *node)
+{
+    NX_UArch level;
+    NX_Vmnode *prevNode, *nextNode;
+
+    if (!space || !node)
+    {
+        return NX_EINVAL;
+    }
+
+    NX_SpinLockIRQ(&space->spinLock, &level);
+    /* merge with prev node */
+    NX_ListForEachEntry(prevNode, &space->spaceNodeList, list)
+    {
+        if (prevNode->end == node->start) /* near prev node */
+        {
+            if (prevNode->attr == node->attr && prevNode->flags == node->flags) /* same node */
+            {
+                node->start = prevNode->start;
+                NX_ASSERT(VmspaceRemoveNodeLocked(space, prevNode, VMNODE_REMOVE_WITH_DESTORY) == NX_EOK);
+                break;
+            }
+        }
+    }
+
+    /* merge with next node */
+    NX_ListForEachEntry(nextNode, &space->spaceNodeList, list)
+    {
+        if (nextNode->start == node->end) /* near next node */
+        {
+            if (nextNode->attr == node->attr && nextNode->flags == node->flags) /* same node */
+            {
+                node->end = nextNode->end;
+                NX_ASSERT(VmspaceRemoveNodeLocked(space, nextNode, VMNODE_REMOVE_WITH_DESTORY) == NX_EOK);
+                break;
+            }
+        }
+    }
+    
+    NX_SpinUnlockIRQ(&space->spinLock, level);
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error VmspaceSplitNode(NX_Vmspace *space, NX_Vmnode *node, NX_Addr addr, NX_USize size)
+{
+    NX_UArch level;
+    NX_Addr start = addr;
+    NX_Addr end = addr + size;
+    NX_Addr oldStart = node->start;
+    NX_Addr oldEnd = node->end;
+
+    if (!space || !node)
+    {
+        return NX_EINVAL;
+    }
+
+    /* no need to split node */
+    if (node->start == start && node->end == end)
+    {
+        return NX_EOK;
+    }
+    else
+    {
+        /* spilt as prev, node, next. */
+        NX_Addr prevStart = node->start;
+        NX_Addr prevEnd = start;
+        NX_Addr nextStart = end;
+        NX_Addr nextEnd = node->end;
+        NX_Vmnode *prevNode = NX_NULL, *nextNode = NX_NULL;
+
+        NX_SpinLockIRQ(&space->spinLock, &level);
+        /* create prev node */
+        if (prevStart != prevEnd)
+        {
+            prevNode = VmnodeCreate(prevStart, prevEnd - prevStart, node->attr, node->flags);
+            if (prevNode == NX_NULL)
+            {
+                NX_SpinUnlockIRQ(&space->spinLock, level);
+                return NX_ENOMEM;
+            }
+        }
+
+        /* create next node */
+        if (nextStart != nextEnd)
+        {
+            nextNode = VmnodeCreate(nextStart, nextEnd - nextStart, node->attr, node->flags);
+            if (nextNode == NX_NULL)
+            {
+                if (prevNode != NX_NULL)
+                {
+                    NX_ASSERT(VmnodeDestroy(prevNode) == NX_EOK);
+                }
+                NX_SpinUnlockIRQ(&space->spinLock, level);
+                return NX_ENOMEM;
+            }
+        }
+
+        /* insert prev node */
+        if (prevNode != NX_NULL)
+        {
+            node->start = prevEnd;
+            if (VmspaceInsertNodeLocked(space, prevNode) != NX_EOK)
+            {
+                node->start = oldStart;
+                NX_ASSERT(VmnodeDestroy(prevNode) == NX_EOK);
+                if (nextNode != NX_NULL)
+                {
+                    NX_ASSERT(VmnodeDestroy(nextNode) == NX_EOK);
+                }
+                NX_SpinUnlockIRQ(&space->spinLock, level);
+                return NX_EFAULT;
+            }
+        }
+
+        /* insert next node */
+        if (nextNode != NX_NULL)
+        {
+            node->end = nextStart;
+            if (VmspaceInsertNodeLocked(space, nextNode) != NX_EOK)
+            {
+                node->start = oldStart;
+                node->end = oldEnd;
+
+                NX_ASSERT(VmnodeDestroy(nextNode) == NX_EOK);
+                if (prevNode != NX_NULL)
+                {
+                    NX_ASSERT(VmspaceRemoveNodeLocked(space, prevNode, VMNODE_REMOVE_WITH_DESTORY));
+                }
+                NX_SpinUnlockIRQ(&space->spinLock, level);
+                return NX_EFAULT;
+            }
+        }
+        NX_SpinUnlockIRQ(&space->spinLock, level);
+    }
     return NX_EOK;
 }
 
@@ -338,15 +500,15 @@ NX_Error __VmspaceMap(NX_Vmspace *space,
 
         if (mapAddr == NX_NULL)
         {
-            NX_ASSERT(VmspaceRemoveNode(space, node) == NX_EOK);
-            NX_ASSERT(VmnodeDestroy(node) == NX_EOK);
+            NX_ASSERT(VmspaceRemoveNode(space, node, VMNODE_REMOVE_WITH_DESTORY) == NX_EOK);
             return NX_ENOMEM;
         }
     }
 
-    *outAddr = mapAddr;
+    /* merge node */
+    NX_ASSERT(VmspaceMergeNode(space, node) == NX_EOK);
 
-    /* TODO: merge node if has same attr, flags and addr neaer*/
+    *outAddr = mapAddr;
     return NX_EOK;
 }
 
@@ -398,22 +560,60 @@ NX_Error NX_VmspaceUnmap(NX_Vmspace *space, NX_Addr addr, NX_USize size)
         return NX_EFAULT;
     }
 
+    /* split node */
+    err = VmspaceSplitNode(space, node, addr , size);
+    if (err != NX_EOK)
+    {
+        NX_LOG_E("unmap: addr %p size %p node %p split error with %d !", addr, size, node, err);
+        return NX_ENOMEM;
+    }
+
+    /* remove node from space */
+    err = VmspaceRemoveNode(space, node, !VMNODE_REMOVE_WITH_DESTORY);
+    if (err != NX_EOK)
+    {
+        NX_LOG_E("unmap: addr %p size %p node %p remove error with %d !", addr, size, node, err);
+        NX_ASSERT(VmspaceMergeNode(space, node) == NX_EOK);
+        return NX_EFAULT;
+    }
+    
     /* unmap addr */
     err = NX_MmuUnmapPage(&space->mmu, addr, size);
     if (err != NX_EOK)
     {
         NX_LOG_E("unmap: addr %p size %p unmap error with %d !", addr, size, err);
+        NX_ASSERT(VmspaceInsertNode(space, node) == NX_EOK);
+        NX_ASSERT(VmspaceMergeNode(space, node) == NX_EOK);
         return NX_EFAULT;
     }
 
-    /* remove node from space */
-    err = VmspaceRemoveNode(space, node);
-    if (err != NX_EOK)
+    /* destroy node at last */
+    NX_ASSERT(VmnodeDestroy(node) == NX_EOK);
+    return NX_EOK;
+}
+
+NX_Error NX_VmspaceExit(NX_Vmspace *space)
+{
+    NX_UArch level;
+    NX_Vmnode *node, *next;
+
+    if (!space)
     {
-        NX_LOG_E("unmap: addr %p size %p node %p remove error with %d !", addr, size, node, err);
-        return NX_EFAULT;
+        return NX_EINVAL;
     }
     
-    NX_ASSERT(VmnodeDestroy(node) == NX_EOK);
+    NX_SpinLockIRQ(&space->spinLock, &level);
+    NX_ListForEachEntrySafe(node, next, &space->spaceNodeList, list)
+    {
+        /* unmap addr */
+        NX_ASSERT(NX_MmuUnmapPage(&space->mmu, node->start, node->end - node->start) == NX_EOK);
+        /* remove node */
+        NX_ASSERT(VmspaceRemoveNodeLocked(space, node, VMNODE_REMOVE_WITH_DESTORY) == NX_EOK);
+    }
+    NX_SpinUnlockIRQ(&space->spinLock, level);
+
+    /* free mmu table */
+    NX_ASSERT(space->mmu.table != NX_NULL);
+    NX_MemFree(space->mmu.table);
     return NX_EOK;
 }

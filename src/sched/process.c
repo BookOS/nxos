@@ -93,9 +93,9 @@ NX_PUBLIC NX_Error NX_ProcessDestroy(NX_Process *process)
         return NX_EINVAL;
     }
     
-    NX_ASSERT(process->vmspace.mmu.table != NX_NULL);
-    NX_MemFree(process->vmspace.mmu.table);
-
+    /* exit vmspace */
+    NX_ASSERT(NX_VmspaceExit(&process->vmspace) == NX_EOK);
+    
     NX_MemFree(process);
     return NX_EOK;
 }
