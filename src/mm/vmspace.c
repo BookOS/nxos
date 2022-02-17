@@ -434,11 +434,10 @@ NX_Error __VmspaceMap(NX_Vmspace *space,
     NX_U32 flags,
     void **outAddr)
 {
-    NX_LOG_D("vaddr:%p, paddr:%p size:%p", vaddr, paddr, size);
     NX_Vmnode *node;
     void *mapAddr = NX_NULL;
 
-    if (!space || !outAddr || !size || !attr)
+    if (!space || !size || !attr)
     {
         return NX_EINVAL;
     }
@@ -508,7 +507,10 @@ NX_Error __VmspaceMap(NX_Vmspace *space,
     /* merge node */
     NX_ASSERT(VmspaceMergeNode(space, node) == NX_EOK);
 
-    *outAddr = mapAddr;
+    if (outAddr)
+    {
+        *outAddr = mapAddr;
+    }
     return NX_EOK;
 }
 

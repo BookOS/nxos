@@ -117,7 +117,9 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
     NX_RomfsFile *file = NX_NULL;
     NX_Error err;
     NX_Offset len;
-    void *addr;
+    void *addr = NX_NULL;
+    NX_USize imageMaxSize;
+    NX_Vmspace *space;
 
     err = NX_RomfsOpen(path, 0, &file);
     if (err != NX_EOK)
@@ -136,6 +138,15 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
 
     NX_LOG_D("process execute file %s size is %d\n", path, len);
 
+    space = &process->vmspace;
+    imageMaxSize = space->imageEnd - space->imageStart;
+    if (len > imageMaxSize)
+    {
+        NX_LOG_E("image too large %p than %p !", len, imageMaxSize);
+        NX_RomfsClose(file);
+        return NX_EFAULT;
+    }
+
     err = NX_RomfsSeek(file, 0, NX_ROMFS_SEEK_SET, NX_NULL);
     if (err != NX_EOK)
     {
@@ -145,15 +156,14 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
     }
 
     /* map code & data memory */
-    addr = NX_MmuMapPage(&process->vmspace.mmu, ARCH_USER_IMAGE_VADDR, 4096, ARCH_PAGE_ATTR_USER);
-    if (addr == NX_NULL)
+    if (NX_VmspaceMap(space, space->imageStart, len, ARCH_PAGE_ATTR_USER, 0, &addr) != NX_EOK)
     {
         NX_RomfsClose(file);
         return NX_ENOMEM;
     }
 
     /* read file */
-    NX_Addr vaddr = ARCH_USER_IMAGE_VADDR;
+    NX_Addr vaddr = space->imageStart;
     NX_Addr paddr;
     NX_Addr vaddrSelf;
     NX_USize chunk;
@@ -161,7 +171,7 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
     
     while (len > 0)
     {
-        paddr = (NX_Addr)NX_MmuVir2Phy(&process->vmspace.mmu, vaddr);
+        paddr = (NX_Addr)NX_MmuVir2Phy(&space->mmu, vaddr);
         NX_ASSERT(paddr);
         vaddrSelf = NX_Phy2Virt(paddr);
 
@@ -182,6 +192,13 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
     /* close file */
     NX_RomfsClose(file);
 
+    /* space resize image and heap size */
+    space->imageEnd = NX_PAGE_ALIGNUP(space->imageStart + len);
+    if (space->imageEnd + NX_PAGE_SIZE < space->heapStart)
+    {
+        space->heapStart = space->imageEnd + NX_PAGE_SIZE;
+    }
+
     return NX_EOK;
 }
 
@@ -190,6 +207,8 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
  */
 NX_PUBLIC NX_Error NX_ProcessExecute(char *name, char *path, NX_U32 flags)
 {
+    NX_Vmspace *space;
+
     if (name == NX_NULL || path == NX_NULL)
     {
         return NX_EINVAL;
@@ -219,11 +238,11 @@ NX_PUBLIC NX_Error NX_ProcessExecute(char *name, char *path, NX_U32 flags)
         return NX_EIO;
     }
 
+    space = &process->vmspace;
     /* map user stack */
-    void *ustack = NX_MmuMapPage(&process->vmspace.mmu, ARCH_USER_STACK_TOP - NX_PAGE_SIZE, NX_PAGE_SIZE, ARCH_PAGE_ATTR_USER);
-    if (ustack == NX_NULL)
+    if (NX_VmspaceMap(space, space->stackEnd - NX_PAGE_SIZE, NX_PAGE_SIZE, ARCH_PAGE_ATTR_USER, 0, NX_NULL) != NX_EOK)
     {
-        /* TODO: unmap process image */
+        NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
         NX_ProcessDestroy(process);
         NX_ThreadDestroy(thread);
         return NX_ENOMEM;
@@ -233,8 +252,8 @@ NX_PUBLIC NX_Error NX_ProcessExecute(char *name, char *path, NX_U32 flags)
 
     if (NX_ThreadRun(thread) != NX_EOK)
     {
-        NX_MmuUnmapPage(&process->vmspace.mmu, ARCH_USER_STACK_TOP - NX_PAGE_SIZE, NX_PAGE_SIZE);
-        /* TODO: unmap process image */
+        NX_ASSERT(NX_VmspaceUnmap(space, space->stackEnd - NX_PAGE_SIZE, NX_PAGE_SIZE) == NX_EOK);
+        NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
         NX_ProcessDestroy(process);
         NX_ThreadDestroy(thread);
         return NX_EFAULT;
