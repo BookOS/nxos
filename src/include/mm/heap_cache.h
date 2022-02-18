@@ -15,14 +15,17 @@
 #include <xbook.h>
 #include <xbook/atomic.h>
 #include <utils/list.h>
+#include <sched/mutex.h>
 
 struct NX_HeapCache
 {
-    NX_List spanFreeList;
-    NX_List objectFreeList;
-    NX_USize classSize; /* heap cache size */
-    NX_Atomic spanFreeCount;
-    NX_Atomic objectFreeCount;
+    NX_List spanFreeList;       /* free list for middle objects, 
+                                   the span object can also be split into small objects */
+    NX_List objectFreeList;     /* free list for small objects */
+    NX_USize classSize;         /* heap cache size */
+    NX_Atomic spanFreeCount;    /* counts for middle objects */
+    NX_Atomic objectFreeCount;  /* counts for small objects */
+    NX_Mutex lock;              /* lock for cache list */
 };
 typedef struct NX_HeapCache NX_HeapCache;
 

@@ -28,6 +28,6 @@ NX_PUBLIC void *NX_PageCacheAlloc(NX_USize count);
 NX_PUBLIC NX_Error NX_PageCacheFree(void *page);
 
 NX_PUBLIC void *NX_PageToSpan(void *page);
-NX_PUBLIC NX_USize NX_PageToSpanCount(void *span);
+NX_PUBLIC NX_USize NX_SpanToCount(void *span);
 
 #endif /* __MM_PAGE_CACHE__ */

@@ -50,7 +50,6 @@
 
 NX_PRIVATE struct NX_SizeClass CacheSizeAarray[MAX_SIZE_CLASS_NR];
 NX_PRIVATE NX_HeapCache MiddleSizeCache;
-NX_PRIVATE NX_Mutex HeapCacheLock;
 
 NX_PRIVATE NX_USize AlignDownToPow2(NX_USize size)
 {
@@ -97,6 +96,7 @@ NX_PRIVATE void HeapCacheInitOne(NX_HeapCache *cache, NX_USize classSize)
     NX_ListInit(&cache->spanFreeList);
     NX_AtomicSet(&cache->spanFreeCount, 0);
     NX_AtomicSet(&cache->objectFreeCount, 0);
+    NX_MutexInit(&cache->lock);
 }
 
 NX_PRIVATE void HeapSizeClassInit(void)
@@ -139,16 +139,21 @@ NX_INLINE NX_HeapCache *SizeToCache(NX_USize size)
     {
         if (CacheSizeAarray[index].size >= size)
         {
-            cache = &CacheSizeAarray[index].cache;
             /* alloc in this cache */
+            cache = &CacheSizeAarray[index].cache;
             break;
         }
     }
     return cache;
 }
 
-NX_PRIVATE void *DoHeapAlloc(NX_USize size)
+NX_PUBLIC void *NX_HeapAlloc(NX_USize size)
 {
+    if (!size)
+    {
+        return NX_NULL;
+    }
+
     /* size align up with 8 */
     size = NX_ALIGN_UP(size, 8);
 
@@ -172,6 +177,8 @@ NX_PRIVATE void *DoHeapAlloc(NX_USize size)
     {
         cache = SizeToCache(size);
     }
+    
+    NX_MutexLock(&cache->lock, NX_True);
     NX_ASSERT(NX_AtomicGet(&cache->objectFreeCount) >= 0);
     if (NX_AtomicGet(&cache->objectFreeCount) == 0) /* no object, need split from span */
     {
@@ -184,6 +191,7 @@ NX_PRIVATE void *DoHeapAlloc(NX_USize size)
             if (span == NX_NULL)
             {
                 NX_LOG_E("no enough memory span!");
+                NX_MutexUnlock(&cache->lock);
                 return NX_NULL;
             }
         }
@@ -196,6 +204,7 @@ NX_PRIVATE void *DoHeapAlloc(NX_USize size)
 
         if (cache == &MiddleSizeCache)  /* return span if middle cache */
         {
+            NX_MutexUnlock(&cache->lock);
             return (void *)span;
         }
 
@@ -225,23 +234,11 @@ NX_PRIVATE void *DoHeapAlloc(NX_USize size)
     objectNode = NX_ListFirstEntry(&cache->objectFreeList, NX_SmallCacheObject, list);
     NX_ListDel(&objectNode->list); /* del from free list */
     NX_AtomicDec(&cache->objectFreeCount);
-    
+    NX_MutexUnlock(&cache->lock);
     return (void *)objectNode;
 }
 
-NX_PUBLIC void *NX_HeapAlloc(NX_USize size)
-{
-    if (!size)
-    {
-        return NX_NULL;
-    }
-    NX_MutexLock(&HeapCacheLock, NX_True);
-    void *ptr = DoHeapAlloc(size);
-    NX_MutexUnlock(&HeapCacheLock);
-    return ptr;
-}
-
-NX_PRIVATE NX_Error DoHeapFree(void *object)
+NX_PUBLIC NX_Error NX_HeapFree(void *object)
 {
     if (object == NX_NULL) /* can't free NX_NULL object */
     {
@@ -251,7 +248,7 @@ NX_PRIVATE NX_Error DoHeapFree(void *object)
     /* object to page, then to span */
     void *page = (void *)(((NX_Addr) object) & NX_PAGE_UMASK);
     void *span = NX_PageToSpan(page);
-    NX_USize pageCount = NX_PageToSpanCount(page);
+    NX_USize pageCount = NX_SpanToCount(span);
     NX_USize size = pageCount * NX_PAGE_SIZE;
 
     /* according size to free */
@@ -263,9 +260,11 @@ NX_PRIVATE NX_Error DoHeapFree(void *object)
         }
         else    /* free to middle cache */
         {
-            /* if len is too long, free to page cache */
+            NX_MutexLock(&MiddleSizeCache.lock, NX_True);
+            /* if length is too long, free to page cache */
             if (NX_AtomicGet(&MiddleSizeCache.spanFreeCount) + 1 >= MAX_MIDDLE_OBJECT_THRESOLD) 
             {
+                NX_MutexUnlock(&MiddleSizeCache.lock);
                 return NX_PageCacheFree(span);
             }
             else    /* free to span free list */
@@ -274,6 +273,7 @@ NX_PRIVATE NX_Error DoHeapFree(void *object)
                 NX_ListAdd(&spanNode->list, &MiddleSizeCache.spanFreeList);
                 NX_AtomicInc(&MiddleSizeCache.spanFreeCount);
             }
+            NX_MutexUnlock(&MiddleSizeCache.lock);
             return NX_EOK;
         }
     }
@@ -288,6 +288,7 @@ NX_PRIVATE NX_Error DoHeapFree(void *object)
         /* get left objects */
         NX_HeapCache *cache = SizeToCache(sizeClass);
  
+        NX_MutexLock(&cache->lock, NX_True);
         /* if objects in span is full, free all objects */
         if (NX_AtomicGet(&cache->objectFreeCount) + 1 >= pageNode->maxObjectsOnSpan)
         {
@@ -298,6 +299,7 @@ NX_PRIVATE NX_Error DoHeapFree(void *object)
             /* free span to page cache */
             if (NX_AtomicGet(&cache->spanFreeCount) + 1 >= MAX_SMALL_SPAN_THRESOLD)
             {
+                NX_MutexUnlock(&cache->lock);
                 return NX_PageCacheFree(span);
             }
             else    /* add span to span list */
@@ -313,20 +315,9 @@ NX_PRIVATE NX_Error DoHeapFree(void *object)
             NX_ListAdd(&objectNode->list, &cache->objectFreeList);
             NX_AtomicInc(&cache->objectFreeCount);
         }
+        NX_MutexUnlock(&cache->lock);
     }
     return NX_EOK;
-}
-
-NX_PUBLIC NX_Error NX_HeapFree(void *object)
-{
-    if (object == NX_NULL) /* can't free NX_NULL object */
-    {
-        return NX_EINVAL;
-    }
-    NX_MutexLock(&HeapCacheLock, NX_True);
-    NX_Error err = DoHeapFree(object);
-    NX_MutexUnlock(&HeapCacheLock);
-    return err;
 }
 
 NX_PUBLIC NX_USize NX_HeapGetObjectSize(void *object)
@@ -335,14 +326,12 @@ NX_PUBLIC NX_USize NX_HeapGetObjectSize(void *object)
     {
         return 0;
     }
-    NX_MutexLock(&HeapCacheLock, NX_True);
     /* object to page, then to span */
     void *page = (void *)(((NX_Addr) object) & NX_PAGE_UMASK);
     void *span = NX_PageToSpan(page);
     /* NOTICE: page must be span page */
     NX_Page *pageNode = NX_PageFromPtr(NX_PageZoneGetBuddySystem(NX_PAGE_ZONE_NORMAL), span);
     NX_ASSERT(pageNode != NX_NULL);
-    NX_MutexUnlock(&HeapCacheLock);
     /* get class size from page */
     return pageNode->sizeClass;
 }
@@ -350,5 +339,4 @@ NX_PUBLIC NX_USize NX_HeapGetObjectSize(void *object)
 NX_PUBLIC void NX_HeapCacheInit(void)
 {
     HeapSizeClassInit();
-    NX_MutexInit(&HeapCacheLock);
 }
