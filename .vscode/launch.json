@@ -5,11 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "NXOS-debug-i386-PC32",
+            "name": "NXOS-debug-x86-i386",
             "type": "cppdbg",
             "request": "launch",
             "miDebuggerServerAddress": "127.0.0.1:10001",
-            "program": "${workspaceFolder}src/build/NXOS.elf",
+            "program": "${workspaceFolder}/src/build/NXOS.elf",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -22,7 +22,7 @@
             "miDebuggerPath": "${workspaceFolder}/tools/gcc/x86_64-elf-gcc/bin/x86_64-elf-gdb.exe",
         },
         {
-            "name": "NXOS-debug-riscv64-Qemu",
+            "name": "NXOS-debug-riscv64-qemu",
             "type": "cppdbg",
             "request": "launch",
             "miDebuggerServerAddress": "127.0.0.1:10001",
