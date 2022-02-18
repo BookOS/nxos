@@ -11,7 +11,7 @@
 
 #include <mm/heap_cache.h>
 #include <utils/math.h>
-#include <mm/page_heap.h>
+#include <mm/page_cache.h>
 #include <mm/buddy.h>
 #include <mm/page.h>
 #include <sched/mutex.h>
@@ -161,7 +161,7 @@ NX_PRIVATE void *DoHeapAlloc(NX_USize size)
     {
         if (size > MAX_MIDDLE_OBJECT_SIZE) /* alloc directly from span */
         {
-            return NX_PageHeapAlloc(NX_DIV_ROUND_UP(size, NX_PAGE_SIZE));
+            return NX_PageCacheAlloc(NX_DIV_ROUND_UP(size, NX_PAGE_SIZE));
         }
         else    /* alloc from middle cache */
         {
@@ -178,9 +178,9 @@ NX_PRIVATE void *DoHeapAlloc(NX_USize size)
         NX_USize objectCount;
         
         NX_ASSERT(NX_AtomicGet(&cache->spanFreeCount) >= 0);
-        if (NX_AtomicGet(&cache->spanFreeCount) == 0)    /* no span, need alloc from page heap */
+        if (NX_AtomicGet(&cache->spanFreeCount) == 0)    /* no span, need alloc from page cache */
         {
-            span = (NX_PageSpan *)NX_PageHeapAlloc(pageCount);
+            span = (NX_PageSpan *)NX_PageCacheAlloc(pageCount);
             if (span == NX_NULL)
             {
                 NX_LOG_E("no enough memory span!");
@@ -259,14 +259,14 @@ NX_PRIVATE NX_Error DoHeapFree(void *object)
     {
         if (size > MAX_MIDDLE_OBJECT_SIZE) /* free directly to span */
         {
-            return NX_PageHeapFree(span);
+            return NX_PageCacheFree(span);
         }
         else    /* free to middle cache */
         {
-            /* if len is too long, free to page heap */
+            /* if len is too long, free to page cache */
             if (NX_AtomicGet(&MiddleSizeCache.spanFreeCount) + 1 >= MAX_MIDDLE_OBJECT_THRESOLD) 
             {
-                return NX_PageHeapFree(span);
+                return NX_PageCacheFree(span);
             }
             else    /* free to span free list */
             {
@@ -295,10 +295,10 @@ NX_PRIVATE NX_Error DoHeapFree(void *object)
             NX_ListInit(&cache->objectFreeList);
             NX_AtomicSet(&cache->objectFreeCount, 0);
 
-            /* free span to page heap */
+            /* free span to page cache */
             if (NX_AtomicGet(&cache->spanFreeCount) + 1 >= MAX_SMALL_SPAN_THRESOLD)
             {
-                return NX_PageHeapFree(span);
+                return NX_PageCacheFree(span);
             }
             else    /* add span to span list */
             {

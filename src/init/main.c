@@ -18,7 +18,7 @@
 #include <sched/sched.h>
 #include <sched/smp.h>
 #include <mm/heap_cache.h>
-#include <mm/page_heap.h>
+#include <mm/page_cache.h>
 #include <io/irq.h>
 #include <mods/time/timer.h>
 
@@ -57,8 +57,8 @@ NX_PUBLIC int NX_Main(NX_UArch coreId)
         /* init irq */
         NX_IRQ_Init();
 
-        /* init page heap */
-        NX_PageHeapInit();
+        /* init page cache */
+        NX_PageCacheInit();
         
         /* init heap cache for NX_MemAlloc & NX_MemFree */
         NX_HeapCacheInit();
