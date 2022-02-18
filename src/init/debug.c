@@ -18,6 +18,7 @@ NX_PUBLIC void NX_DebugAssertionFailure(char *exp, char *file, char *baseFile, i
 {
     NX_LOG_E("\nAssert(%s) failed:\nfile: %s\nbase_file: %s\nln: %d", 
         exp, file, baseFile, line);
+    NX_IRQ_Disable();
     while (1);
 }
 #endif
