@@ -157,10 +157,10 @@ NX_PUBLIC void HAL_InterruptDispatch(void *stackFrame)
         NX_Process *process = cur->resource.process;
         if (process)
         {
+            NX_Addr faultAddr = CPU_ReadCR2();
             NX_LOG_E("mmu table:%p", process->vmspace.mmu.table);
             
-            void *phy = NX_MmuVir2Phy(&process->vmspace.mmu, CPU_ReadCR2());
-            NX_LOG_E("fault phy addr:%p", phy);
+            NX_LOG_E("fault vir addr:%p", faultAddr);
         }
         else
         {
