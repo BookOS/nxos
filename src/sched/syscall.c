@@ -13,6 +13,8 @@
 #include <sched/thread.h>
 #define NX_LOG_NAME "syscall"
 #include <utils/log.h>
+#include <sched/process.h>
+#include <xbook/debug.h>
 
 NX_PRIVATE int SYS_InvalidCall(void)
 {
@@ -27,11 +29,19 @@ NX_PRIVATE int SYS_DebugLog(const char *buf, int size)
     return 0;
 }
 
+NX_PRIVATE int SYS_ProcessExit(int exitCode)
+{
+    NX_ProcessExit(exitCode);
+    NX_PANIC("process exit syscall failed !");
+    return 0;
+}
+
 /* xbook env syscall table  */
 NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] = 
 {
     SYS_InvalidCall,    /* 0 */
-    SYS_DebugLog,       /* 1 */
+    SYS_ProcessExit,    /* 1 */
+    SYS_DebugLog,       /* 2 */
 };
 
 /* posix env syscall table */
