@@ -61,6 +61,14 @@ ifeq ($(strip $(ARCH)), i386)
 DEFINES		+=	-D__I386__
 endif
 
+RELEASE 	?=n
+
+# debug info
+ifeq ($(RELEASE),n)
+ASFLAGS		+=	-g
+CFLAGS		+=	-g
+endif
+
 ASFLAGS		+=	-ffunction-sections -fdata-sections -ffreestanding -std=gnu99 $(DEFINES)
 CFLAGS		+=	-ffunction-sections -fdata-sections -ffreestanding -std=gnu99 $(DEFINES)
 
