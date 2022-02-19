@@ -132,6 +132,12 @@ NX_PRIVATE void ClearSpan(void *span, NX_USize count)
 
 NX_PUBLIC void *NX_PageToSpan(void *page)
 {
+    NX_ASSERT(page != NX_NULL);
+    if (page < SpanBaseAddr)
+    {
+        return NX_NULL;
+    }
+    
     NX_USize dis = (NX_Addr)page - (NX_Addr)SpanBaseAddr;
     NX_USize idx = dis >> NX_PAGE_SHIFT;
 
@@ -141,6 +147,12 @@ NX_PUBLIC void *NX_PageToSpan(void *page)
 
 NX_PUBLIC NX_USize NX_SpanToCount(void *span)
 {
+    NX_ASSERT(span != NX_NULL);
+    if (span < SpanBaseAddr)
+    {
+        return 0;
+    }
+    
     NX_USize dis = (NX_Addr)span - (NX_Addr)SpanBaseAddr;
     NX_USize idx = dis >> NX_PAGE_SHIFT;
 
@@ -182,7 +194,6 @@ NX_PRIVATE void *__PageCacheAlloc(NX_USize count)
     }
     else /* cache list not empty, alloc from list */
     {
-        NX_LOG_W("page cache alloc from free list");
         if (isLargeSpan)
         {
             /* use best fit to alloc a span */
@@ -237,7 +248,18 @@ NX_PUBLIC void *NX_PageCacheAlloc(NX_USize count)
 NX_PRIVATE NX_Error __PageCacheFree(void *page)
 {
     void *span = NX_PageToSpan(page);
+    if (span == NX_NULL)
+    {
+        NX_LOG_E("page cache free invalid page %p", page);
+        return NX_EINVAL;
+    }
+
     NX_USize count = NX_SpanToCount(span);
+    if (!count)
+    {
+        return NX_EFAULT;
+    }
+
     NX_Atomic *freeCount = NX_NULL;
 
     if (!count)
@@ -276,7 +298,6 @@ NX_PRIVATE NX_Error __PageCacheFree(void *page)
     }
     else    /* add to list for cache */
     {
-        NX_LOG_W("page cache free to free list");
         NX_PageSpan *spanNode = (NX_PageSpan *)span;
         spanNode->pageCount = count;
         NX_ListAdd(&spanNode->list, listHead);
