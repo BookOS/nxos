@@ -30,13 +30,11 @@ NX_IMPORT void HAL_ProcessEnterUserMode(HAL_TrapFrame *frame);
 
 NX_PRIVATE NX_Error HAL_ProcessInitUserSpace(NX_Process *process, NX_Addr virStart, NX_USize size)
 {
-    // TODO: void *table = NX_MemAlloc(NX_PAGE_SIZE);
-    void *table = NX_PageAlloc(1);
+    void *table = NX_MemAlloc(NX_PAGE_SIZE);
     if (table == NX_NULL)
     {
         return NX_ENOMEM;
     }
-    table = NX_Phy2Virt(table);
     NX_MemZero(table, NX_PAGE_SIZE);
     NX_MemCopy(table, HAL_GetKernelPageTable(), NX_PAGE_SIZE);
     NX_MmuInit(&process->vmspace.mmu, table, virStart, size);

@@ -616,7 +616,6 @@ NX_Error NX_VmspaceExit(NX_Vmspace *space)
 
     /* free mmu table */
     NX_ASSERT(space->mmu.table != NX_NULL);
-    // TODO: NX_MemFree(space->mmu.table);
-    NX_PageFree(NX_Virt2Phy(space->mmu.table));
+    NX_MemFree(space->mmu.table);
     return NX_EOK;
 }

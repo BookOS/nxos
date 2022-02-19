@@ -91,14 +91,13 @@ NX_PUBLIC NX_Thread *NX_ThreadCreate(const char *name, NX_ThreadHandler handler,
     {
         return NX_NULL;
     }
-    // TODO: NX_U8 *stack = NX_MemAlloc(NX_THREAD_STACK_SIZE_DEFAULT);
-    NX_U8 *stack = NX_PageAlloc(2);
+    NX_U8 *stack = NX_MemAlloc(NX_THREAD_STACK_SIZE_DEFAULT);
     if (stack == NX_NULL)
     {
         NX_MemFree(thread);
         return NX_NULL;
     }
-    if (ThreadInit(thread, name, handler, arg, NX_Phy2Virt(stack), NX_THREAD_STACK_SIZE_DEFAULT) != NX_EOK)
+    if (ThreadInit(thread, name, handler, arg, stack, NX_THREAD_STACK_SIZE_DEFAULT) != NX_EOK)
     {
         NX_PageFree(stack);
         NX_MemFree(thread);
@@ -125,8 +124,7 @@ NX_PUBLIC NX_Error NX_ThreadDestroy(NX_Thread *thread)
         return err;
     }
 
-    // TODO: NX_MemFree(stackBase);
-    NX_PageFree(NX_Virt2Phy(stackBase));
+    NX_MemFree(stackBase);
     NX_MemFree(thread);
     return NX_EOK;
 }
