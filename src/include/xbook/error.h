@@ -17,20 +17,46 @@
 enum NX_Error
 {
     NX_EOK = 0, /* ok */
-    NX_ERROR,   /* error */
+    NX_ERROR,   /* normal error */
     NX_EPERM,   /* no perimisson */
     NX_EINVAL,  /* invalid arg */
     NX_ETIMEOUT,/* timeout */
     NX_EFAULT,  /* execute fault */
     NX_ENORES,  /* no resource */
     NX_EAGAIN,  /* try again later */
-    NX_EINTR,   /* interrupt */
-    NX_ENOMEM,  /* no memory */
+    NX_EINTR,   /* interrupted */
+    NX_ENOMEM,  /* no enough memory */
     NX_ENOFUNC, /* no function */
     NX_ENOSRCH, /* no search/found */
     NX_EIO,     /* mmio/portio */
     NX_ERROR_NR
 };
 typedef enum NX_Error NX_Error;
+
+NX_PRIVATE const char *__NX_ErrorString[] = 
+{
+    "ok",
+    "normal error",
+    "no perimisson",
+    "invalid arg",
+    "timeout",
+    "execute fault",
+    "no resource",
+    "try again later",
+    "interrupted",
+    "no enough memory",
+    "no function",
+    "no search/found",
+    "mmio/portio failed"
+};
+
+NX_INLINE const char *NX_ErrorToString(NX_Error err)
+{
+    if (err < NX_EOK || err >= NX_ERROR_NR)
+    {
+        return "unknown error";
+    }
+    return __NX_ErrorString[err];
+}
 
 #endif  /* __XBOOK_ERROR__ */
