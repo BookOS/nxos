@@ -41,6 +41,17 @@ NX_PRIVATE NX_Error HAL_ProcessInitUserSpace(NX_Process *process, NX_Addr virSta
     return NX_EOK;
 }
 
+NX_PRIVATE NX_Error HAL_ProcessFreePageTable(NX_Vmspace *vmspace)
+{
+    NX_ASSERT(vmspace);
+    if(vmspace->mmu.table == NX_NULL)
+    {
+        return NX_EFAULT;
+    }
+    NX_MemFree(vmspace->mmu.table);
+    return NX_EOK;
+}
+
 NX_PRIVATE NX_Error HAL_ProcessSwitchPageTable(void *pageTableVir)
 {
     NX_Thread *cur = NX_ThreadSelf();
@@ -124,4 +135,5 @@ NX_INTERFACE struct NX_ProcessOps NX_ProcessOpsInterface =
     .switchPageTable    = HAL_ProcessSwitchPageTable,
     .getKernelPageTable = HAL_ProcessGetKernelPageTable,
     .executeUser        = HAL_ProcessExecuteUser,
+    .freePageTable      = HAL_ProcessFreePageTable,
 };

@@ -43,6 +43,7 @@ struct NX_ProcessOps
     NX_Error (*switchPageTable)(void *pageTable);
     void *(*getKernelPageTable)(void);
     void (*executeUser)(const void *text, void *userStack, void *kernelStack, void *args);
+    NX_Error (*freePageTable)(NX_Vmspace *vmspace);
 };
 
 NX_INTERFACE NX_IMPORT struct NX_ProcessOps NX_ProcessOpsInterface; 
@@ -51,6 +52,7 @@ NX_INTERFACE NX_IMPORT struct NX_ProcessOps NX_ProcessOpsInterface;
 #define NX_ProcessSwitchPageTable       NX_ProcessOpsInterface.switchPageTable
 #define NX_ProcessGetKernelPageTable    NX_ProcessOpsInterface.getKernelPageTable
 #define NX_ProcessExecuteUser           NX_ProcessOpsInterface.executeUser
+#define NX_ProcessFreePageTable         NX_ProcessOpsInterface.freePageTable
 
 NX_PUBLIC NX_Process *NX_ProcessCreate(NX_U32 flags);
 NX_PUBLIC NX_Error NX_ProcessDestroy(NX_Process *process);

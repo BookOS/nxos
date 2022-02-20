@@ -13,6 +13,7 @@
 #include <mm/page.h>
 #include <mm/alloc.h>
 #include <mm/mmu.h>
+#include <sched/process.h>
 #include <xbook/debug.h>
 
 #define NX_LOG_NAME "vmspace"
@@ -614,8 +615,7 @@ NX_Error NX_VmspaceExit(NX_Vmspace *space)
     }
     NX_SpinUnlockIRQ(&space->spinLock, level);
 
-    /* free mmu table */
-    NX_ASSERT(space->mmu.table != NX_NULL);
-    NX_MemFree(space->mmu.table);
+    /* free page table */
+    NX_ASSERT(NX_ProcessFreePageTable(space) == NX_EOK);
     return NX_EOK;
 }
