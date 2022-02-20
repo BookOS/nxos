@@ -20,14 +20,15 @@
 
 ## 平台支持
 
-| ARCH    | MACH       |STATUS      |
+| ARCH    | PLATFORM   |STATUS      |
 | ------- | ---------- | ---------- |
-| I386    | PC32       | 开发中 |
-| Amd64   | PC64       | 计划中 |
-| Riscv64 | Qemu       | 开发中 |
-| Riscv64 | K210       | 计划中 |
-| Arm64   | Qemu       | 计划中 |
-| Arm32   | Qemu       | 计划中 |
+| x86     | i386       | 开发中 |
+| x86_64  | amd64      | 计划中 |
+| riscv64 | qemu       | 开发中 |
+| riscv64 | k210       | 开发中 |
+| aarch64 | qemu       | 计划中 |
+| arm32   | qemu       | 计划中 |
+| LongArch| 3a5000     | 计划中 |
 
 ## 文档中心
 
