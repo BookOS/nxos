@@ -17,12 +17,16 @@
 #include <regs.h>
 
 #define NX_LOG_NAME "Trap"
+#define NX_LOG_LEVEL NX_LOG_INFO
 #include <utils/log.h>
 #include <xbook/debug.h>
 
 #include <sched/thread.h>
 #include <sched/smp.h>
 #include <utils/memory.h>
+
+ /* (syscall) Environment call from U-mode */
+#define RISCV_SYSCALL_EXCEPTION 8
 
 /* trap name for riscv */
 NX_PRIVATE const char *InterruptName[] =
@@ -170,6 +174,8 @@ NX_PUBLIC void CPU_InitTrap(NX_UArch coreId)
     SetCSR(sie, SIE_SSIE);
 }
 
+NX_IMPORT void HAL_ProcessSyscallDispatch(HAL_TrapFrame *frame);
+
 NX_PUBLIC void TrapDispatch(HAL_TrapFrame *frame)
 {
     NX_U64 cause = ReadCSR(scause);
@@ -217,8 +223,17 @@ NX_PUBLIC void TrapDispatch(HAL_TrapFrame *frame)
         }
         NX_LOG_E("Unhandled Interrupt %ld:%s", id, msg);
     }
-    else
+    else /* exceptions */
     {
+        if (id == RISCV_SYSCALL_EXCEPTION)
+        {
+            /* NOTICE: need enable interrupt while dispatch syscall */
+            NX_IRQ_Enable();
+            HAL_ProcessSyscallDispatch(frame);
+            NX_IRQ_Disable();
+            return;
+        }
+
         if(id < sizeof(ExceptionName) / sizeof(const char *))
         {
             msg = ExceptionName[id];
@@ -248,7 +263,7 @@ NX_PUBLIC NX_U8 *TrapSwitchStack(HAL_TrapFrame *frame)
     }
     else    /* trap from user */
     {
-        NX_LOG_W("from user:%p, sstatus:%p", frame, sstatus);
+        NX_LOG_D("from user:%p, sstatus:%p", frame, sstatus);
         NX_Thread *thread = NX_ThreadSelf();
         sp = (NX_U8 *)(thread->stackBase + thread->stackSize);
     }

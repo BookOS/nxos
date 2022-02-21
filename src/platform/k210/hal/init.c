@@ -50,11 +50,6 @@ NX_INTERFACE NX_Error HAL_PlatformStage2(void)
 {
     NX_LOG_I("stage2!");
 
-    /* map kernel and enable mmu */
-    MMU_EarlyMap();
-    
-    NX_LOG_I("stage2 done!");
-    
     HAL_DirectUartStage2();
 
     return NX_EOK;
