@@ -35,8 +35,8 @@
 🏠 [文档中心](https://gitee.com/BookOS/nxos-documentation)  
 
 ## 联系我们  
-🌍 [官网](www.book-os.org)  
-📫 [邮箱](book-os@163.com)  
+🌍 [官网](https://www.book-os.org)  
+📫 [邮箱](mailto:book-os@163.com)  
 
 ## 致谢
 
