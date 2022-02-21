@@ -39,11 +39,6 @@ typedef NX_U32 MMU_PTE; /* page table entry */
 #define PTE2ATTR(pte) ((pte) & NX_PAGE_MASK)
 #define PADDR2PTE(pa) (((NX_Addr)pa) & NX_PAGE_ADDR_MASK)
 
-#define PTE_CNT_PER_PAGE 1024
-
-/* map kernel early need some page tables */
-#define EARLY_PAGE_TABLE_ADDR     0X3F3000
-
 #define MAKE_PTE(paddr, attr) (NX_UArch) (((NX_UArch)(paddr) & NX_PAGE_ADDR_MASK) | ((attr) & NX_PAGE_MASK))
 
 #define PTE_USED(pte) ((pte) & PTE_P)
@@ -333,45 +328,6 @@ NX_PRIVATE void *HAL_Vir2Phy(NX_Mmu *mmu, NX_Addr virAddr)
     return (void *)(pagePhy + pageOffset);
 }
 
-NX_PRIVATE void HAL_EarlyMap(NX_Mmu *mmu, NX_Addr virStart, NX_USize size)
-{
-    virStart = virStart & NX_PAGE_ADDR_MASK;
-    NX_Addr phyStart = virStart;
-    NX_Addr virEnd = virStart + NX_PAGE_ALIGNUP(size);
-
-    NX_LOG_I("OS map early on [%p~%p]", virStart, virEnd);
-    
-    MMU_PDE *pdt = (MMU_PDE *)mmu->table;
-    
-    NX_USize pdeCnt = (virEnd - virStart) / (PTE_CNT_PER_PAGE * NX_PAGE_SIZE);
-    NX_USize pteCnt = ((virEnd - virStart) / NX_PAGE_SIZE) % PTE_CNT_PER_PAGE;
-    NX_Addr *pte = (NX_UArch *) EARLY_PAGE_TABLE_ADDR;
-    NX_U32 pdeIdx = GET_PDE_OFF(virStart);
-    int i, j;
-    for (i = 0; i < pdeCnt; i++)
-    {
-        /* fill pde */
-        pdt[pdeIdx + i] = MAKE_PTE(pte, ARCH_PAGE_ATTR_KERNEL);
-        for (j = 0; j < PTE_CNT_PER_PAGE; j++)
-        {
-            /* fill each pte */
-            pte[j] = MAKE_PTE(phyStart, ARCH_PAGE_ATTR_KERNEL);
-            phyStart += NX_PAGE_SIZE;
-        }
-        pte += PTE_CNT_PER_PAGE;
-    }
-    if (pteCnt > 0)
-    {
-        /* fill left pte */
-        pdt[pdeIdx + i] = MAKE_PTE(pte, ARCH_PAGE_ATTR_KERNEL);
-        for (j = 0; j < pteCnt; j++)
-        {
-            pte[j] = MAKE_PTE(phyStart, ARCH_PAGE_ATTR_KERNEL);
-            phyStart += NX_PAGE_SIZE;
-        }
-    }
-}
-
 NX_PRIVATE void HAL_SetPageTable(NX_Addr addr)
 {
     /* set new pgdir will flush tlb */
@@ -393,7 +349,6 @@ NX_INTERFACE struct NX_MmuOps NX_MmuOpsInterface =
     .setPageTable   = HAL_SetPageTable,
     .getPageTable   = HAL_GetPageTable,
     .enable         = HAL_Enable,
-    .earlyMap       = HAL_EarlyMap,
     .mapPage        = HAL_MapPage,
     .mapPageWithPhy = HAL_MapPageWithPhy,
     .unmapPage      = HAL_UnmapPage,

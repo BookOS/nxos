@@ -39,7 +39,7 @@ NX_Error NX_VmspaceInit(NX_Vmspace *space,
         return NX_EINVAL;
     }
     NX_ListInit(&space->spaceNodeList);
-    NX_MmuInit(&space->mmu, NX_NULL, 0, 0);
+    NX_MmuInit(&space->mmu, NX_NULL, 0, 0, 0);
     NX_SpinInit(&space->spinLock);
     
     space->spaceBase = spaceBase;

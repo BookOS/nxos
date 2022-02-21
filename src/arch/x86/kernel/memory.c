@@ -11,6 +11,7 @@
 
 #include <mm/mmu.h>
 #include <mm/page.h>
+#include <arch/mmu.h>
 #include <page_zone.h>
 #include <platform.h>
 
@@ -28,11 +29,17 @@ NX_PUBLIC NX_Mmu KernelMMU;
 
 NX_PRIVATE NX_U32 KernelTable[NX_PAGE_SIZE / sizeof(NX_U32)] NX_CALIGN(NX_PAGE_SIZE);
 
+NX_PRIVATE void HAL_EarlyMap(NX_Mmu *mmu, NX_Addr virStart, NX_USize size)
+{
+    NX_LOG_I("OS map early on [%p~%p]", virStart, virStart + size);
+    NX_MmuMapPageWithPhy(&KernelMMU, virStart, virStart, size, ARCH_PAGE_ATTR_KERNEL);
+}
+
 /**
  * Init physic memory and map kernel on virtual memory.
  */
 NX_PUBLIC void HAL_PageZoneInit(void)
-{    
+{
     NX_USize memSize = *(NX_USize *)GRUB2_READ_MEMORY_BYTES_ADDR;
     
     NX_LOG_I("Memory NX_USize: %x Bytes %d MB", memSize, memSize / NX_MB);
@@ -68,11 +75,9 @@ NX_PUBLIC void HAL_PageZoneInit(void)
     NX_PageInitZone(NX_PAGE_ZONE_NORMAL, (void *)MEM_NORMAL_BASE, normalSize);
     NX_PageInitZone(NX_PAGE_ZONE_USER, (void *)userBase, userSize);
 
-    KernelMMU.earlyEnd = userBase;
-    
-    NX_MmuInit(&KernelMMU, KernelTable, 0, MEM_KERNEL_TOP);
+    NX_MmuInit(&KernelMMU, KernelTable, 0, MEM_KERNEL_TOP, userBase);
 
-    NX_MmuEarlyMap(&KernelMMU, KernelMMU.virStart, KernelMMU.earlyEnd);
+    HAL_EarlyMap(&KernelMMU, KernelMMU.virStart, KernelMMU.earlyEnd - KernelMMU.virStart);
 
     NX_MmuSetPageTable((NX_UArch)KernelMMU.table);
     NX_MmuEnable();

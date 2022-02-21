@@ -37,7 +37,7 @@ NX_PRIVATE NX_Error HAL_ProcessInitUserSpace(NX_Process *process, NX_Addr virSta
     }
     NX_MemZero(table, NX_PAGE_SIZE);
     NX_MemCopy(table, HAL_GetKernelPageTable(), NX_PAGE_SIZE);
-    NX_MmuInit(&process->vmspace.mmu, table, virStart, size);
+    NX_MmuInit(&process->vmspace.mmu, table, virStart, size, 0);
     return NX_EOK;
 }
 
