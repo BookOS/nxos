@@ -11,7 +11,7 @@
 
 #include <utils/memory.h>
 
-NX_PUBLIC void *NX_MemSet(void *dst, NX_U8 value, NX_Size sz)
+void *NX_MemSet(void *dst, NX_U8 value, NX_Size sz)
 {
     NX_U8 *dstPtr = (NX_U8 *)dst;
 	while (sz > 0)
@@ -22,7 +22,7 @@ NX_PUBLIC void *NX_MemSet(void *dst, NX_U8 value, NX_Size sz)
 	return dst;
 }
 
-NX_PUBLIC void NX_MemCopy(void *dst, void *src, NX_Size sz)
+void NX_MemCopy(void *dst, void *src, NX_Size sz)
 {
     NX_U8 *dstPtr = (NX_U8 *)dst;
     NX_U8 *srcPtr = (NX_U8 *)src;
@@ -32,12 +32,12 @@ NX_PUBLIC void NX_MemCopy(void *dst, void *src, NX_Size sz)
     }
 }
 
-NX_PUBLIC void *NX_MemZero(void *dst, NX_Size sz)
+void *NX_MemZero(void *dst, NX_Size sz)
 {
     return NX_MemSet(dst, 0, sz);
 }
 
-NX_PUBLIC int NX_CompareN(const void *s1, const void *s2, NX_Size nBytes)
+int NX_CompareN(const void *s1, const void *s2, NX_Size nBytes)
 {
 	if ((s1 == 0) || (s2 == 0)) 
     {

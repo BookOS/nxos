@@ -35,7 +35,7 @@
 #define DA_GATE_DPL3 3
 
 #ifndef __ASSEMBLY__
-NX_PUBLIC void CPU_InitGate(void);
+void CPU_InitGate(void);
 #endif
 
 #endif  /* __I386_GATE__ */

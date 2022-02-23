@@ -14,7 +14,7 @@
 #include <utils/memory.h>
 #include <xbook/debug.h>
 
-NX_PUBLIC void NX_MmuInit(NX_Mmu *mmu, void *pageTable, NX_Addr virStart, NX_Size size, NX_Addr earlyEnd)
+void NX_MmuInit(NX_Mmu *mmu, void *pageTable, NX_Addr virStart, NX_Size size, NX_Addr earlyEnd)
 {
     mmu->table = pageTable;
     mmu->virStart = virStart & NX_PAGE_ADDR_MASK;

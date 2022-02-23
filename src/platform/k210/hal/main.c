@@ -20,7 +20,7 @@ NX_INTERFACE void HAL_PlatformMain(void)
     NX_LOG_I("QEMU platform main running...\n");
 }
 
-NX_PUBLIC void HAL_DirectUartGetcHandler(char data)
+void HAL_DirectUartGetcHandler(char data)
 {
     switch (data)
     {

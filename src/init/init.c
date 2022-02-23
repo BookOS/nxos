@@ -20,7 +20,7 @@ NX_IMPORT NX_InitCallHandler __NX_InitCallEnd[];
 NX_IMPORT NX_InitCallHandler __NX_ExitCallStart[];
 NX_IMPORT NX_InitCallHandler __NX_ExitCallEnd[];
 
-NX_PUBLIC void NX_CallInvoke(NX_InitCallHandler start[], NX_InitCallHandler end[])
+void NX_CallInvoke(NX_InitCallHandler start[], NX_InitCallHandler end[])
 {
 	NX_InitCallHandler *func =  &(*start);
 	for (;func < &(*end); func++)
@@ -29,12 +29,12 @@ NX_PUBLIC void NX_CallInvoke(NX_InitCallHandler start[], NX_InitCallHandler end[
     }
 }
 
-NX_PUBLIC void NX_InitCallInvoke(void)
+void NX_InitCallInvoke(void)
 {
     NX_CallInvoke(__NX_InitCallStart, __NX_InitCallEnd);
 }
 
-NX_PUBLIC void NX_ExitCallInvoke(void)
+void NX_ExitCallInvoke(void)
 {
     NX_CallInvoke(__NX_ExitCallStart, __NX_ExitCallEnd);
 }
@@ -50,7 +50,7 @@ NX_PRIVATE void CallsEntry(void *arg)
     HAL_PlatformMain();
 }
 
-NX_PUBLIC void NX_CallsInit(void)
+void NX_CallsInit(void)
 {
     NX_Thread *thread = NX_ThreadCreate("Calls", CallsEntry, NX_NULL);
     NX_ASSERT(thread != NX_NULL);

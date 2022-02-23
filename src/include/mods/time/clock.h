@@ -31,11 +31,11 @@
 typedef NX_UArch NX_TimeVal;
 typedef NX_UArch NX_ClockTick;
 
-NX_PUBLIC NX_ClockTick NX_ClockTickGet(void);
-NX_PUBLIC void NX_ClockTickSet(NX_ClockTick tick);
-NX_PUBLIC void NX_ClockTickGo(void);
+NX_ClockTick NX_ClockTickGet(void);
+void NX_ClockTickSet(NX_ClockTick tick);
+void NX_ClockTickGo(void);
 
-NX_PUBLIC NX_Error NX_ClockTickDelay(NX_ClockTick ticks);
+NX_Error NX_ClockTickDelay(NX_ClockTick ticks);
 
 NX_INLINE NX_TimeVal NX_ClockTickToMillisecond(NX_ClockTick tick)
 {
@@ -57,6 +57,6 @@ NX_INLINE NX_Error NX_ClockTickDelayMillisecond(NX_TimeVal milliseconds)
     return NX_ClockTickDelay(NX_MillisecondToClockTick(milliseconds));
 }
 
-NX_PUBLIC NX_Error NX_ClockInit(void);
+NX_Error NX_ClockInit(void);
 
 #endif  /* __MODS_TIME_CLOCK__ */

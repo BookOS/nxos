@@ -136,7 +136,7 @@ __TestCaseContinue:
 
 }
 
-NX_PUBLIC void NX_UTestAssert(int value, const char *file, int line, const char *func, const char *msg, NX_Bool dieAction)
+void NX_UTestAssert(int value, const char *file, int line, const char *func, const char *msg, NX_Bool dieAction)
 {
     if (value)
     {
@@ -157,7 +157,7 @@ NX_PUBLIC void NX_UTestAssert(int value, const char *file, int line, const char 
     }
 }
 
-NX_PUBLIC void NX_UTestAssertString(const char *a, const char *b, NX_Bool equal, 
+void NX_UTestAssertString(const char *a, const char *b, NX_Bool equal, 
     const char *file, int line, const char *func, const char *msg, NX_Bool dieAction)
 {
     if (a == NX_NULL || b == NX_NULL)
@@ -189,7 +189,7 @@ NX_PUBLIC void NX_UTestAssertString(const char *a, const char *b, NX_Bool equal,
     }
 }
 
-NX_PUBLIC void NX_UTestAssertBuf(const char *a, const char *b, NX_Size sz, NX_Bool equal,
+void NX_UTestAssertBuf(const char *a, const char *b, NX_Size sz, NX_Bool equal,
     const char *file, int line, const char *func, const char *msg, NX_Bool dieAction)
 {
     if (a == NX_NULL || b == NX_NULL)

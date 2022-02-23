@@ -16,7 +16,7 @@
 
 NX_PRIVATE struct NX_ThreadID ThreadIdObject;
 
-NX_PUBLIC int NX_ThreadIdAlloc(void)
+int NX_ThreadIdAlloc(void)
 {
     NX_UArch level;
     NX_SpinLockIRQ(&ThreadIdObject.idLock, &level);
@@ -43,7 +43,7 @@ NX_PUBLIC int NX_ThreadIdAlloc(void)
     return id;
 }
 
-NX_PUBLIC void NX_ThreadIdFree(int id)
+void NX_ThreadIdFree(int id)
 {
     if (id < 0 || id >= NX_MAX_THREAD_NR)
     {
@@ -59,7 +59,7 @@ NX_PUBLIC void NX_ThreadIdFree(int id)
     NX_SpinUnlockIRQ(&ThreadIdObject.idLock, level);
 }
 
-NX_PUBLIC void NX_ThreadsInitID(void)
+void NX_ThreadsInitID(void)
 {
     ThreadIdObject.maps = NX_MemAlloc(NX_MAX_THREAD_NR / 8);
     NX_ASSERT(ThreadIdObject.maps != NX_NULL);

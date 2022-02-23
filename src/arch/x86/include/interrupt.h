@@ -69,8 +69,8 @@ struct HAL_TrapFrame
 } NX_PACKED;
 typedef struct HAL_TrapFrame HAL_TrapFrame;
 
-NX_PUBLIC void CPU_InitInterrupt(void);
+void CPU_InitInterrupt(void);
 
-NX_PUBLIC void CPU_TrapFrameDump(HAL_TrapFrame *frame);
+void CPU_TrapFrameDump(HAL_TrapFrame *frame);
 
 #endif  /* __PLATFORM_INTERRUPT__ */

@@ -25,7 +25,7 @@
 
 #define GRUB2_READ_MEMORY_BYTES_ADDR (0x000001000)
 
-NX_PUBLIC NX_Mmu KernelMMU;
+NX_Mmu KernelMMU;
 
 NX_PRIVATE NX_U32 KernelTable[NX_PAGE_SIZE / sizeof(NX_U32)] NX_CALIGN(NX_PAGE_SIZE);
 
@@ -38,7 +38,7 @@ NX_PRIVATE void HAL_EarlyMap(NX_Mmu *mmu, NX_Addr virStart, NX_Size size)
 /**
  * Init physic memory and map kernel on virtual memory.
  */
-NX_PUBLIC void HAL_PageZoneInit(void)
+void HAL_PageZoneInit(void)
 {
     NX_Size memSize = *(NX_Size *)GRUB2_READ_MEMORY_BYTES_ADDR;
     
@@ -85,7 +85,7 @@ NX_PUBLIC void HAL_PageZoneInit(void)
     NX_LOG_I("MMU enabled");
 }
 
-NX_PUBLIC void *HAL_GetKernelPageTable(void)
+void *HAL_GetKernelPageTable(void)
 {
     return KernelMMU.table;
 }
@@ -93,7 +93,7 @@ NX_PUBLIC void *HAL_GetKernelPageTable(void)
 NX_IMPORT NX_Addr __NX_BssStart;
 NX_IMPORT NX_Addr __NX_BssEnd;
 
-NX_PUBLIC void HAL_ClearBSS(void)
+void HAL_ClearBSS(void)
 {
     NX_MemZero(&__NX_BssStart, &__NX_BssEnd - &__NX_BssStart);
 }

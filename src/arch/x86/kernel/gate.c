@@ -23,58 +23,58 @@ struct CPU_Gate
 
 typedef void (*TrapHandler)(void);
 
-NX_PUBLIC void CPU_TrapEntry0x00(void);
-NX_PUBLIC void CPU_TrapEntry0x01(void);
-NX_PUBLIC void CPU_TrapEntry0x02(void);
-NX_PUBLIC void CPU_TrapEntry0x03(void);
-NX_PUBLIC void CPU_TrapEntry0x04(void);
-NX_PUBLIC void CPU_TrapEntry0x05(void);
-NX_PUBLIC void CPU_TrapEntry0x06(void);
-NX_PUBLIC void CPU_TrapEntry0x07(void);
-NX_PUBLIC void CPU_TrapEntry0x08(void);
-NX_PUBLIC void CPU_TrapEntry0x09(void);
-NX_PUBLIC void CPU_TrapEntry0x0a(void);
-NX_PUBLIC void CPU_TrapEntry0x0b(void);
-NX_PUBLIC void CPU_TrapEntry0x0c(void);
-NX_PUBLIC void CPU_TrapEntry0x0d(void);
-NX_PUBLIC void CPU_TrapEntry0x0e(void);
-NX_PUBLIC void CPU_TrapEntry0x0f(void);
-NX_PUBLIC void CPU_TrapEntry0x10(void);
-NX_PUBLIC void CPU_TrapEntry0x11(void);
-NX_PUBLIC void CPU_TrapEntry0x12(void);
-NX_PUBLIC void CPU_TrapEntry0x13(void);
-NX_PUBLIC void CPU_TrapEntry0x14(void);
-NX_PUBLIC void CPU_TrapEntry0x15(void);
-NX_PUBLIC void CPU_TrapEntry0x16(void);
-NX_PUBLIC void CPU_TrapEntry0x17(void);
-NX_PUBLIC void CPU_TrapEntry0x18(void);
-NX_PUBLIC void CPU_TrapEntry0x19(void);
-NX_PUBLIC void CPU_TrapEntry0x1a(void);
-NX_PUBLIC void CPU_TrapEntry0x1b(void);
-NX_PUBLIC void CPU_TrapEntry0x1c(void);
-NX_PUBLIC void CPU_TrapEntry0x1d(void);
-NX_PUBLIC void CPU_TrapEntry0x1e(void);
-NX_PUBLIC void CPU_TrapEntry0x1f(void);
+void CPU_TrapEntry0x00(void);
+void CPU_TrapEntry0x01(void);
+void CPU_TrapEntry0x02(void);
+void CPU_TrapEntry0x03(void);
+void CPU_TrapEntry0x04(void);
+void CPU_TrapEntry0x05(void);
+void CPU_TrapEntry0x06(void);
+void CPU_TrapEntry0x07(void);
+void CPU_TrapEntry0x08(void);
+void CPU_TrapEntry0x09(void);
+void CPU_TrapEntry0x0a(void);
+void CPU_TrapEntry0x0b(void);
+void CPU_TrapEntry0x0c(void);
+void CPU_TrapEntry0x0d(void);
+void CPU_TrapEntry0x0e(void);
+void CPU_TrapEntry0x0f(void);
+void CPU_TrapEntry0x10(void);
+void CPU_TrapEntry0x11(void);
+void CPU_TrapEntry0x12(void);
+void CPU_TrapEntry0x13(void);
+void CPU_TrapEntry0x14(void);
+void CPU_TrapEntry0x15(void);
+void CPU_TrapEntry0x16(void);
+void CPU_TrapEntry0x17(void);
+void CPU_TrapEntry0x18(void);
+void CPU_TrapEntry0x19(void);
+void CPU_TrapEntry0x1a(void);
+void CPU_TrapEntry0x1b(void);
+void CPU_TrapEntry0x1c(void);
+void CPU_TrapEntry0x1d(void);
+void CPU_TrapEntry0x1e(void);
+void CPU_TrapEntry0x1f(void);
 
-NX_PUBLIC void CPU_TrapEntry0x20(void);
-NX_PUBLIC void CPU_TrapEntry0x21(void);
-NX_PUBLIC void CPU_TrapEntry0x22(void);
-NX_PUBLIC void CPU_TrapEntry0x23(void);
-NX_PUBLIC void CPU_TrapEntry0x24(void);
-NX_PUBLIC void CPU_TrapEntry0x25(void);
-NX_PUBLIC void CPU_TrapEntry0x26(void);
-NX_PUBLIC void CPU_TrapEntry0x27(void);
-NX_PUBLIC void CPU_TrapEntry0x28(void);
-NX_PUBLIC void CPU_TrapEntry0x29(void);
-NX_PUBLIC void CPU_TrapEntry0x2a(void);
-NX_PUBLIC void CPU_TrapEntry0x2b(void);
-NX_PUBLIC void CPU_TrapEntry0x2c(void);
-NX_PUBLIC void CPU_TrapEntry0x2d(void);
-NX_PUBLIC void CPU_TrapEntry0x2e(void);
-NX_PUBLIC void CPU_TrapEntry0x2f(void);
+void CPU_TrapEntry0x20(void);
+void CPU_TrapEntry0x21(void);
+void CPU_TrapEntry0x22(void);
+void CPU_TrapEntry0x23(void);
+void CPU_TrapEntry0x24(void);
+void CPU_TrapEntry0x25(void);
+void CPU_TrapEntry0x26(void);
+void CPU_TrapEntry0x27(void);
+void CPU_TrapEntry0x28(void);
+void CPU_TrapEntry0x29(void);
+void CPU_TrapEntry0x2a(void);
+void CPU_TrapEntry0x2b(void);
+void CPU_TrapEntry0x2c(void);
+void CPU_TrapEntry0x2d(void);
+void CPU_TrapEntry0x2e(void);
+void CPU_TrapEntry0x2f(void);
 
-NX_PUBLIC void CPU_SyscallEntry(void);
-NX_PUBLIC void CPU_LoadIDT(NX_UArch NX_Size, NX_UArch idtr);    
+void CPU_SyscallEntry(void);
+void CPU_LoadIDT(NX_UArch NX_Size, NX_UArch idtr);    
 
 NX_PRIVATE void SetGate(struct CPU_Gate *gate, TrapHandler handler,
                      NX_U32 selector, NX_U32 attributes, NX_U8 privilege)
@@ -87,7 +87,7 @@ NX_PRIVATE void SetGate(struct CPU_Gate *gate, TrapHandler handler,
     gate->offsetHigh = (offset >> 16) & 0xffff;
 }
 
-NX_PUBLIC void CPU_InitGate(void)
+void CPU_InitGate(void)
 {
     struct CPU_Gate *idt = (struct CPU_Gate *) (IDT_VADDR);
 

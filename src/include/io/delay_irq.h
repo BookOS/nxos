@@ -43,16 +43,16 @@ struct NX_IRQ_DelayWork
 };
 typedef struct NX_IRQ_DelayWork NX_IRQ_DelayWork;
 
-NX_PUBLIC void NX_IRQ_DelayQueueInit(void);
+void NX_IRQ_DelayQueueInit(void);
 
-NX_PUBLIC NX_Error NX_IRQ_DelayQueueEnter(NX_IRQ_DelayQueue queue, NX_IRQ_DelayWork *work);
-NX_PUBLIC NX_Error NX_IRQ_DelayQueueLeave(NX_IRQ_DelayQueue queue, NX_IRQ_DelayWork *work);
+NX_Error NX_IRQ_DelayQueueEnter(NX_IRQ_DelayQueue queue, NX_IRQ_DelayWork *work);
+NX_Error NX_IRQ_DelayQueueLeave(NX_IRQ_DelayQueue queue, NX_IRQ_DelayWork *work);
 
-NX_PUBLIC NX_IRQ_DelayWork *NX_IRQ_DelayWorkCreate(NX_IRQ_WorkHandler handler, void *arg, NX_U32 flags);
-NX_PUBLIC NX_Error NX_IRQ_DelayWorkDestroy(NX_IRQ_DelayWork *work);
-NX_PUBLIC NX_Error NX_IRQ_DelayWorkInit(NX_IRQ_DelayWork *work, NX_IRQ_WorkHandler handler, void *arg, NX_U32 flags);
+NX_IRQ_DelayWork *NX_IRQ_DelayWorkCreate(NX_IRQ_WorkHandler handler, void *arg, NX_U32 flags);
+NX_Error NX_IRQ_DelayWorkDestroy(NX_IRQ_DelayWork *work);
+NX_Error NX_IRQ_DelayWorkInit(NX_IRQ_DelayWork *work, NX_IRQ_WorkHandler handler, void *arg, NX_U32 flags);
 
-NX_PUBLIC NX_Error NX_IRQ_DelayWorkHandle(NX_IRQ_DelayWork *work);
+NX_Error NX_IRQ_DelayWorkHandle(NX_IRQ_DelayWork *work);
 
 NX_INTERFACE void NX_IRQ_DelayQueueCheck(void);
 

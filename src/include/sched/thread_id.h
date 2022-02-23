@@ -28,8 +28,8 @@ struct NX_ThreadID
     NX_Spin idLock;
 };
 
-NX_PUBLIC int NX_ThreadIdAlloc(void);
-NX_PUBLIC void NX_ThreadIdFree(int id);
-NX_PUBLIC void NX_ThreadsInitID(void);
+int NX_ThreadIdAlloc(void);
+void NX_ThreadIdFree(int id);
+void NX_ThreadsInitID(void);
 
 #endif /* __SCHED_THREAD_ID__ */

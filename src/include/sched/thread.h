@@ -100,35 +100,35 @@ typedef struct NX_ThreadManager NX_ThreadManager;
 
 #define NX_CurrentThread NX_ThreadSelf()
 
-NX_PUBLIC NX_Thread *NX_ThreadCreate(const char *name, NX_ThreadHandler handler, void *arg);
-NX_PUBLIC NX_Error NX_ThreadDestroy(NX_Thread *thread);
+NX_Thread *NX_ThreadCreate(const char *name, NX_ThreadHandler handler, void *arg);
+NX_Error NX_ThreadDestroy(NX_Thread *thread);
 
-NX_PUBLIC NX_Error NX_ThreadTerminate(NX_Thread *thread);
-NX_PUBLIC void NX_ThreadExit(void);
-NX_PUBLIC NX_Thread *NX_ThreadSelf(void);
-NX_PUBLIC NX_Thread *NX_ThreadFindById(NX_U32 tid);
+NX_Error NX_ThreadTerminate(NX_Thread *thread);
+void NX_ThreadExit(void);
+NX_Thread *NX_ThreadSelf(void);
+NX_Thread *NX_ThreadFindById(NX_U32 tid);
 
-NX_PUBLIC NX_Error NX_ThreadRun(NX_Thread *thread);
-NX_PUBLIC void NX_ThreadYield(void);
-NX_PUBLIC NX_Error NX_ThreadSetAffinity(NX_Thread *thread, NX_UArch coreId);
+NX_Error NX_ThreadRun(NX_Thread *thread);
+void NX_ThreadYield(void);
+NX_Error NX_ThreadSetAffinity(NX_Thread *thread, NX_UArch coreId);
 
-NX_PUBLIC NX_Error NX_ThreadSleep(NX_UArch microseconds);
-NX_PUBLIC NX_Error NX_ThreadWakeup(NX_Thread *thread);
+NX_Error NX_ThreadSleep(NX_UArch microseconds);
+NX_Error NX_ThreadWakeup(NX_Thread *thread);
 
-NX_PUBLIC void NX_ThreadsInit(void);
+void NX_ThreadsInit(void);
 
 /* thread sched */
-NX_PUBLIC void NX_SchedToFirstThread(void);
+void NX_SchedToFirstThread(void);
 
-NX_PUBLIC void NX_ThreadEnququeExitList(NX_Thread *thread);
-NX_PUBLIC NX_Thread *NX_ThreadDeququeExitList(void);
+void NX_ThreadEnququeExitList(NX_Thread *thread);
+NX_Thread *NX_ThreadDeququeExitList(void);
 
-NX_PUBLIC void NX_ThreadEnqueuePendingList(NX_Thread *thread);
-NX_PUBLIC NX_Thread *NX_ThreadDequeuePendingList(void);
+void NX_ThreadEnqueuePendingList(NX_Thread *thread);
+NX_Thread *NX_ThreadDequeuePendingList(void);
 
-NX_PUBLIC void NX_ThreadReadyRunLocked(NX_Thread *thread, int flags);
-NX_PUBLIC void NX_ThreadReadyRunUnlocked(NX_Thread *thread, int flags);
+void NX_ThreadReadyRunLocked(NX_Thread *thread, int flags);
+void NX_ThreadReadyRunUnlocked(NX_Thread *thread, int flags);
 
-NX_PUBLIC void NX_ThreadExitProcess(NX_Thread *thread, NX_Process *process);
+void NX_ThreadExitProcess(NX_Thread *thread, NX_Process *process);
 
 #endif /* __SCHED_THREAD__ */

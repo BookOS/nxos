@@ -31,7 +31,7 @@ NX_PRIVATE NX_Error PLIC_SetPriority(NX_IRQ_Number irqno, NX_U32 priority)
     return NX_EOK;
 }
 
-NX_PUBLIC NX_Error PLIC_EnableIRQ(NX_U32 hart, NX_IRQ_Number irqno)
+NX_Error PLIC_EnableIRQ(NX_U32 hart, NX_IRQ_Number irqno)
 {
     if (hart >= NX_MULTI_CORES_NR || irqno <= 0 || irqno >= NX_NR_IRQS)
     {
@@ -50,7 +50,7 @@ NX_PUBLIC NX_Error PLIC_EnableIRQ(NX_U32 hart, NX_IRQ_Number irqno)
     return NX_EOK;
 }
 
-NX_PUBLIC NX_Error PLIC_DisableIRQ(NX_U32 hart, NX_IRQ_Number irqno)
+NX_Error PLIC_DisableIRQ(NX_U32 hart, NX_IRQ_Number irqno)
 {
     if (hart >= NX_MULTI_CORES_NR || irqno <= 0 || irqno >= NX_NR_IRQS)
     {
@@ -72,7 +72,7 @@ NX_PUBLIC NX_Error PLIC_DisableIRQ(NX_U32 hart, NX_IRQ_Number irqno)
 /**
  * ask the PLIC what interrupt we should serve.
  */
-NX_PUBLIC NX_IRQ_Number PLIC_Claim(NX_U32 hart)
+NX_IRQ_Number PLIC_Claim(NX_U32 hart)
 {
     if (hart >= NX_MULTI_CORES_NR)
     {
@@ -85,7 +85,7 @@ NX_PUBLIC NX_IRQ_Number PLIC_Claim(NX_U32 hart)
 /**
  * tell the PLIC we've served this IRQ.
  */
-NX_PUBLIC NX_Error PLIC_Complete(NX_U32 hart, int irqno)
+NX_Error PLIC_Complete(NX_U32 hart, int irqno)
 {
     if (hart >= NX_MULTI_CORES_NR || irqno <= 0 || irqno >= NX_NR_IRQS)
     {
@@ -102,7 +102,7 @@ NX_PUBLIC NX_Error PLIC_Complete(NX_U32 hart, int irqno)
     return NX_EOK;
 }
 
-NX_PUBLIC void PLIC_Init(NX_Bool bootCore)
+void PLIC_Init(NX_Bool bootCore)
 {
     if (bootCore == NX_True)
     {

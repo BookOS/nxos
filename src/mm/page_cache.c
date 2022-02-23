@@ -130,7 +130,7 @@ NX_PRIVATE void ClearSpan(void *span, NX_Size count)
     }
 }
 
-NX_PUBLIC void *NX_PageToSpan(void *page)
+void *NX_PageToSpan(void *page)
 {
     NX_ASSERT(page != NX_NULL);
     if (page < SpanBaseAddr)
@@ -145,7 +145,7 @@ NX_PUBLIC void *NX_PageToSpan(void *page)
     return (void *)((NX_Addr)page - mark->idx * NX_PAGE_SIZE);
 }
 
-NX_PUBLIC NX_Size NX_SpanToCount(void *span)
+NX_Size NX_SpanToCount(void *span)
 {
     NX_ASSERT(span != NX_NULL);
     if (span < SpanBaseAddr)
@@ -226,7 +226,7 @@ NX_PRIVATE void *__PageCacheAlloc(NX_Size count)
 /**
  * alloc span from heap, if no free page, alloc from buddy system
  */
-NX_PUBLIC void *NX_PageCacheAlloc(NX_Size count)
+void *NX_PageCacheAlloc(NX_Size count)
 {
     if (!count)
     {
@@ -306,7 +306,7 @@ NX_PRIVATE NX_Error __PageCacheFree(void *page)
     return NX_EOK;
 }
 
-NX_PUBLIC NX_Error NX_PageCacheFree(void *page)
+NX_Error NX_PageCacheFree(void *page)
 {
     if (page == NX_NULL)
     {
@@ -320,7 +320,7 @@ NX_PUBLIC NX_Error NX_PageCacheFree(void *page)
     return err;
 }
 
-NX_PUBLIC void NX_PageCacheInit(void)
+void NX_PageCacheInit(void)
 {
     int i;
     for (i = 0; i < NX_ARRAY_SIZE(PageCacheObject.spanFreeList); i++)

@@ -44,21 +44,21 @@ struct NX_Timer
 };
 typedef struct NX_Timer NX_Timer;
 
-NX_PUBLIC NX_Error NX_TimerInit(NX_Timer *timer, NX_UArch milliseconds, 
+NX_Error NX_TimerInit(NX_Timer *timer, NX_UArch milliseconds, 
                           NX_Bool (*handler)(struct NX_Timer *, void *arg), void *arg, 
                           int flags);
                          
-NX_PUBLIC NX_Timer *NX_TimerCreate(NX_UArch milliseconds, 
+NX_Timer *NX_TimerCreate(NX_UArch milliseconds, 
                           NX_Bool (*handler)(struct NX_Timer *, void *arg), void *arg, 
                           int flags);
                            
-NX_PUBLIC NX_Error NX_TimerStart(NX_Timer *timer);
-NX_PUBLIC NX_Error NX_TimerStop(NX_Timer *timer);
-NX_PUBLIC NX_Error NX_TimerDestroy(NX_Timer *timer);
+NX_Error NX_TimerStart(NX_Timer *timer);
+NX_Error NX_TimerStop(NX_Timer *timer);
+NX_Error NX_TimerDestroy(NX_Timer *timer);
 
-NX_PUBLIC void NX_TimerDump(NX_Timer *timer);
+void NX_TimerDump(NX_Timer *timer);
 
-NX_PUBLIC void NX_TimersInit(void);
-NX_PUBLIC void NX_TimerGo(void);
+void NX_TimersInit(void);
+void NX_TimerGo(void);
 
 #endif  /* __MODS_TIME_TIMER__ */

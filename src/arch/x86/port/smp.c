@@ -13,18 +13,18 @@
 #define NX_LOG_NAME "Multi Core"
 #include <utils/log.h>
 
-NX_PUBLIC NX_UArch HAL_CoreGetIndex(void)
+NX_UArch HAL_CoreGetIndex(void)
 {
     return 0;
 }
 
-NX_PUBLIC NX_Error HAL_CoreBootApp(NX_UArch bootCoreId)
+NX_Error HAL_CoreBootApp(NX_UArch bootCoreId)
 {
     NX_LOG_I("boot core is:%d", bootCoreId);
     return NX_ENORES;
 }
 
-NX_PUBLIC NX_Error HAL_CoreEnterApp(NX_UArch appCoreId)
+NX_Error HAL_CoreEnterApp(NX_UArch appCoreId)
 {
     return NX_ENORES;
 }

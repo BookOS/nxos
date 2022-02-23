@@ -60,7 +60,7 @@
  * +------------------------+ <- 0x00000000
  */
 
-NX_PUBLIC void *HAL_GetKernelPageTable(void);
-NX_PUBLIC void HAL_ClearBSS(void);
+void *HAL_GetKernelPageTable(void);
+void HAL_ClearBSS(void);
 
 #endif /* __PLATFORM_I386__ */

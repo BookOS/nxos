@@ -31,7 +31,7 @@ NX_PRIVATE NX_U64 GetTimerCounter()
     return ret;
 }
 
-NX_PUBLIC void HAL_ClockHandler(void)
+void HAL_ClockHandler(void)
 {
     NX_ClockTickGo();
     /* update timer */

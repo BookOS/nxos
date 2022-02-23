@@ -14,7 +14,7 @@
 #include <io/irq.h>
 
 #ifdef CONFIG_NX_DEBUG
-NX_PUBLIC void NX_DebugAssertionFailure(char *exp, char *file, char *baseFile, int line)
+void NX_DebugAssertionFailure(char *exp, char *file, char *baseFile, int line)
 {
     NX_LOG_E("\nAssert(%s) failed:\nfile: %s\nbase_file: %s\nln: %d", 
         exp, file, baseFile, line);
@@ -23,7 +23,7 @@ NX_PUBLIC void NX_DebugAssertionFailure(char *exp, char *file, char *baseFile, i
 }
 #endif
 
-NX_PUBLIC void NX_DebugSpin(const char *str)
+void NX_DebugSpin(const char *str)
 {
     NX_LOG_I(str, NX_Endln "FILE:%s\nFUNCTION:%s\nLINE:%d", __FILE__, __FUNCTION__, __LINE__);
     while (1);
@@ -32,7 +32,7 @@ NX_PUBLIC void NX_DebugSpin(const char *str)
 /**
  * OS Panic
  */
-NX_PUBLIC void NX_DebugPanic(const char *str)
+void NX_DebugPanic(const char *str)
 {
     NX_IRQ_Disable();
     NX_LOG_E("!NX_PANIC!");

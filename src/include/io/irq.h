@@ -68,24 +68,24 @@ typedef struct NX_IRQ_Node NX_IRQ_Node;
 
 NX_INTERFACE NX_IMPORT NX_IRQ_Controller NX_IRQ_ControllerInterface;
 
-NX_PUBLIC NX_Error NX_IRQ_Bind(NX_IRQ_Number irqno,
+NX_Error NX_IRQ_Bind(NX_IRQ_Number irqno,
                          NX_IRQ_Handler handler,
                          void *data,
                          char *name,
                          NX_U32 flags);
                          
-NX_PUBLIC NX_Error NX_IRQ_Unbind(NX_IRQ_Number irqno, void *data);
+NX_Error NX_IRQ_Unbind(NX_IRQ_Number irqno, void *data);
 
-NX_PUBLIC NX_Error NX_IRQ_Unmask(NX_IRQ_Number irqno);
-NX_PUBLIC NX_Error NX_IRQ_Mask(NX_IRQ_Number irqno);
+NX_Error NX_IRQ_Unmask(NX_IRQ_Number irqno);
+NX_Error NX_IRQ_Mask(NX_IRQ_Number irqno);
 
-NX_PUBLIC NX_Error NX_IRQ_Handle(NX_IRQ_Number irqno);
+NX_Error NX_IRQ_Handle(NX_IRQ_Number irqno);
 
 #define NX_IRQ_Enable()            NX_IRQ_ControllerInterface.enable()
 #define NX_IRQ_Disable()           NX_IRQ_ControllerInterface.disable()
 #define NX_IRQ_SaveLevel()         NX_IRQ_ControllerInterface.saveLevel()
 #define NX_IRQ_RestoreLevel(level) NX_IRQ_ControllerInterface.restoreLevel(level)
 
-NX_PUBLIC void NX_IRQ_Init(void);
+void NX_IRQ_Init(void);
 
 #endif  /* __IO_IRQ__ */

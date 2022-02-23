@@ -60,7 +60,7 @@ NX_PRIVATE void ShowLogVersion(void)
     NX_Printf("Copyright (c) 2018-2022, BookOS Development Team\n");
 }
 
-NX_PUBLIC int NX_Main(NX_UArch coreId)
+int NX_Main(NX_UArch coreId)
 {
     if (NX_AtomicGet(&NX_ActivedCoreCount) == 0)
     {

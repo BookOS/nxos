@@ -34,6 +34,6 @@ typedef NX_UArch (*NX_SyscallWithArgHandler) (NX_UArch, NX_UArch, NX_UArch, NX_U
  */
 typedef NX_U32 NX_SyscallApi;
 
-NX_PUBLIC NX_SyscallHandler NX_SyscallGetHandler(NX_SyscallApi api);
+NX_SyscallHandler NX_SyscallGetHandler(NX_SyscallApi api);
 
 #endif /* __SCHED_SYSCALL___ */

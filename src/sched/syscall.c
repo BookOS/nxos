@@ -55,7 +55,7 @@ NX_PRIVATE const NX_SyscallHandler NX_SyscallTableWin32[] =
     SYS_InvalidCall,    /* 0 */
 };
 
-NX_PUBLIC NX_SyscallHandler NX_SyscallGetHandler(NX_SyscallApi api)
+NX_SyscallHandler NX_SyscallGetHandler(NX_SyscallApi api)
 {
     NX_SyscallHandler handler = SYS_InvalidCall;
 

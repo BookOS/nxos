@@ -33,14 +33,9 @@
 #define NX_PRIVATE static
 
 /**
- * Public variable or function 
- */
-#define NX_PUBLIC 
-
-/**
  * Operating system interface
  */
-#define NX_INTERFACE NX_PUBLIC 
+#define NX_INTERFACE 
 
 /**
  * Import variable or function 

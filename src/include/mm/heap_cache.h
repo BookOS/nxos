@@ -50,11 +50,11 @@ struct NX_HeapSmallCacheSystem
 };
 typedef struct NX_HeapSmallCacheSystem NX_HeapSmallCacheSystem;
 
-NX_PUBLIC void NX_HeapCacheInit(void);
+void NX_HeapCacheInit(void);
 
-NX_PUBLIC void *NX_HeapAlloc(NX_Size size);
-NX_PUBLIC NX_Error NX_HeapFree(void *object);
-NX_PUBLIC NX_Size NX_HeapGetObjectSize(void *object);
+void *NX_HeapAlloc(NX_Size size);
+NX_Error NX_HeapFree(void *object);
+NX_Size NX_HeapGetObjectSize(void *object);
 
 NX_INLINE NX_Error __HeapFreeSatety(void **object)
 {

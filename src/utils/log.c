@@ -15,12 +15,12 @@
 /* spin lock for log output */
 NX_PRIVATE STATIC_SPIN_UNLOCKED(LogOutputLock);
 
-NX_PUBLIC NX_Error LogLineLock(NX_UArch *level)
+NX_Error LogLineLock(NX_UArch *level)
 {
     return NX_SpinLockIRQ(&LogOutputLock, level);
 }
 
-NX_PUBLIC NX_Error LogLineUnlock(NX_UArch level)
+NX_Error LogLineUnlock(NX_UArch level)
 {
     return NX_SpinUnlockIRQ(&LogOutputLock, level);
 }

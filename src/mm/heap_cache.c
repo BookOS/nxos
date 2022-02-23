@@ -317,7 +317,7 @@ NX_PRIVATE NX_Error FreeSmallObject(void *span, void *object)
     return err;
 }
 
-NX_PUBLIC void *NX_HeapAlloc(NX_Size size)
+void *NX_HeapAlloc(NX_Size size)
 {
     NX_Size pageCount;
     NX_HeapCache *cache = NX_NULL;
@@ -391,7 +391,7 @@ NX_PUBLIC void *NX_HeapAlloc(NX_Size size)
     return (void *)memObject;
 }
 
-NX_PUBLIC NX_Error NX_HeapFree(void *object)
+NX_Error NX_HeapFree(void *object)
 {
     /* object to page, then to span */
     void *page = NX_NULL;
@@ -452,7 +452,7 @@ NX_PUBLIC NX_Error NX_HeapFree(void *object)
     return FreeSmallObject(span, object);
 }
 
-NX_PUBLIC NX_Size NX_HeapGetObjectSize(void *object)
+NX_Size NX_HeapGetObjectSize(void *object)
 {
     if (object == NX_NULL) /* can't free NX_NULL object */
     {
@@ -473,7 +473,7 @@ NX_PUBLIC NX_Size NX_HeapGetObjectSize(void *object)
     return pageNode->sizeClass;
 }
 
-NX_PUBLIC void NX_HeapCacheInit(void)
+void NX_HeapCacheInit(void)
 {
     HeapSizeClassInit();
 }

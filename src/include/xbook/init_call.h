@@ -32,11 +32,11 @@ typedef void (*NX_ExitCallHandler)(void);
 
 #define NX_INIT_TEST(fn)            __DEFINE_INITCALL("9", fn, 9)
 
-NX_PUBLIC void NX_CallInvoke(NX_InitCallHandler start[], NX_InitCallHandler end[]);
+void NX_CallInvoke(NX_InitCallHandler start[], NX_InitCallHandler end[]);
 
-NX_PUBLIC void NX_InitCallInvoke(void);
-NX_PUBLIC void NX_ExitCallInvoke(void);
+void NX_InitCallInvoke(void);
+void NX_ExitCallInvoke(void);
 
-NX_PUBLIC void NX_CallsInit(void);
+void NX_CallsInit(void);
 
 #endif  /* __XBOOK_INIT_CALL__ */

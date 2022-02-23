@@ -22,7 +22,7 @@ NX_PRIVATE NX_Spin buddyLock[NX_PAGE_ZONE_NR];
 /**
  * Init buddy memory allocator
  */
-NX_PUBLIC void NX_PageInitZone(NX_PageZone zone, void *mem, NX_Size size)
+void NX_PageInitZone(NX_PageZone zone, void *mem, NX_Size size)
 {
     NX_ASSERT(zone >= NX_PAGE_ZONE_NORMAL && zone < NX_PAGE_ZONE_NR && size > 0);
     BuddySystemArray[zone] = NX_BuddyCreate(mem, size);
@@ -30,7 +30,7 @@ NX_PUBLIC void NX_PageInitZone(NX_PageZone zone, void *mem, NX_Size size)
     NX_SpinInit(&buddyLock[zone]);
 }
 
-NX_PUBLIC void *NX_PageAllocInZone(NX_PageZone zone, NX_Size count)
+void *NX_PageAllocInZone(NX_PageZone zone, NX_Size count)
 {
     NX_ASSERT(zone >= NX_PAGE_ZONE_NORMAL && zone < NX_PAGE_ZONE_NR && count > 0);
     void *addr;
@@ -41,7 +41,7 @@ NX_PUBLIC void *NX_PageAllocInZone(NX_PageZone zone, NX_Size count)
     return addr;
 }
 
-NX_PUBLIC NX_Error NX_PageFreeInZone(NX_PageZone zone, void *ptr)
+NX_Error NX_PageFreeInZone(NX_PageZone zone, void *ptr)
 {
     NX_ASSERT(zone >= NX_PAGE_ZONE_NORMAL && zone < NX_PAGE_ZONE_NR && ptr != NX_NULL);
     NX_Error err;
@@ -52,7 +52,7 @@ NX_PUBLIC NX_Error NX_PageFreeInZone(NX_PageZone zone, void *ptr)
     return err;
 }
 
-NX_PUBLIC NX_Error NX_PageIncreaseInZone(NX_PageZone zone, void *ptr)
+NX_Error NX_PageIncreaseInZone(NX_PageZone zone, void *ptr)
 {
     NX_ASSERT(zone >= NX_PAGE_ZONE_NORMAL && zone < NX_PAGE_ZONE_NR && ptr != NX_NULL);
     NX_Error err;
@@ -63,7 +63,7 @@ NX_PUBLIC NX_Error NX_PageIncreaseInZone(NX_PageZone zone, void *ptr)
     return err;
 }
 
-NX_PUBLIC void *NX_PageZoneGetBase(NX_PageZone zone)
+void *NX_PageZoneGetBase(NX_PageZone zone)
 {
     NX_ASSERT(zone >= NX_PAGE_ZONE_NORMAL && zone < NX_PAGE_ZONE_NR);
     void *addr;
@@ -74,7 +74,7 @@ NX_PUBLIC void *NX_PageZoneGetBase(NX_PageZone zone)
     return addr;
 }
 
-NX_PUBLIC NX_Size NX_PageZoneGetPages(NX_PageZone zone)
+NX_Size NX_PageZoneGetPages(NX_PageZone zone)
 {
     NX_ASSERT(zone >= NX_PAGE_ZONE_NORMAL && zone < NX_PAGE_ZONE_NR);
     NX_Size size;
@@ -85,7 +85,7 @@ NX_PUBLIC NX_Size NX_PageZoneGetPages(NX_PageZone zone)
     return size;
 }
 
-NX_PUBLIC void *NX_PageZoneGetBuddySystem(NX_PageZone zone)
+void *NX_PageZoneGetBuddySystem(NX_PageZone zone)
 {
     NX_ASSERT(zone >= NX_PAGE_ZONE_NORMAL && zone < NX_PAGE_ZONE_NR);
     void *addr;

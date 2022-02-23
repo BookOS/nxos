@@ -65,7 +65,7 @@ NX_PRIVATE const char *ExceptionName[] =
     "Store/AMO Page Fault"
 };
 
-NX_PUBLIC void TrapFrameDump(HAL_TrapFrame *frame)
+void TrapFrameDump(HAL_TrapFrame *frame)
 {
     NX_LOG_RAW("------------ Trap frame Dump ------------\n");
     NX_LOG_RAW("Function Registers:\n");
@@ -147,7 +147,7 @@ NX_IMPORT NX_Addr TrapEntry1;
 NX_IMPORT NX_Addr TrapEntry2;
 NX_IMPORT NX_Addr TrapEntry3;
 
-NX_PUBLIC void CPU_InitTrap(NX_UArch coreId)
+void CPU_InitTrap(NX_UArch coreId)
 {
     NX_Addr *trapEntry = 0;
     switch (coreId)
@@ -176,7 +176,7 @@ NX_PUBLIC void CPU_InitTrap(NX_UArch coreId)
 
 NX_IMPORT void HAL_ProcessSyscallDispatch(HAL_TrapFrame *frame);
 
-NX_PUBLIC void TrapDispatch(HAL_TrapFrame *frame)
+void TrapDispatch(HAL_TrapFrame *frame)
 {
     NX_U64 cause = ReadCSR(scause);
     NX_U64 stval = ReadCSR(stval);
@@ -253,7 +253,7 @@ NX_PUBLIC void TrapDispatch(HAL_TrapFrame *frame)
 /**
  * switch CPU stack to thread stack, thread stack maybe stack top or stack middle.
  */
-NX_PUBLIC NX_U8 *TrapSwitchStack(HAL_TrapFrame *frame)
+NX_U8 *TrapSwitchStack(HAL_TrapFrame *frame)
 {
     NX_UArch sstatus = ReadCSR(sstatus);
     NX_U8 *sp;

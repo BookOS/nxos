@@ -17,7 +17,7 @@
 
 NX_PRIVATE NX_IRQ_Node IRQ_NodeTable[NX_NR_IRQS];
 
-NX_PUBLIC void NX_IRQ_Init(void)
+void NX_IRQ_Init(void)
 {
     int i;
     NX_IRQ_Node *irq;
@@ -40,7 +40,7 @@ NX_PRIVATE NX_IRQ_Node *IRQ_NodeGet(NX_IRQ_Number irq)
     return NX_NULL;
 }
 
-NX_PUBLIC NX_Error NX_IRQ_Bind(NX_IRQ_Number irqno,
+NX_Error NX_IRQ_Bind(NX_IRQ_Number irqno,
                          NX_IRQ_Handler handler,
                          void *data,
                          char *name,
@@ -72,7 +72,7 @@ NX_PUBLIC NX_Error NX_IRQ_Bind(NX_IRQ_Number irqno,
     return NX_EOK;
 }
 
-NX_PUBLIC NX_Error NX_IRQ_Unbind(NX_IRQ_Number irqno, void *data)
+NX_Error NX_IRQ_Unbind(NX_IRQ_Number irqno, void *data)
 {
     NX_IRQ_Node *irqNode = IRQ_NodeGet(irqno);
     if (irqNode == NX_NULL)
@@ -124,7 +124,7 @@ NX_PUBLIC NX_Error NX_IRQ_Unbind(NX_IRQ_Number irqno, void *data)
     return NX_EOK;
 }
 
-NX_PUBLIC NX_Error NX_IRQ_Unmask(NX_IRQ_Number irqno)
+NX_Error NX_IRQ_Unmask(NX_IRQ_Number irqno)
 {
     NX_IRQ_Node *irqNode = IRQ_NodeGet(irqno);
     if (irqNode == NX_NULL)
@@ -138,7 +138,7 @@ NX_PUBLIC NX_Error NX_IRQ_Unmask(NX_IRQ_Number irqno)
     return NX_ENOFUNC;
 }
 
-NX_PUBLIC NX_Error NX_IRQ_Mask(NX_IRQ_Number irqno)
+NX_Error NX_IRQ_Mask(NX_IRQ_Number irqno)
 {
     NX_IRQ_Node *irqNode = IRQ_NodeGet(irqno);
     if (irqNode == NX_NULL)
@@ -152,7 +152,7 @@ NX_PUBLIC NX_Error NX_IRQ_Mask(NX_IRQ_Number irqno)
     return NX_ENOFUNC;
 }
 
-NX_PUBLIC NX_Error NX_IRQ_Handle(NX_IRQ_Number irqno)
+NX_Error NX_IRQ_Handle(NX_IRQ_Number irqno)
 {
     NX_IRQ_Node *irqNode = IRQ_NodeGet(irqno);
     if (irqNode == NX_NULL)

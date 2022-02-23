@@ -58,7 +58,7 @@ NX_PRIVATE void thread_entry3(void *arg)
     }
 }
 
-NX_PUBLIC void Demo_HAL_Context(void)
+void Demo_HAL_Context(void)
 {
     NX_LOG_I("start demo: HAL_Context");
     threadSP1 = NX_ContextInit(thread_entry1, NX_NULL, (void *) 0x12345678, threadStack1 + STACK_SZ);

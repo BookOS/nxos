@@ -56,10 +56,10 @@
 
 #endif
 
-NX_PUBLIC NX_Error PLIC_EnableIRQ(NX_U32 hart, NX_IRQ_Number irqno);
-NX_PUBLIC NX_Error PLIC_DisableIRQ(NX_U32 hart, NX_IRQ_Number irqno);
-NX_PUBLIC NX_IRQ_Number PLIC_Claim(NX_U32 hart);
-NX_PUBLIC NX_Error PLIC_Complete(NX_U32 hart, int irqno);
-NX_PUBLIC void PLIC_Init(NX_Bool bootCore);
+NX_Error PLIC_EnableIRQ(NX_U32 hart, NX_IRQ_Number irqno);
+NX_Error PLIC_DisableIRQ(NX_U32 hart, NX_IRQ_Number irqno);
+NX_IRQ_Number PLIC_Claim(NX_U32 hart);
+NX_Error PLIC_Complete(NX_U32 hart, int irqno);
+void PLIC_Init(NX_Bool bootCore);
 
 #endif  /* __RISCV_PLIC__ */

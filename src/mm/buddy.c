@@ -48,7 +48,7 @@ NX_PRIVATE void *PageToPtr(NX_BuddySystem* system, NX_Page* page)
     return &NX_ARRAY_CAST(system->pageStart, NX_PAGE_SIZE)[diff];
 }
 
-NX_PUBLIC NX_Page* NX_PageFromPtr(NX_BuddySystem* system, void *ptr)
+NX_Page* NX_PageFromPtr(NX_BuddySystem* system, void *ptr)
 {
     NX_ASSERT(0 == ((NX_Size)ptr % NX_PAGE_SIZE));
     NX_PtrDiff diff = NX_ARRAY_CAST(ptr, NX_PAGE_SIZE) - NX_ARRAY_CAST(system->pageStart, NX_PAGE_SIZE);
@@ -97,7 +97,7 @@ NX_PRIVATE NX_BuddySystem* BuddyCreateFromMemory(void *mem)
     return system;
 }
 
-NX_PUBLIC NX_BuddySystem* NX_BuddyCreate(void *mem, NX_Size size)
+NX_BuddySystem* NX_BuddyCreate(void *mem, NX_Size size)
 {
     NX_ASSERT(mem && size);
     NX_LOG_I("mem: 0x%p size: 0x%p", mem, size);
@@ -241,7 +241,7 @@ NX_PRIVATE void *PagePrepareUsed(NX_BuddySystem* system, NX_Page* page, int orde
     return PageToPtr(system, page);
 }
 
-NX_PUBLIC void *NX_BuddyAllocPage(NX_BuddySystem* system, NX_Size count)
+void *NX_BuddyAllocPage(NX_BuddySystem* system, NX_Size count)
 {
     NX_ASSERT(system && count);
 
@@ -263,7 +263,7 @@ NX_PUBLIC void *NX_BuddyAllocPage(NX_BuddySystem* system, NX_Size count)
     return PagePrepareUsed(system, page, order);
 }
 
-NX_PUBLIC NX_Error NX_BuddyIncreasePage(NX_BuddySystem* system, void *ptr)
+NX_Error NX_BuddyIncreasePage(NX_BuddySystem* system, void *ptr)
 {
     NX_ASSERT(system && ptr);
 
@@ -282,7 +282,7 @@ NX_PUBLIC NX_Error NX_BuddyIncreasePage(NX_BuddySystem* system, void *ptr)
  * 
  * return others if failed!
  */
-NX_PUBLIC NX_Error NX_BuddyFreePage(NX_BuddySystem* system, void *ptr)
+NX_Error NX_BuddyFreePage(NX_BuddySystem* system, void *ptr)
 {
     NX_ASSERT(system && ptr);
 

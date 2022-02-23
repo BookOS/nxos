@@ -46,6 +46,6 @@ NX_INTERFACE NX_IMPORT struct NX_MmuOps NX_MmuOpsInterface;
 #define NX_MmuUnmapPage             NX_MmuOpsInterface.unmapPage
 #define NX_MmuVir2Phy               NX_MmuOpsInterface.vir2Phy
 
-NX_PUBLIC void NX_MmuInit(NX_Mmu *mmu, void *pageTable, NX_Addr virStart, NX_Size size, NX_Addr earlyEnd);
+void NX_MmuInit(NX_Mmu *mmu, void *pageTable, NX_Addr virStart, NX_Size size, NX_Addr earlyEnd);
 
 #endif /* __MM_MMU__ */

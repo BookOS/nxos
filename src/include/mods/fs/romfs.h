@@ -37,14 +37,14 @@ struct NX_RomfsSystem
 };
 typedef struct NX_RomfsSystem NX_RomfsSystem;
 
-NX_PUBLIC NX_Error NX_RomfsMount(const char *path, const char *devname, int flags);
-NX_PUBLIC NX_Error NX_RomfsUnmount(const char *path, int flags);
+NX_Error NX_RomfsMount(const char *path, const char *devname, int flags);
+NX_Error NX_RomfsUnmount(const char *path, int flags);
 
-NX_PUBLIC NX_Error NX_RomfsOpen(const char *path, int flags, NX_RomfsFile **outFile);
-NX_PUBLIC NX_Error NX_RomfsClose(NX_RomfsFile *file);
+NX_Error NX_RomfsOpen(const char *path, int flags, NX_RomfsFile **outFile);
+NX_Error NX_RomfsClose(NX_RomfsFile *file);
 
-NX_PUBLIC NX_Error NX_RomfsRead(NX_RomfsFile *file, void *buf, NX_Size bytes, NX_Size *outBytes);
-NX_PUBLIC NX_Error NX_RomfsSeek(NX_RomfsFile *file, NX_Offset off, int flags, NX_Offset *outOff);
+NX_Error NX_RomfsRead(NX_RomfsFile *file, void *buf, NX_Size bytes, NX_Size *outBytes);
+NX_Error NX_RomfsSeek(NX_RomfsFile *file, NX_Offset off, int flags, NX_Offset *outOff);
 
 #endif /* __MODS_FS_ROMFS__ */
 

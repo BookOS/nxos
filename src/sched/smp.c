@@ -19,20 +19,20 @@
 
 NX_IMPORT NX_Error HAL_InitClock(void);
 
-NX_PUBLIC NX_STATIC_ATOMIC_INIT(NX_ActivedCoreCount, 0);
+NX_STATIC_ATOMIC_INIT(NX_ActivedCoreCount, 0);
 
 /* init as zero, avoid cleared by clear bss action */
 NX_PRIVATE NX_VOLATILE NX_UArch BootCoreId = 0;
 
 NX_PRIVATE NX_Cpu CpuArray[NX_MULTI_CORES_NR];
 
-NX_PUBLIC void NX_SMP_Preload(NX_UArch coreId)
+void NX_SMP_Preload(NX_UArch coreId)
 {
     /* recored boot core */
     BootCoreId = coreId;
 }
 
-NX_PUBLIC NX_UArch NX_SMP_GetBootCore(void)
+NX_UArch NX_SMP_GetBootCore(void)
 {
     return BootCoreId;
 }
@@ -40,7 +40,7 @@ NX_PUBLIC NX_UArch NX_SMP_GetBootCore(void)
 /**
  * init multi core before thread
  */
-NX_PUBLIC void NX_SMP_Init(NX_UArch coreId)
+void NX_SMP_Init(NX_UArch coreId)
 {
     /* init core array */
     int i;
@@ -56,13 +56,13 @@ NX_PUBLIC void NX_SMP_Init(NX_UArch coreId)
 /**
  * get CPU by index
  */
-NX_PUBLIC NX_Cpu *NX_CpuGetIndex(NX_UArch coreId)
+NX_Cpu *NX_CpuGetIndex(NX_UArch coreId)
 {
     NX_ASSERT(coreId < NX_MULTI_CORES_NR);
     return &CpuArray[coreId];
 }
 
-NX_PUBLIC void NX_SMP_Main(NX_UArch coreId)
+void NX_SMP_Main(NX_UArch coreId)
 {
     /* boot other cores */
     if (NX_SMP_BootApp(coreId) != NX_EOK)
@@ -75,7 +75,7 @@ NX_PUBLIC void NX_SMP_Main(NX_UArch coreId)
     }
 }
 
-NX_PUBLIC void NX_SMP_Stage2(NX_UArch appCoreId)
+void NX_SMP_Stage2(NX_UArch appCoreId)
 {
     NX_Error err;
     err = NX_SMP_EnterApp(appCoreId);
@@ -96,7 +96,7 @@ NX_PUBLIC void NX_SMP_Stage2(NX_UArch appCoreId)
     }
 }
 
-NX_PUBLIC void NX_SMP_EnqueueThreadIrqDisabled(NX_UArch coreId, NX_Thread *thread, int flags)
+void NX_SMP_EnqueueThreadIrqDisabled(NX_UArch coreId, NX_Thread *thread, int flags)
 {
     NX_Cpu *cpu = NX_CpuGetIndex(coreId);
 
@@ -116,7 +116,7 @@ NX_PUBLIC void NX_SMP_EnqueueThreadIrqDisabled(NX_UArch coreId, NX_Thread *threa
     NX_SpinUnlock(&cpu->lock);
 }
 
-NX_PUBLIC NX_Thread *NX_SMP_DeququeThreadIrqDisabled(NX_UArch coreId)
+NX_Thread *NX_SMP_DeququeThreadIrqDisabled(NX_UArch coreId)
 {
     NX_Thread *thread;
     NX_Cpu *cpu = NX_CpuGetIndex(coreId);
@@ -136,7 +136,7 @@ NX_PUBLIC NX_Thread *NX_SMP_DeququeThreadIrqDisabled(NX_UArch coreId)
 /**
  * NOTE: this must called irq disabled
  */
-NX_PUBLIC NX_Thread *NX_SMP_DeququeNoAffinityThread(NX_UArch coreId)
+NX_Thread *NX_SMP_DeququeNoAffinityThread(NX_UArch coreId)
 {
     NX_Thread *thread, *findThread = NX_NULL;
     NX_Cpu *cpu = NX_CpuGetIndex(coreId);
@@ -159,7 +159,7 @@ NX_PUBLIC NX_Thread *NX_SMP_DeququeNoAffinityThread(NX_UArch coreId)
     return findThread;
 }
 
-NX_PUBLIC NX_Error NX_SMP_SetRunning(NX_UArch coreId, NX_Thread *thread)
+NX_Error NX_SMP_SetRunning(NX_UArch coreId, NX_Thread *thread)
 {
     if (coreId >= NX_MULTI_CORES_NR || thread == NX_NULL)
     {
@@ -178,7 +178,7 @@ NX_PUBLIC NX_Error NX_SMP_SetRunning(NX_UArch coreId, NX_Thread *thread)
 /**
  * get running thread
  */
-NX_PUBLIC NX_Thread *NX_SMP_GetRunning(void)
+NX_Thread *NX_SMP_GetRunning(void)
 {
     NX_Thread *thread;
     NX_Cpu *cpu = NX_CpuGetPtr();

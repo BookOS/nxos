@@ -47,11 +47,11 @@ struct NX_BuddySystem
 };
 typedef struct NX_BuddySystem NX_BuddySystem;
 
-NX_PUBLIC NX_BuddySystem* NX_BuddyCreate(void *mem, NX_Size size);
-NX_PUBLIC void *NX_BuddyAllocPage(NX_BuddySystem* system, NX_Size count);
-NX_PUBLIC NX_Error NX_BuddyFreePage(NX_BuddySystem* system, void *ptr);
-NX_PUBLIC NX_Error NX_BuddyIncreasePage(NX_BuddySystem* system, void *ptr);
+NX_BuddySystem* NX_BuddyCreate(void *mem, NX_Size size);
+void *NX_BuddyAllocPage(NX_BuddySystem* system, NX_Size count);
+NX_Error NX_BuddyFreePage(NX_BuddySystem* system, void *ptr);
+NX_Error NX_BuddyIncreasePage(NX_BuddySystem* system, void *ptr);
 
-NX_PUBLIC NX_Page* NX_PageFromPtr(NX_BuddySystem* system, void *ptr);
+NX_Page* NX_PageFromPtr(NX_BuddySystem* system, void *ptr);
 
 #endif /* __MM_BUDDY__ */
