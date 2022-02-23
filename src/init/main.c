@@ -22,6 +22,19 @@
 #include <io/irq.h>
 #include <mods/time/timer.h>
 
+/**
+ * see http://asciiarts.net
+ * Text: "NXOS", Font: standard.flf
+ */
+NX_PRIVATE char *LogString = \
+"  _   ___  _____  ____  \n"\
+" | \\ | \\ \\/ / _ \\/ ___| \n"\
+" |  \\| |\\  / | | \\___ \\ \n"\
+" | |\\  |/  \\ |_| |___) |\n"\
+" |_| \\_/_/\\_\\___/|____/ \n";
+
+NX_IMPORT NX_Atomic NX_ActivedCoreCount;
+
 /* Platform init */
 NX_INTERFACE NX_Error HAL_PlatformInit(NX_UArch coreId);
 
@@ -37,7 +50,15 @@ NX_INTERFACE NX_WEAK_SYM NX_Error HAL_PlatformStage2(void)
     return NX_EOK;
 }
 
-NX_IMPORT NX_Atomic NX_ActivedCoreCount;
+NX_PRIVATE void ShowLogVersion(void)
+{
+    NX_Printf("%s", LogString);
+    NX_Printf("Kernel    : %s\n", NX_SYSTEM_NAME);
+    NX_Printf("Version   : %d.%d.%d\n", NX_VERSION_MAJOR, NX_VERSION_MINOR, NX_VERSION_REVISE);
+    NX_Printf("Build     : %s\n", __DATE__);
+    NX_Printf("Platform  : %s\n", CONFIG_NX_PLATFROM_NAME);
+    NX_Printf("Copyright (c) 2018-2022, BookOS Development Team\n");
+}
 
 NX_PUBLIC int NX_Main(NX_UArch coreId)
 {
@@ -52,7 +73,8 @@ NX_PUBLIC int NX_Main(NX_UArch coreId)
         {
             NX_PANIC("Platfrom init failed!");
         }
-        NX_LOG_I("Hello, NXOS on %s!", CONFIG_NX_PLATFROM_NAME);
+
+        ShowLogVersion();
 
         /* init irq */
         NX_IRQ_Init();

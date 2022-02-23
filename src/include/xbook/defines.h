@@ -7,11 +7,24 @@
  * Change Logs:
  * Date           Author            Notes
  * 2021-9-23      JasonHu           Init
+ * 2022-2-24      JasonHu           Add version
  */
 
 #ifndef __XBOOK_DEFINES__
 #define __XBOOK_DEFINES__
 
+#define NX_SYSTEM_NAME  "nxos"
+
+/**
+ * Version
+ */
+#define NX_VERSION_MAJOR    0
+#define NX_VERSION_MINOR    1
+#define NX_VERSION_REVISE   0
+
+/**
+ * Null pointer
+ */
 #define NX_NULL ((void *) 0)
 
 /**
