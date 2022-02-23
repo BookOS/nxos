@@ -18,7 +18,7 @@
 NX_PUBLIC char *NX_StrCopy(const char *dst, const char *src);
 NX_PUBLIC int NX_StrCmp(const char *a, const char *b);
 NX_PUBLIC int NX_StrLen(const char *str);
-NX_PUBLIC char *NX_StrCopyN(const char *dst, const char *src, NX_USize len);
+NX_PUBLIC char *NX_StrCopyN(const char *dst, const char *src, NX_Size len);
 
 NX_PUBLIC int NX_VSNPrintf(char *buf, int bufLen, const char *fmt, NX_VarList args);
 NX_PUBLIC int NX_SNPrintf(char *buf, int buflen, const char *fmt, ...);

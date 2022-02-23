@@ -29,7 +29,7 @@ NX_PUBLIC NX_Mmu KernelMMU;
 
 NX_PRIVATE NX_U32 KernelTable[NX_PAGE_SIZE / sizeof(NX_U32)] NX_CALIGN(NX_PAGE_SIZE);
 
-NX_PRIVATE void HAL_EarlyMap(NX_Mmu *mmu, NX_Addr virStart, NX_USize size)
+NX_PRIVATE void HAL_EarlyMap(NX_Mmu *mmu, NX_Addr virStart, NX_Size size)
 {
     NX_LOG_I("OS map early on [%p~%p]", virStart, virStart + size);
     NX_MmuMapPageWithPhy(&KernelMMU, virStart, virStart, size, ARCH_PAGE_ATTR_KERNEL);
@@ -40,13 +40,13 @@ NX_PRIVATE void HAL_EarlyMap(NX_Mmu *mmu, NX_Addr virStart, NX_USize size)
  */
 NX_PUBLIC void HAL_PageZoneInit(void)
 {
-    NX_USize memSize = *(NX_USize *)GRUB2_READ_MEMORY_BYTES_ADDR;
+    NX_Size memSize = *(NX_Size *)GRUB2_READ_MEMORY_BYTES_ADDR;
     
-    NX_LOG_I("Memory NX_USize: %x Bytes %d MB", memSize, memSize / NX_MB);
+    NX_LOG_I("Memory NX_Size: %x Bytes %d MB", memSize, memSize / NX_MB);
 
     if (memSize == 0)
     {
-        NX_PANIC("Get Memory NX_USize Failed!");
+        NX_PANIC("Get Memory NX_Size Failed!");
     }
     if (memSize < MEM_MIN_SIZE)
     {
@@ -55,7 +55,7 @@ NX_PUBLIC void HAL_PageZoneInit(void)
     }
     
     /* calc normal base & size */
-    NX_USize normalSize = memSize - MEM_DMA_SIZE - MEM_KERNEL_SZ;
+    NX_Size normalSize = memSize - MEM_DMA_SIZE - MEM_KERNEL_SZ;
     normalSize /= 2;
     if (normalSize > MEM_KERNEL_SPACE_SZ)
     {
@@ -64,11 +64,11 @@ NX_PUBLIC void HAL_PageZoneInit(void)
     
     /* calc user base & size */
     NX_Addr userBase = MEM_NORMAL_BASE + normalSize;
-    NX_USize userSize = memSize - normalSize;
+    NX_Size userSize = memSize - normalSize;
 
-    NX_LOG_I("DMA memory base: %x NX_USize:%d MB", MEM_DMA_BASE, MEM_DMA_SIZE / NX_MB);
-    NX_LOG_I("Normal memory base: %x NX_USize:%d MB", MEM_NORMAL_BASE, normalSize / NX_MB);
-    NX_LOG_I("User memory base: %x NX_USize:%d MB", userBase, userSize / NX_MB);
+    NX_LOG_I("DMA memory base: %x NX_Size:%d MB", MEM_DMA_BASE, MEM_DMA_SIZE / NX_MB);
+    NX_LOG_I("Normal memory base: %x NX_Size:%d MB", MEM_NORMAL_BASE, normalSize / NX_MB);
+    NX_LOG_I("User memory base: %x NX_Size:%d MB", userBase, userSize / NX_MB);
 
     /* init page zone */
     NX_PageInitZone(NX_PAGE_ZONE_DMA, (void *)MEM_DMA_BASE, MEM_DMA_SIZE);

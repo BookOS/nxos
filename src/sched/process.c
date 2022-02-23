@@ -118,7 +118,7 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
     NX_Error err;
     NX_Offset len;
     void *addr = NX_NULL;
-    NX_USize imageMaxSize;
+    NX_Size imageMaxSize;
     NX_Vmspace *space;
 
     err = NX_RomfsOpen(path, 0, &file);
@@ -166,8 +166,8 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
     NX_Addr vaddr = space->imageStart;
     NX_Addr paddr;
     NX_Addr vaddrSelf;
-    NX_USize chunk;
-    NX_USize chunkRead;
+    NX_Size chunk;
+    NX_Size chunkRead;
     
     while (len > 0)
     {

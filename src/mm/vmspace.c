@@ -79,7 +79,7 @@ NX_Error NX_VmspaceListNodes(NX_Vmspace *space)
 
 NX_PRIVATE NX_Vmnode *VmnodeCreate(
     NX_Addr addr,
-    NX_USize size,
+    NX_Size size,
     NX_U32 attr,
     NX_U32 flags)
 {
@@ -251,7 +251,7 @@ NX_PRIVATE NX_Error VmspaceMergeNode(NX_Vmspace *space, NX_Vmnode *node)
     return NX_EOK;
 }
 
-NX_PRIVATE NX_Error VmspaceSplitNode(NX_Vmspace *space, NX_Vmnode *node, NX_Addr addr, NX_USize size)
+NX_PRIVATE NX_Error VmspaceSplitNode(NX_Vmspace *space, NX_Vmnode *node, NX_Addr addr, NX_Size size)
 {
     NX_UArch level;
     NX_Addr start = addr;
@@ -345,7 +345,7 @@ NX_PRIVATE NX_Error VmspaceSplitNode(NX_Vmspace *space, NX_Vmnode *node, NX_Addr
     return NX_EOK;
 }
 
-NX_PRIVATE NX_Vmnode *VmspaceFindNode(NX_Vmspace *space, NX_Addr addr, NX_USize size)
+NX_PRIVATE NX_Vmnode *VmspaceFindNode(NX_Vmspace *space, NX_Addr addr, NX_Size size)
 {
     NX_Vmnode *node;
     NX_UArch level;
@@ -363,7 +363,7 @@ NX_PRIVATE NX_Vmnode *VmspaceFindNode(NX_Vmspace *space, NX_Addr addr, NX_USize 
     return NX_NULL;
 }
 
-NX_PRIVATE NX_Bool VmspaceCheckAddrCollisions(NX_Vmspace *space, NX_Addr addr, NX_USize size)
+NX_PRIVATE NX_Bool VmspaceCheckAddrCollisions(NX_Vmspace *space, NX_Addr addr, NX_Size size)
 {
     NX_ASSERT(space);
     NX_Addr start = addr;
@@ -386,7 +386,7 @@ NX_PRIVATE NX_Bool VmspaceCheckAddrCollisions(NX_Vmspace *space, NX_Addr addr, N
     return NX_False;
 }
 
-NX_PRIVATE NX_Error GetAddrFromMapArea(NX_Vmspace *space, NX_USize size, NX_Addr *outAddr)
+NX_PRIVATE NX_Error GetAddrFromMapArea(NX_Vmspace *space, NX_Size size, NX_Addr *outAddr)
 {
     NX_Vmnode *node;
     NX_Addr freeAddr;
@@ -430,7 +430,7 @@ NX_PRIVATE NX_Error GetAddrFromMapArea(NX_Vmspace *space, NX_USize size, NX_Addr
 NX_Error __VmspaceMap(NX_Vmspace *space,
     NX_Addr vaddr,
     NX_Addr paddr,
-    NX_USize size,
+    NX_Size size,
     NX_U32 attr,
     NX_U32 flags,
     void **outAddr)
@@ -517,7 +517,7 @@ NX_Error __VmspaceMap(NX_Vmspace *space,
 
 NX_Error NX_VmspaceMap(NX_Vmspace *space,
     NX_Addr addr,
-    NX_USize size,
+    NX_Size size,
     NX_U32 attr,
     NX_U32 flags,
     void **outAddr)
@@ -528,7 +528,7 @@ NX_Error NX_VmspaceMap(NX_Vmspace *space,
 NX_Error NX_VmspaceMapWithPhy(NX_Vmspace *space,
     NX_Addr vaddr,
     NX_Addr paddr,
-    NX_USize size,
+    NX_Size size,
     NX_U32 attr,
     NX_U32 flags,
     void **outAddr)
@@ -536,7 +536,7 @@ NX_Error NX_VmspaceMapWithPhy(NX_Vmspace *space,
     return __VmspaceMap(space, vaddr, paddr, size, attr, flags, outAddr);
 }
 
-NX_Error NX_VmspaceUnmap(NX_Vmspace *space, NX_Addr addr, NX_USize size)
+NX_Error NX_VmspaceUnmap(NX_Vmspace *space, NX_Addr addr, NX_Size size)
 {
     NX_Vmnode *node;
     NX_Error err;

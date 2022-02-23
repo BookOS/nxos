@@ -30,7 +30,7 @@ NX_PUBLIC NX_ThreadManager NX_ThreadManagerObject;
 NX_PRIVATE NX_Error ThreadInit(NX_Thread *thread, 
     const char *name,
     NX_ThreadHandler handler, void *arg,
-    NX_U8 *stack, NX_USize stackSize)
+    NX_U8 *stack, NX_Size stackSize)
 {
     if (thread == NX_NULL || name == NX_NULL || handler == NX_NULL || stack == NX_NULL || !stackSize)
     {

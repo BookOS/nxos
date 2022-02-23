@@ -12,7 +12,7 @@
 #include <segment.h>
 #include <tss.h>
 
-NX_PUBLIC void CPU_LoadGDT(NX_UArch NX_USize, NX_UArch gdtr);
+NX_PUBLIC void CPU_LoadGDT(NX_UArch NX_Size, NX_UArch gdtr);
 
 struct CPU_Segment
 {

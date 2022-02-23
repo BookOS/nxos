@@ -50,12 +50,12 @@ NX_PRIVATE void *PageToPtr(NX_BuddySystem* system, NX_Page* page)
 
 NX_PUBLIC NX_Page* NX_PageFromPtr(NX_BuddySystem* system, void *ptr)
 {
-    NX_ASSERT(0 == ((NX_USize)ptr % NX_PAGE_SIZE));
+    NX_ASSERT(0 == ((NX_Size)ptr % NX_PAGE_SIZE));
     NX_PtrDiff diff = NX_ARRAY_CAST(ptr, NX_PAGE_SIZE) - NX_ARRAY_CAST(system->pageStart, NX_PAGE_SIZE);
     return &system->map[diff];
 }
 
-NX_PRIVATE NX_USize PageToPFN(NX_BuddySystem* system, NX_Page* page)
+NX_PRIVATE NX_Size PageToPFN(NX_BuddySystem* system, NX_Page* page)
 {
     NX_ASSERT(system);
 
@@ -63,13 +63,13 @@ NX_PRIVATE NX_USize PageToPFN(NX_BuddySystem* system, NX_Page* page)
     return diff;
 }
 
-NX_USED NX_PRIVATE NX_Page* PageFromPFN(NX_BuddySystem* system, NX_USize pfn)
+NX_USED NX_PRIVATE NX_Page* PageFromPFN(NX_BuddySystem* system, NX_Size pfn)
 {
     NX_ASSERT(system);
     return &system->map[pfn];
 }
 
-NX_PRIVATE int IsValidPFN(NX_BuddySystem* system, NX_USize pfn)
+NX_PRIVATE int IsValidPFN(NX_BuddySystem* system, NX_Size pfn)
 {
     NX_ASSERT(system);
 
@@ -97,7 +97,7 @@ NX_PRIVATE NX_BuddySystem* BuddyCreateFromMemory(void *mem)
     return system;
 }
 
-NX_PUBLIC NX_BuddySystem* NX_BuddyCreate(void *mem, NX_USize size)
+NX_PUBLIC NX_BuddySystem* NX_BuddyCreate(void *mem, NX_Size size)
 {
     NX_ASSERT(mem && size);
     NX_LOG_I("mem: 0x%p size: 0x%p", mem, size);
@@ -111,16 +111,16 @@ NX_PUBLIC NX_BuddySystem* NX_BuddyCreate(void *mem, NX_USize size)
     mem += sizeof(NX_BuddySystem);
     size -= sizeof(NX_BuddySystem);
 
-    NX_USize page_count = size >> NX_PAGE_SHIFT;
+    NX_Size page_count = size >> NX_PAGE_SHIFT;
 
     // Alloc page map
-    NX_USize map_size = BuddyAlignUp(page_count * sizeof(NX_Page), NX_PAGE_SIZE);
+    NX_Size map_size = BuddyAlignUp(page_count * sizeof(NX_Page), NX_PAGE_SIZE);
     page_count -= map_size / NX_PAGE_SIZE;
     mem += map_size;
     size -= map_size;
 
     // Alloc page
-    NX_USize mem_diff = (NX_TYPE_CAST(NX_PtrDiff, BuddyAlignPtr(mem, NX_PAGE_SIZE)) - NX_TYPE_CAST(NX_PtrDiff, mem));
+    NX_Size mem_diff = (NX_TYPE_CAST(NX_PtrDiff, BuddyAlignPtr(mem, NX_PAGE_SIZE)) - NX_TYPE_CAST(NX_PtrDiff, mem));
     mem += mem_diff;
     size -= mem_diff;
     page_count = size >> NX_PAGE_SHIFT;
@@ -128,9 +128,9 @@ NX_PUBLIC NX_BuddySystem* NX_BuddyCreate(void *mem, NX_USize size)
     system->pageStart = mem;
     system->maxPFN = page_count - 1;
 
-    BUDDY_ASSERT(((NX_USize)mem & NX_PAGE_MASK) == 0, "must align to PAGE_SIZE");
+    BUDDY_ASSERT(((NX_Size)mem & NX_PAGE_MASK) == 0, "must align to PAGE_SIZE");
 
-    NX_USize i;
+    NX_Size i;
     for (i = 0; i < page_count; i++)
     {
         system->map[i].order = NX_PAGE_INVALID_ORDER;
@@ -138,7 +138,7 @@ NX_PUBLIC NX_BuddySystem* NX_BuddyCreate(void *mem, NX_USize size)
 
     int order = NX_PAGE_INVALID_ORDER;
 
-    NX_USize count;
+    NX_Size count;
     for (i = 0, count = page_count; count; i += 1UL << order, count -= 1UL << order)
     {
         order = BuddyFlsSizet(count);
@@ -163,7 +163,7 @@ NX_PRIVATE NX_Page* BuddyLocateFree(NX_BuddySystem* system, int order)
 
     if (NX_ListEmpty(&system->pageBuddy[order]))
     {
-        NX_USize bitmap = system->bitmap & (~0UL << order);
+        NX_Size bitmap = system->bitmap & (~0UL << order);
         if (!bitmap)
         {
             NX_LOG_E("Cannot find free page!");
@@ -197,11 +197,11 @@ NX_PRIVATE NX_Page* PageMerge(NX_BuddySystem* system, NX_Page* page)
     NX_ASSERT(system && page);
 
     int order = page->order;
-    NX_USize pfn = PageToPFN(system, page);
+    NX_Size pfn = PageToPFN(system, page);
 
     for (; order <= NX_MAX_PAGE_ORDER;)
     {
-        NX_USize buddyPFN = pfn ^ (1UL << order);
+        NX_Size buddyPFN = pfn ^ (1UL << order);
         NX_Page* buddy = page + (buddyPFN - pfn);
 
         if (!IsValidPFN(system, buddyPFN))
@@ -213,11 +213,11 @@ NX_PRIVATE NX_Page* PageMerge(NX_BuddySystem* system, NX_Page* page)
 
         BuddyDelPage(system, buddy);
 
-        NX_USize privatePFN = buddyPFN | pfn;
+        NX_Size privatePFN = buddyPFN | pfn;
         NX_Page* private = page + (privatePFN - pfn);
         private->order = NX_PAGE_INVALID_ORDER;
 
-        NX_USize combinedPFN = buddyPFN & pfn;
+        NX_Size combinedPFN = buddyPFN & pfn;
         page = page + (combinedPFN - pfn);
         pfn = combinedPFN;
         order++;
@@ -241,7 +241,7 @@ NX_PRIVATE void *PagePrepareUsed(NX_BuddySystem* system, NX_Page* page, int orde
     return PageToPtr(system, page);
 }
 
-NX_PUBLIC void *NX_BuddyAllocPage(NX_BuddySystem* system, NX_USize count)
+NX_PUBLIC void *NX_BuddyAllocPage(NX_BuddySystem* system, NX_Size count)
 {
     NX_ASSERT(system && count);
 

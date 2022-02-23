@@ -34,7 +34,7 @@ struct NX_UTestCase
     NX_Error (*setup)(void);
     NX_Error (*clean)(void);
     NX_UTest *unitTable;
-    NX_USize unitCount;
+    NX_Size unitCount;
 };
 typedef struct NX_UTestCase NX_UTestCase;
 

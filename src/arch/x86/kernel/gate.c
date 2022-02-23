@@ -74,7 +74,7 @@ NX_PUBLIC void CPU_TrapEntry0x2e(void);
 NX_PUBLIC void CPU_TrapEntry0x2f(void);
 
 NX_PUBLIC void CPU_SyscallEntry(void);
-NX_PUBLIC void CPU_LoadIDT(NX_UArch NX_USize, NX_UArch idtr);    
+NX_PUBLIC void CPU_LoadIDT(NX_UArch NX_Size, NX_UArch idtr);    
 
 NX_PRIVATE void SetGate(struct CPU_Gate *gate, TrapHandler handler,
                      NX_U32 selector, NX_U32 attributes, NX_U8 privilege)

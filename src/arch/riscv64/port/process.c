@@ -22,7 +22,7 @@
 #include <mm/mmu.h>
 #include <interrupt.h>
 
-NX_PRIVATE NX_Error HAL_ProcessInitUserSpace(NX_Process *process, NX_Addr virStart, NX_USize size)
+NX_PRIVATE NX_Error HAL_ProcessInitUserSpace(NX_Process *process, NX_Addr virStart, NX_Size size)
 {
     void *table = NX_MemAlloc(NX_PAGE_SIZE);
     if (table == NX_NULL)

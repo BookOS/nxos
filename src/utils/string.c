@@ -26,7 +26,7 @@ NX_PUBLIC char *NX_StrCopy(const char *dst, const char *src)
     return (char *)dst;
 }
 
-NX_PUBLIC char *NX_StrCopyN(const char *dst, const char *src, NX_USize len)
+NX_PUBLIC char *NX_StrCopyN(const char *dst, const char *src, NX_Size len)
 {
     if (dst == NX_NULL || src == NX_NULL || !len)
     {

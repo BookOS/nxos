@@ -14,9 +14,9 @@
 
 #include <xbook.h>
 
-NX_PUBLIC void *NX_MemSet(void *dst, NX_U8 value, NX_USize sz);
-NX_PUBLIC void NX_MemCopy(void *dst, void *src, NX_USize sz);
-NX_PUBLIC void *NX_MemZero(void *dst, NX_USize sz);
-NX_PUBLIC int NX_CompareN(const void *s1, const void *s2, NX_USize nBytes);
+NX_PUBLIC void *NX_MemSet(void *dst, NX_U8 value, NX_Size sz);
+NX_PUBLIC void NX_MemCopy(void *dst, void *src, NX_Size sz);
+NX_PUBLIC void *NX_MemZero(void *dst, NX_Size sz);
+NX_PUBLIC int NX_CompareN(const void *s1, const void *s2, NX_Size nBytes);
 
 #endif  /* __UTILS_MEMORY__ */

@@ -39,7 +39,7 @@ typedef struct NX_Process NX_Process;
 
 struct NX_ProcessOps
 {
-    NX_Error (*initUserSpace)(NX_Process *process, NX_Addr virStart, NX_USize size);
+    NX_Error (*initUserSpace)(NX_Process *process, NX_Addr virStart, NX_Size size);
     NX_Error (*switchPageTable)(void *pageTable);
     void *(*getKernelPageTable)(void);
     void (*executeUser)(const void *text, void *userStack, void *kernelStack, void *args);

@@ -74,7 +74,7 @@ NX_PRIVATE SpanMark *SpanMarkMap;
 NX_PRIVATE void *SpanBaseAddr;
 NX_PRIVATE NX_Mutex PageCacheLock;
 
-NX_PRIVATE void *PageAllocVirtual(NX_USize count)
+NX_PRIVATE void *PageAllocVirtual(NX_Size count)
 {
     void *ptr = NX_PageAlloc(count);
     if (ptr == NX_NULL)
@@ -96,10 +96,10 @@ NX_PRIVATE void PageFreeVirtual(void *ptr)
 /**
  * Mark spans for count pages
  */
-NX_PRIVATE void MarkSpan(void *span, NX_USize count)
+NX_PRIVATE void MarkSpan(void *span, NX_Size count)
 {
     NX_Addr dis = (NX_Addr)span - (NX_Addr)SpanBaseAddr;
-    NX_USize idx = dis >> NX_PAGE_SHIFT;
+    NX_Size idx = dis >> NX_PAGE_SHIFT;
 
     SpanMark *mark = SpanMarkMap + idx;
     int i;
@@ -114,10 +114,10 @@ NX_PRIVATE void MarkSpan(void *span, NX_USize count)
 /**
  * clear span for count pages
  */
-NX_PRIVATE void ClearSpan(void *span, NX_USize count)
+NX_PRIVATE void ClearSpan(void *span, NX_Size count)
 {
     NX_Addr dis = (NX_Addr)span - (NX_Addr)SpanBaseAddr;
-    NX_USize idx = dis >> NX_PAGE_SHIFT;
+    NX_Size idx = dis >> NX_PAGE_SHIFT;
 
     SpanMark *mark = SpanMarkMap + idx;
 
@@ -138,14 +138,14 @@ NX_PUBLIC void *NX_PageToSpan(void *page)
         return NX_NULL;
     }
     
-    NX_USize dis = (NX_Addr)page - (NX_Addr)SpanBaseAddr;
-    NX_USize idx = dis >> NX_PAGE_SHIFT;
+    NX_Size dis = (NX_Addr)page - (NX_Addr)SpanBaseAddr;
+    NX_Size idx = dis >> NX_PAGE_SHIFT;
 
     SpanMark *mark = SpanMarkMap + idx;
     return (void *)((NX_Addr)page - mark->idx * NX_PAGE_SIZE);
 }
 
-NX_PUBLIC NX_USize NX_SpanToCount(void *span)
+NX_PUBLIC NX_Size NX_SpanToCount(void *span)
 {
     NX_ASSERT(span != NX_NULL);
     if (span < SpanBaseAddr)
@@ -153,14 +153,14 @@ NX_PUBLIC NX_USize NX_SpanToCount(void *span)
         return 0;
     }
     
-    NX_USize dis = (NX_Addr)span - (NX_Addr)SpanBaseAddr;
-    NX_USize idx = dis >> NX_PAGE_SHIFT;
+    NX_Size dis = (NX_Addr)span - (NX_Addr)SpanBaseAddr;
+    NX_Size idx = dis >> NX_PAGE_SHIFT;
 
     SpanMark *mark = SpanMarkMap + idx;
     return mark->count;
 }
 
-NX_PRIVATE void *__PageCacheAlloc(NX_USize count)
+NX_PRIVATE void *__PageCacheAlloc(NX_Size count)
 {
     int isLargeSpan = 0;
     NX_List *listHead;
@@ -226,7 +226,7 @@ NX_PRIVATE void *__PageCacheAlloc(NX_USize count)
 /**
  * alloc span from heap, if no free page, alloc from buddy system
  */
-NX_PUBLIC void *NX_PageCacheAlloc(NX_USize count)
+NX_PUBLIC void *NX_PageCacheAlloc(NX_Size count)
 {
     if (!count)
     {
@@ -254,7 +254,7 @@ NX_PRIVATE NX_Error __PageCacheFree(void *page)
         return NX_EINVAL;
     }
 
-    NX_USize count = NX_SpanToCount(span);
+    NX_Size count = NX_SpanToCount(span);
     if (!count)
     {
         return NX_EFAULT;
@@ -269,7 +269,7 @@ NX_PRIVATE NX_Error __PageCacheFree(void *page)
     }
 
     NX_List *listHead;
-    NX_USize maxThresold = 0;
+    NX_Size maxThresold = 0;
 
     if (count >= SMALL_SPAN_PAGES_MAX)    /* free to large list */
     {
@@ -334,9 +334,9 @@ NX_PUBLIC void NX_PageCacheInit(void)
     SpanBaseAddr = NX_PageZoneGetBase(NX_PAGE_ZONE_NORMAL);
     NX_LOG_I("span base addr: %p", SpanBaseAddr);
 
-    NX_USize pages = NX_PageZoneGetPages(NX_PAGE_ZONE_NORMAL);
+    NX_Size pages = NX_PageZoneGetPages(NX_PAGE_ZONE_NORMAL);
     /* alloc span mark array */
-    NX_USize spanMarkPages = NX_DIV_ROUND_UP(pages * sizeof(SpanMark), NX_PAGE_SIZE);
+    NX_Size spanMarkPages = NX_DIV_ROUND_UP(pages * sizeof(SpanMark), NX_PAGE_SIZE);
     NX_LOG_I("span mark used page: %d", spanMarkPages);
 
     SpanMarkMap = PageAllocVirtual(spanMarkPages);

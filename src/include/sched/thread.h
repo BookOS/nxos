@@ -68,7 +68,7 @@ struct NX_Thread
     
     /* thread stack */
     NX_U8 *stackBase;  /* stack base */
-    NX_USize stackSize; 
+    NX_Size stackSize; 
     NX_U8 *stack;      /* stack top */
     
     /* thread sched */

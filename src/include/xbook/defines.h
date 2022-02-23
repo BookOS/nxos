@@ -73,7 +73,7 @@
 /**
  * Offset of struct
  */
-#define NX_OFFSET_OF_STRUCT(type, member) ((NX_USize) &((type *)0)->member)
+#define NX_OFFSET_OF_STRUCT(type, member) ((NX_Size) &((type *)0)->member)
 
 /**
  * Ptr of struct base addr 

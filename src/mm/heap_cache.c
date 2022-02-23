@@ -52,9 +52,9 @@
 NX_PRIVATE struct NX_HeapSizeClass CacheSizeAarray[MAX_SIZE_CLASS_NR];
 NX_PRIVATE NX_HeapCache MiddleSizeCache;
 
-NX_PRIVATE NX_USize AlignDownToPow2(NX_USize size)
+NX_PRIVATE NX_Size AlignDownToPow2(NX_Size size)
 {
-    NX_USize n = 19;    /* pow(2, 19) -> 512kb */
+    NX_Size n = 19;    /* pow(2, 19) -> 512kb */
     while (NX_PowInt(2, n) > size)
     {
         n--;
@@ -62,7 +62,7 @@ NX_PRIVATE NX_USize AlignDownToPow2(NX_USize size)
     return NX_PowInt(2, n);
 }
 
-NX_PRIVATE NX_USize SizeToPageCount(NX_USize size)
+NX_PRIVATE NX_Size SizeToPageCount(NX_Size size)
 {
     if (size > 0 && size <= 1024)
     {
@@ -90,7 +90,7 @@ NX_PRIVATE NX_USize SizeToPageCount(NX_USize size)
     }
 }
 
-NX_PRIVATE void HeapCacheInitOne(NX_HeapCache *cache, NX_USize classSize)
+NX_PRIVATE void HeapCacheInitOne(NX_HeapCache *cache, NX_Size classSize)
 {
     cache->classSize = classSize;
     NX_ListInit(&cache->objectFreeList);
@@ -127,7 +127,7 @@ NX_PRIVATE void HeapSizeClassInit(void)
     HeapCacheInitOne(&MiddleSizeCache, 0);
 }
 
-NX_INLINE NX_HeapCache *SizeToCache(NX_USize size)
+NX_INLINE NX_HeapCache *SizeToCache(NX_Size size)
 {
     NX_ASSERT(size <= MAX_SMALL_OBJECT_SIZE);
     NX_HeapCache *cache = NX_NULL;
@@ -160,7 +160,7 @@ NX_PRIVATE NX_HeapSmallCacheSystem *GetFreeSmallCacheSystem(NX_HeapCache *cache)
     return NX_NULL;
 }
 
-NX_PRIVATE void *GetFreeSmallCacheObject(NX_HeapSmallCacheSystem *system, NX_USize size)
+NX_PRIVATE void *GetFreeSmallCacheObject(NX_HeapSmallCacheSystem *system, NX_Size size)
 {
     NX_HeapSmallCacheObject *object;
     object = NX_ListFirstEntryOrNULL(&system->objectFreeList, NX_HeapSmallCacheObject, list);
@@ -174,7 +174,7 @@ NX_PRIVATE void *GetFreeSmallCacheObject(NX_HeapSmallCacheSystem *system, NX_USi
     return object;
 }
 
-NX_PRIVATE void PageNodeMarkSize(NX_PageSpan *spanNode, NX_USize size)
+NX_PRIVATE void PageNodeMarkSize(NX_PageSpan *spanNode, NX_Size size)
 {
     /* NOTICE: must get page node from span page */
     NX_Page *pageNode = NX_PageFromPtr(NX_PageZoneGetBuddySystem(NX_PAGE_ZONE_NORMAL), spanNode);
@@ -213,7 +213,7 @@ NX_PRIVATE NX_Error PutFreeSmallCacheObject(NX_HeapCache *cache, NX_HeapSmallCac
     }
 }
 
-NX_PRIVATE void BuildSmallCacheSystem(NX_PageSpan *spanNode, NX_USize objectCount, NX_USize size)
+NX_PRIVATE void BuildSmallCacheSystem(NX_PageSpan *spanNode, NX_Size objectCount, NX_Size size)
 {
     NX_HeapSmallCacheObject *objectNode;
     NX_HeapSmallCacheSystem *system = (NX_HeapSmallCacheSystem *)spanNode;
@@ -221,7 +221,7 @@ NX_PRIVATE void BuildSmallCacheSystem(NX_PageSpan *spanNode, NX_USize objectCoun
     system->objectFreeCount = 0;
 
     /* skip system self */
-    NX_USize systemUsedObjectCount = NX_DIV_ROUND_UP(sizeof(NX_HeapSmallCacheSystem), size);
+    NX_Size systemUsedObjectCount = NX_DIV_ROUND_UP(sizeof(NX_HeapSmallCacheSystem), size);
 
     /* update object count */
     objectCount -= systemUsedObjectCount;
@@ -241,7 +241,7 @@ NX_PRIVATE void BuildSmallCacheSystem(NX_PageSpan *spanNode, NX_USize objectCoun
     NX_ASSERT(system->objectFreeCount == objectCount);
 }
 
-NX_PRIVATE NX_Error AllocSpan(NX_HeapCache *cache, NX_USize pageCount, NX_USize objectCount, NX_USize size)
+NX_PRIVATE NX_Error AllocSpan(NX_HeapCache *cache, NX_Size pageCount, NX_Size objectCount, NX_Size size)
 {
     NX_PageSpan *spanNode = (NX_PageSpan *)NX_PageCacheAlloc(pageCount);
     if (spanNode == NX_NULL)
@@ -266,7 +266,7 @@ NX_PRIVATE NX_Error AllocSpan(NX_HeapCache *cache, NX_USize pageCount, NX_USize 
     return NX_EOK;
 }
 
-NX_PRIVATE void *AllocSmallObject(NX_HeapCache *cache, NX_USize pageCount, NX_USize objectCount, NX_USize size)
+NX_PRIVATE void *AllocSmallObject(NX_HeapCache *cache, NX_Size pageCount, NX_Size objectCount, NX_Size size)
 {
     NX_HeapSmallCacheSystem *system = NX_NULL;
 
@@ -294,7 +294,7 @@ NX_PRIVATE NX_Error FreeSmallObject(void *span, void *object)
 {
     NX_HeapSmallCacheSystem *system;
     NX_Error err;
-    NX_USize sizeClass;
+    NX_Size sizeClass;
     NX_HeapCache *cache;
     NX_Page *pageNode;
 
@@ -317,13 +317,13 @@ NX_PRIVATE NX_Error FreeSmallObject(void *span, void *object)
     return err;
 }
 
-NX_PUBLIC void *NX_HeapAlloc(NX_USize size)
+NX_PUBLIC void *NX_HeapAlloc(NX_Size size)
 {
-    NX_USize pageCount;
+    NX_Size pageCount;
     NX_HeapCache *cache = NX_NULL;
     NX_PageSpan *spanNode = NX_NULL;
     void *memObject = NX_NULL;
-    NX_USize objectCount;
+    NX_Size objectCount;
 
     if (!size)
     {
@@ -397,7 +397,7 @@ NX_PUBLIC NX_Error NX_HeapFree(void *object)
     void *page = NX_NULL;
     void *span = NX_NULL;
     NX_HeapCache *cache = NX_NULL;
-    NX_USize sizeClass;
+    NX_Size sizeClass;
 
     if (object == NX_NULL) /* can't free NX_NULL object */
     {
@@ -452,7 +452,7 @@ NX_PUBLIC NX_Error NX_HeapFree(void *object)
     return FreeSmallObject(span, object);
 }
 
-NX_PUBLIC NX_USize NX_HeapGetObjectSize(void *object)
+NX_PUBLIC NX_Size NX_HeapGetObjectSize(void *object)
 {
     if (object == NX_NULL) /* can't free NX_NULL object */
     {

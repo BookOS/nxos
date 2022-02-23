@@ -109,7 +109,7 @@ NX_PUBLIC void TrapFrameDump(HAL_TrapFrame *frame)
     NX_LOG_RAW("\t%s\n", (frame->sstatus & SSTATUS_SPP) ? "Last Privilege is Supervisor Mode" : "Last Privilege is User Mode");
     NX_LOG_RAW("\t%s\n", (frame->sstatus & SSTATUS_FS) ? "FPU Enabled" : "FPU not Enabled");
     
-    NX_USize satp = ReadCSR(satp);
+    NX_Size satp = ReadCSR(satp);
     NX_LOG_RAW("satp = 0x%p\n", satp);
     
     NX_LOG_RAW("\tCurrent PPN = 0x%p\n", (satp & ((1UL << 28) - 1)));

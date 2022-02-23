@@ -65,7 +65,7 @@ NX_Error NX_VmspaceExit(NX_Vmspace *space);
 
 NX_Error NX_VmspaceMap(NX_Vmspace *space,
     NX_Addr addr,
-    NX_USize size,
+    NX_Size size,
     NX_U32 attr,
     NX_U32 flags,
     void **outAddr);
@@ -73,12 +73,12 @@ NX_Error NX_VmspaceMap(NX_Vmspace *space,
 NX_Error NX_VmspaceMapWithPhy(NX_Vmspace *space,
     NX_Addr vaddr,
     NX_Addr paddr,
-    NX_USize size,
+    NX_Size size,
     NX_U32 attr,
     NX_U32 flags,
     void **outAddr);
 
-NX_Error NX_VmspaceUnmap(NX_Vmspace *space, NX_Addr addr, NX_USize size);
+NX_Error NX_VmspaceUnmap(NX_Vmspace *space, NX_Addr addr, NX_Size size);
 
 NX_Error NX_VmspaceListNodes(NX_Vmspace *space);
 

@@ -20,7 +20,7 @@
 #include <xbook/init_call.h>
 
 NX_PRIVATE NX_UTestCase *TestCaseTable = NX_NULL;
-NX_PRIVATE NX_USize TestCaseCount;
+NX_PRIVATE NX_Size TestCaseCount;
 NX_PRIVATE NX_UTestSum LocalUtestSum = {NX_False, 0, 0};
 NX_PRIVATE NX_UTestSum UtestSum = {NX_False, 0, 0};
 NX_PRIVATE NX_UTestSum UtestCaseSum = {NX_False, 0, 0};
@@ -189,7 +189,7 @@ NX_PUBLIC void NX_UTestAssertString(const char *a, const char *b, NX_Bool equal,
     }
 }
 
-NX_PUBLIC void NX_UTestAssertBuf(const char *a, const char *b, NX_USize sz, NX_Bool equal,
+NX_PUBLIC void NX_UTestAssertBuf(const char *a, const char *b, NX_Size sz, NX_Bool equal,
     const char *file, int line, const char *func, const char *msg, NX_Bool dieAction)
 {
     if (a == NX_NULL || b == NX_NULL)

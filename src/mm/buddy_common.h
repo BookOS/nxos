@@ -36,7 +36,7 @@ NX_INLINE int BuddyFLS(NX_U32 word)
 
 /* Possibly 64-bit version of BuddyFLS. */
 #if defined(CONFIG_NX_CPU_64BITS)
-NX_PRIVATE int BuddyFlsSizet(NX_USize size)
+NX_PRIVATE int BuddyFlsSizet(NX_Size size)
 {
     int high = (int)(size >> 32);
     int bits = 0;
@@ -51,7 +51,7 @@ NX_PRIVATE int BuddyFlsSizet(NX_USize size)
     return bits;
 }
 
-NX_PRIVATE int BuddyFfsSizet(NX_USize size)
+NX_PRIVATE int BuddyFfsSizet(NX_Size size)
 {
     int low = (int)(size);
     int bits = 0;
@@ -70,19 +70,19 @@ NX_PRIVATE int BuddyFfsSizet(NX_USize size)
 #define BuddyFfsSizet BuddyFFS
 #endif
 
-NX_PRIVATE NX_USize BuddyAlignUp(NX_USize x, NX_USize align)
+NX_PRIVATE NX_Size BuddyAlignUp(NX_Size x, NX_Size align)
 {
     BUDDY_ASSERT(0 == (align & (align - 1)), "must align to a power of two");
     return (x + (align - 1)) & ~(align - 1);
 }
 
-NX_USED NX_PRIVATE NX_USize BuddyAlignDown(NX_USize x, NX_USize align)
+NX_USED NX_PRIVATE NX_Size BuddyAlignDown(NX_Size x, NX_Size align)
 {
     BUDDY_ASSERT(0 == (align & (align - 1)), "must align to a power of two");
     return x - (x & (align - 1));
 }
 
-NX_PRIVATE void *BuddyAlignPtr(const void *ptr, NX_USize align)
+NX_PRIVATE void *BuddyAlignPtr(const void *ptr, NX_Size align)
 {
     NX_ASSERT(ptr && align);
 
