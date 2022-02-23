@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2022, BookOS Development Team
  * SPDX-License-Identifier: Apache-2.0
  * 
- * Contains: I386 registers 
+ * Contains: nxos types header
  * 
  * Change Logs:
  * Date           Author            Notes
