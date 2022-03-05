@@ -25,12 +25,12 @@
 #include <utils/string.h>
 #include <mods/time/timer.h>
 
-NX_PUBLIC NX_ThreadManager NX_ThreadManagerObject;
+NX_ThreadManager NX_ThreadManagerObject;
 
 NX_PRIVATE NX_Error ThreadInit(NX_Thread *thread, 
     const char *name,
     NX_ThreadHandler handler, void *arg,
-    NX_U8 *stack, NX_USize stackSize)
+    NX_U8 *stack, NX_Size stackSize)
 {
     if (thread == NX_NULL || name == NX_NULL || handler == NX_NULL || stack == NX_NULL || !stackSize)
     {
@@ -84,7 +84,7 @@ NX_PRIVATE NX_Error ThreadDeInit(NX_Thread *thread)
     return NX_EOK;
 }
 
-NX_PUBLIC NX_Thread *NX_ThreadCreate(const char *name, NX_ThreadHandler handler, void *arg)
+NX_Thread *NX_ThreadCreate(const char *name, NX_ThreadHandler handler, void *arg)
 {
     NX_Thread *thread = (NX_Thread *)NX_MemAlloc(sizeof(NX_Thread));
     if (thread == NX_NULL)
@@ -106,7 +106,7 @@ NX_PUBLIC NX_Thread *NX_ThreadCreate(const char *name, NX_ThreadHandler handler,
     return thread;
 }
 
-NX_PUBLIC NX_Error NX_ThreadDestroy(NX_Thread *thread)
+NX_Error NX_ThreadDestroy(NX_Thread *thread)
 {
     if (thread == NX_NULL)
     {
@@ -129,7 +129,7 @@ NX_PUBLIC NX_Error NX_ThreadDestroy(NX_Thread *thread)
     return NX_EOK;
 }
 
-NX_PUBLIC void NX_ThreadReadyRunLocked(NX_Thread *thread, int flags)
+void NX_ThreadReadyRunLocked(NX_Thread *thread, int flags)
 {
     thread->state = NX_THREAD_READY;
 
@@ -151,7 +151,7 @@ NX_PUBLIC void NX_ThreadReadyRunLocked(NX_Thread *thread, int flags)
     }
 }
 
-NX_PUBLIC void NX_ThreadReadyRunUnlocked(NX_Thread *thread, int flags)
+void NX_ThreadReadyRunUnlocked(NX_Thread *thread, int flags)
 {
     NX_UArch level;
     NX_SpinLockIRQ(&NX_ThreadManagerObject.lock, &level);
@@ -173,7 +173,7 @@ NX_INLINE void NX_ThreadDeququeGlobalListUnlocked(NX_Thread *thread)
     NX_AtomicDec(&NX_ThreadManagerObject.activeThreadCount);
 }
 
-NX_PUBLIC NX_Error NX_ThreadRun(NX_Thread *thread)
+NX_Error NX_ThreadRun(NX_Thread *thread)
 {
     if (thread == NX_NULL)
     {
@@ -192,12 +192,12 @@ NX_PUBLIC NX_Error NX_ThreadRun(NX_Thread *thread)
     return NX_EOK;
 }
 
-NX_PUBLIC void NX_ThreadYield(void)
+void NX_ThreadYield(void)
 {
     NX_SchedYield();
 }
 
-NX_PUBLIC NX_Error NX_ThreadTerminate(NX_Thread *thread)
+NX_Error NX_ThreadTerminate(NX_Thread *thread)
 {
     if (thread == NX_NULL)
     {
@@ -235,7 +235,7 @@ NX_PRIVATE void ThreadReleaseResouce(NX_Thread *thread)
 
 }
 
-NX_PUBLIC void NX_ThreadExit(void)
+void NX_ThreadExit(void)
 {
     /* free thread resource */
     NX_Thread *thread = NX_ThreadSelf();
@@ -254,7 +254,7 @@ NX_PUBLIC void NX_ThreadExit(void)
     NX_PANIC("Thread Exit should never arrive here!");
 }
 
-NX_PUBLIC NX_Thread *NX_ThreadSelf(void)
+NX_Thread *NX_ThreadSelf(void)
 {
     NX_Thread *cur = NX_SMP_GetRunning();
     NX_ASSERT(cur != NX_NULL);
@@ -283,7 +283,7 @@ NX_PRIVATE void ThreadUnblockInterruptDisabled(NX_Thread *thread)
 /**
  * wakeup a thread, must called interrupt disabled
  */
-NX_PUBLIC NX_Error NX_ThreadWakeup(NX_Thread *thread)
+NX_Error NX_ThreadWakeup(NX_Thread *thread)
 {
     if (thread == NX_NULL)
     {
@@ -316,7 +316,7 @@ NX_PRIVATE NX_Bool TimerThreadSleepTimeout(NX_Timer *timer, void *arg)
 /* if thread sleep less equal than 2s, use delay instead */
 #define THREAD_SLEEP_TIMEOUT_THRESHOLD 2
 
-NX_PUBLIC NX_Error NX_ThreadSleep(NX_UArch microseconds)
+NX_Error NX_ThreadSleep(NX_UArch microseconds)
 {
     if (microseconds == 0)
     {
@@ -372,7 +372,7 @@ NX_PUBLIC NX_Error NX_ThreadSleep(NX_UArch microseconds)
     return NX_EOK;
 }
 
-NX_PUBLIC NX_Error NX_ThreadSetAffinity(NX_Thread *thread, NX_UArch coreId)
+NX_Error NX_ThreadSetAffinity(NX_Thread *thread, NX_UArch coreId)
 {
     if (thread == NX_NULL || coreId >= NX_MULTI_CORES_NR)
     {
@@ -386,7 +386,7 @@ NX_PUBLIC NX_Error NX_ThreadSetAffinity(NX_Thread *thread, NX_UArch coreId)
     return NX_EOK;
 }
 
-NX_PUBLIC void NX_ThreadEnqueuePendingList(NX_Thread *thread)
+void NX_ThreadEnqueuePendingList(NX_Thread *thread)
 {
     NX_UArch level;
     NX_SpinLockIRQ(&NX_ThreadManagerObject.lock, &level);
@@ -395,7 +395,7 @@ NX_PUBLIC void NX_ThreadEnqueuePendingList(NX_Thread *thread)
     NX_SpinUnlockIRQ(&NX_ThreadManagerObject.lock, level);
 }
 
-NX_PUBLIC NX_Thread *NX_ThreadDequeuePendingList(void)
+NX_Thread *NX_ThreadDequeuePendingList(void)
 {
     NX_Thread *thread;
     NX_SpinLock(&NX_ThreadManagerObject.lock, NX_True);
@@ -409,7 +409,7 @@ NX_PUBLIC NX_Thread *NX_ThreadDequeuePendingList(void)
     return thread;
 }
 
-NX_PUBLIC void NX_ThreadEnququeExitList(NX_Thread *thread)
+void NX_ThreadEnququeExitList(NX_Thread *thread)
 {
     NX_UArch level;
     NX_SpinLockIRQ(&NX_ThreadManagerObject.exitLock, &level);
@@ -418,7 +418,7 @@ NX_PUBLIC void NX_ThreadEnququeExitList(NX_Thread *thread)
     NX_SpinUnlockIRQ(&NX_ThreadManagerObject.exitLock, level);
 }
 
-NX_PUBLIC NX_Thread *NX_ThreadDeququeExitList(void)
+NX_Thread *NX_ThreadDeququeExitList(void)
 {
     NX_Thread *thread;
     NX_UArch level;
@@ -433,7 +433,7 @@ NX_PUBLIC NX_Thread *NX_ThreadDeququeExitList(void)
     return thread;
 }
 
-NX_PUBLIC NX_Thread *NX_ThreadFindById(NX_U32 tid)
+NX_Thread *NX_ThreadFindById(NX_U32 tid)
 {
     NX_Thread *thread = NX_NULL, *find = NX_NULL;
     NX_UArch level;
@@ -453,7 +453,7 @@ NX_PUBLIC NX_Thread *NX_ThreadFindById(NX_U32 tid)
     return find;
 }
 
-NX_PUBLIC void NX_ThreadManagerInit(void)
+void NX_ThreadManagerInit(void)
 {
     NX_AtomicSet(&NX_ThreadManagerObject.averageThreadThreshold, 0);
     NX_AtomicSet(&NX_ThreadManagerObject.activeThreadCount, 0);
@@ -469,7 +469,7 @@ NX_PUBLIC void NX_ThreadManagerInit(void)
 NX_IMPORT void NX_ThreadInitIdle(void);
 NX_IMPORT void NX_ThreadInitDeamon(void);
 
-NX_PUBLIC void NX_ThreadsInit(void)
+void NX_ThreadsInit(void)
 {
     NX_ThreadsInitID();
     NX_ThreadManagerInit();

@@ -21,7 +21,7 @@
 #include <xbook/init_call.h>
 
 NX_PRIVATE NX_Integration *IntegrationTable = NX_NULL;
-NX_PRIVATE NX_USize IntegrationCount;
+NX_PRIVATE NX_Size IntegrationCount;
 
 NX_IMPORT const NX_Addr __NX_IntegrationTableStart;
 NX_IMPORT const NX_Addr __NX_IntegrationTableEnd;
@@ -33,7 +33,7 @@ NX_PRIVATE void IntegrationInvoke(void)
     NX_LOG_I("[==========] Total integrations: %d", IntegrationCount);
     int integrationIndex;
     NX_Error err;
-    NX_USize passedTests = 0; 
+    NX_Size passedTests = 0; 
     for (integrationIndex = 0; integrationIndex < IntegrationCount; integrationIndex++)
     {
         NX_LOG_I("[==========] [ integration ] Running (%d/%d) test (%s).", integrationIndex + 1, IntegrationCount, IntegrationTable->integrationName);

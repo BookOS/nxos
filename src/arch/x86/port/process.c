@@ -28,7 +28,7 @@
 
 NX_IMPORT void HAL_ProcessEnterUserMode(HAL_TrapFrame *frame);
 
-NX_PRIVATE NX_Error HAL_ProcessInitUserSpace(NX_Process *process, NX_Addr virStart, NX_USize size)
+NX_PRIVATE NX_Error HAL_ProcessInitUserSpace(NX_Process *process, NX_Addr virStart, NX_Size size)
 {
     void *table = NX_MemAlloc(NX_PAGE_SIZE);
     if (table == NX_NULL)
@@ -72,7 +72,7 @@ NX_PRIVATE void *HAL_ProcessGetKernelPageTable(void)
     return HAL_GetKernelPageTable();
 }
 
-NX_PUBLIC void HAL_ProcessSyscallDispatch(HAL_TrapFrame *frame)
+void HAL_ProcessSyscallDispatch(HAL_TrapFrame *frame)
 {
     NX_SyscallWithArgHandler handler = (NX_SyscallWithArgHandler)NX_SyscallGetHandler((NX_SyscallApi)frame->eax);
     NX_ASSERT(handler);

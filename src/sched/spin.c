@@ -12,7 +12,7 @@
 #include <sched/spin.h>
 #include <io/irq.h>
 
-NX_PUBLIC NX_Error NX_SpinInit(NX_Spin *lock)
+NX_Error NX_SpinInit(NX_Spin *lock)
 {
     if (lock == NX_NULL)
     {
@@ -28,7 +28,7 @@ NX_PUBLIC NX_Error NX_SpinInit(NX_Spin *lock)
     return NX_EOK;
 }
 
-NX_PUBLIC NX_Error NX_SpinLock(NX_Spin *lock, NX_Bool forever)
+NX_Error NX_SpinLock(NX_Spin *lock, NX_Bool forever)
 {
     if (lock == NX_NULL || lock->magic != NX_SPIN_MAGIC)
     {
@@ -50,7 +50,7 @@ NX_PUBLIC NX_Error NX_SpinLock(NX_Spin *lock, NX_Bool forever)
     return NX_EOK;
 }
 
-NX_PUBLIC NX_Error NX_SpinUnlock(NX_Spin *lock)
+NX_Error NX_SpinUnlock(NX_Spin *lock)
 {
     if (lock == NX_NULL || lock->magic != NX_SPIN_MAGIC)
     {
@@ -60,7 +60,7 @@ NX_PUBLIC NX_Error NX_SpinUnlock(NX_Spin *lock)
     return NX_EOK;
 }
 
-NX_PUBLIC NX_Error NX_SpinLockIRQ(NX_Spin *lock, NX_UArch *level)
+NX_Error NX_SpinLockIRQ(NX_Spin *lock, NX_UArch *level)
 {
     if (lock == NX_NULL || level == NX_NULL)
     {
@@ -70,7 +70,7 @@ NX_PUBLIC NX_Error NX_SpinLockIRQ(NX_Spin *lock, NX_UArch *level)
     return NX_SpinLock(lock, NX_True);
 }
 
-NX_PUBLIC NX_Error NX_SpinUnlockIRQ(NX_Spin *lock, NX_UArch level)
+NX_Error NX_SpinUnlockIRQ(NX_Spin *lock, NX_UArch level)
 {
     if (lock == NX_NULL)
     {

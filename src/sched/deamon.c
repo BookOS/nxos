@@ -53,7 +53,7 @@ NX_PRIVATE void DaemonThreadEntry(void *arg)
     }
 }
 
-NX_PUBLIC void NX_ThreadInitDeamon(void)
+void NX_ThreadInitDeamon(void)
 {
     NX_Thread *deamonThread;
     /* init daemon thread */

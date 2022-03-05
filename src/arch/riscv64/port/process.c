@@ -22,7 +22,7 @@
 #include <mm/mmu.h>
 #include <interrupt.h>
 
-NX_PRIVATE NX_Error HAL_ProcessInitUserSpace(NX_Process *process, NX_Addr virStart, NX_USize size)
+NX_PRIVATE NX_Error HAL_ProcessInitUserSpace(NX_Process *process, NX_Addr virStart, NX_Size size)
 {
     void *table = NX_MemAlloc(NX_PAGE_SIZE);
     if (table == NX_NULL)
@@ -57,7 +57,7 @@ NX_PRIVATE NX_Error HAL_ProcessSwitchPageTable(void *pageTableVir)
     return NX_EOK;
 }
 
-NX_PUBLIC void HAL_ProcessSyscallDispatch(HAL_TrapFrame *frame)
+void HAL_ProcessSyscallDispatch(HAL_TrapFrame *frame)
 {
     NX_SyscallWithArgHandler handler = (NX_SyscallWithArgHandler)NX_SyscallGetHandler((NX_SyscallApi)frame->a7);
     NX_ASSERT(handler);

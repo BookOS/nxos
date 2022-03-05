@@ -19,15 +19,15 @@
 struct NX_PageSpan
 {
     NX_List list;  /* NOTICE: list must be first member here */
-    NX_USize pageCount; /* page count for this span */
+    NX_Size pageCount; /* page count for this span */
 };
 typedef struct NX_PageSpan NX_PageSpan;
 
-NX_PUBLIC void NX_PageCacheInit(void);
-NX_PUBLIC void *NX_PageCacheAlloc(NX_USize count);
-NX_PUBLIC NX_Error NX_PageCacheFree(void *page);
+void NX_PageCacheInit(void);
+void *NX_PageCacheAlloc(NX_Size count);
+NX_Error NX_PageCacheFree(void *page);
 
-NX_PUBLIC void *NX_PageToSpan(void *page);
-NX_PUBLIC NX_USize NX_SpanToCount(void *span);
+void *NX_PageToSpan(void *page);
+NX_Size NX_SpanToCount(void *span);
 
 #endif /* __MM_PAGE_CACHE__ */

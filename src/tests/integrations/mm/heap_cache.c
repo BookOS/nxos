@@ -175,7 +175,7 @@ NX_PRIVATE void SmallObjectTest(void)
             p = NX_HeapAlloc(i);
             if (p != NX_NULL)
             {
-                NX_LOG_D("Alloc & Free: %p NX_USize: %d", p, NX_HeapGetObjectSize(p));
+                NX_LOG_D("Alloc & Free: %p NX_Size: %d", p, NX_HeapGetObjectSize(p));
                 NX_HeapFree(p);
             }
         }

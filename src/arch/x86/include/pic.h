@@ -21,9 +21,9 @@
 
 #define PIC_EIO             0x20    /* end of IO port */
 
-NX_PUBLIC void PIC_Init(void);
-NX_PUBLIC void PIC_Enable(NX_U32 irq);
-NX_PUBLIC void PIC_Disable(NX_U32 irq);
-NX_PUBLIC void PIC_Ack(NX_U32 irq);
+void PIC_Init(void);
+void PIC_Enable(NX_U32 irq);
+void PIC_Disable(NX_U32 irq);
+void PIC_Ack(NX_U32 irq);
 
 #endif /* __I386_PIC__ */

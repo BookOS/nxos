@@ -21,15 +21,15 @@
 struct NX_HeapCache
 {
     NX_List objectFreeList;
-    NX_USize classSize;         /* heap cache size */
-    NX_USize objectFreeCount;
+    NX_Size classSize;         /* heap cache size */
+    NX_Size objectFreeCount;
     NX_Mutex lock;              /* lock for cache list */
 };
 typedef struct NX_HeapCache NX_HeapCache;
 
 struct NX_HeapSizeClass
 {
-    NX_USize size;
+    NX_Size size;
     struct NX_HeapCache cache;
 };
 
@@ -45,16 +45,16 @@ struct NX_HeapSmallCacheSystem
 {
     NX_PageSpan pageSpan;
     NX_List objectFreeList;     /* free list for small objects */
-    NX_USize objectFreeCount;   /* counts for small objects */
-    NX_USize maxObjects;        /* max objects on this cache system */
+    NX_Size objectFreeCount;   /* counts for small objects */
+    NX_Size maxObjects;        /* max objects on this cache system */
 };
 typedef struct NX_HeapSmallCacheSystem NX_HeapSmallCacheSystem;
 
-NX_PUBLIC void NX_HeapCacheInit(void);
+void NX_HeapCacheInit(void);
 
-NX_PUBLIC void *NX_HeapAlloc(NX_USize size);
-NX_PUBLIC NX_Error NX_HeapFree(void *object);
-NX_PUBLIC NX_USize NX_HeapGetObjectSize(void *object);
+void *NX_HeapAlloc(NX_Size size);
+NX_Error NX_HeapFree(void *object);
+NX_Size NX_HeapGetObjectSize(void *object);
 
 NX_INLINE NX_Error __HeapFreeSatety(void **object)
 {

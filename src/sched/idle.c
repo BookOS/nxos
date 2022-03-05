@@ -30,7 +30,7 @@ NX_PRIVATE void IdleThreadEntry(void *arg)
     }
 }
 
-NX_PUBLIC void NX_ThreadInitIdle(void)
+void NX_ThreadInitIdle(void)
 {
     NX_Thread *idleThread;
     int coreId;

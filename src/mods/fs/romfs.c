@@ -44,7 +44,7 @@ NX_PRIVATE void NX_RomfsList(void)
     int i;
     char* file_buf;
     char *filename;
-    NX_USize file_sz;
+    NX_Size file_sz;
 
     if ((path = (char *)NX_MemAlloc(info.max_path_sz + ROOT_PATH_LEN)) == NX_NULL)
     {
@@ -71,7 +71,7 @@ NX_PRIVATE void NX_RomfsList(void)
     NX_MemFree(path);
 }
 
-NX_PUBLIC NX_Error NX_RomfsMount(const char *path, const char *devname, int flags)
+NX_Error NX_RomfsMount(const char *path, const char *devname, int flags)
 {
     if (path == NX_NULL || devname == NX_NULL)
     {
@@ -82,7 +82,7 @@ NX_PUBLIC NX_Error NX_RomfsMount(const char *path, const char *devname, int flag
     return NX_EOK;
 }
 
-NX_PUBLIC NX_Error NX_RomfsUnmount(const char *path, int flags)
+NX_Error NX_RomfsUnmount(const char *path, int flags)
 {
     if (path == NX_NULL)
     {
@@ -93,7 +93,7 @@ NX_PUBLIC NX_Error NX_RomfsUnmount(const char *path, int flags)
     return NX_EOK;
 }
 
-NX_PRIVATE NX_RomfsFile *NX_RomfsCreateFile(void *buf, NX_USize size)
+NX_PRIVATE NX_RomfsFile *NX_RomfsCreateFile(void *buf, NX_Size size)
 {
     NX_RomfsFile *file = NX_MemAlloc(sizeof(NX_RomfsFile));
     if (file == NX_NULL)
@@ -107,7 +107,7 @@ NX_PRIVATE NX_RomfsFile *NX_RomfsCreateFile(void *buf, NX_USize size)
     return file;
 }
 
-NX_PUBLIC NX_Error NX_RomfsOpen(const char *path, int flags, NX_RomfsFile **outFile)
+NX_Error NX_RomfsOpen(const char *path, int flags, NX_RomfsFile **outFile)
 {
     NX_RomfsFile *file;
     unsigned long size;
@@ -147,7 +147,7 @@ NX_PUBLIC NX_Error NX_RomfsOpen(const char *path, int flags, NX_RomfsFile **outF
     return NX_EOK;
 }
 
-NX_PUBLIC NX_Error NX_RomfsClose(NX_RomfsFile *file)
+NX_Error NX_RomfsClose(NX_RomfsFile *file)
 {
     if (file == NX_NULL)
     {
@@ -157,9 +157,9 @@ NX_PUBLIC NX_Error NX_RomfsClose(NX_RomfsFile *file)
     return NX_EOK;
 }
 
-NX_PUBLIC NX_Error NX_RomfsRead(NX_RomfsFile *file, void *buf, NX_USize bytes, NX_USize *outBytes)
+NX_Error NX_RomfsRead(NX_RomfsFile *file, void *buf, NX_Size bytes, NX_Size *outBytes)
 {
-    NX_ISize chunk;
+    NX_SSize chunk;
 
     if (romfsSystem.archive == NX_NULL)
     {
@@ -189,7 +189,7 @@ NX_PUBLIC NX_Error NX_RomfsRead(NX_RomfsFile *file, void *buf, NX_USize bytes, N
     return NX_EOK;
 }
 
-NX_PUBLIC NX_Error NX_RomfsSeek(NX_RomfsFile *file, NX_Offset off, int flags, NX_Offset *outOff)
+NX_Error NX_RomfsSeek(NX_RomfsFile *file, NX_Offset off, int flags, NX_Offset *outOff)
 {
     NX_Offset offVal = 0;
 

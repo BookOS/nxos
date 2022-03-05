@@ -17,10 +17,10 @@
 #define NX_SCHED_HEAD          0x01
 #define NX_SCHED_TAIL          0x02
 
-NX_PUBLIC void NX_SchedToFirstThread(void);
-NX_PUBLIC void NX_SchedWithInterruptDisabled(NX_UArch irqLevel);
-NX_PUBLIC void NX_SchedYield(void);
-NX_PUBLIC void NX_ReSchedCheck(void);
-NX_PUBLIC void NX_SchedExit(void);
+void NX_SchedToFirstThread(void);
+void NX_SchedWithInterruptDisabled(NX_UArch irqLevel);
+void NX_SchedYield(void);
+void NX_ReSchedCheck(void);
+void NX_SchedExit(void);
 
 #endif /* __XBOOK_SCHED___ */

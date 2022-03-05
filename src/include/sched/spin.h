@@ -28,10 +28,10 @@ typedef struct NX_Spin NX_Spin;
 #define STATIC_SPIN_UNLOCKED(name) NX_Spin name = {NX_ATOMIC_INIT_VALUE(0), NX_SPIN_MAGIC}
 #define STATIC_SPIN_LOCKED(name) NX_Spin name = {NX_ATOMIC_INIT_VALUE(1), NX_SPIN_MAGIC}
 
-NX_PUBLIC NX_Error NX_SpinInit(NX_Spin *lock);
-NX_PUBLIC NX_Error NX_SpinLock(NX_Spin *lock, NX_Bool forever);
-NX_PUBLIC NX_Error NX_SpinUnlock(NX_Spin *lock);
-NX_PUBLIC NX_Error NX_SpinLockIRQ(NX_Spin *lock, NX_UArch *level);
-NX_PUBLIC NX_Error NX_SpinUnlockIRQ(NX_Spin *lock, NX_UArch level);
+NX_Error NX_SpinInit(NX_Spin *lock);
+NX_Error NX_SpinLock(NX_Spin *lock, NX_Bool forever);
+NX_Error NX_SpinUnlock(NX_Spin *lock);
+NX_Error NX_SpinLockIRQ(NX_Spin *lock, NX_UArch *level);
+NX_Error NX_SpinUnlockIRQ(NX_Spin *lock, NX_UArch level);
 
 #endif /* __SCHED_SPIN___ */

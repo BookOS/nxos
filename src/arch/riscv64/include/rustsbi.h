@@ -60,7 +60,7 @@ NX_INLINE int sbi_console_getchar(void)
 	return SBI_CALL_0(SBI_CONSOLE_GETCHAR);
 }
 
-NX_INLINE void sbi_set_timer(NX_USize stime_value)
+NX_INLINE void sbi_set_timer(NX_Size stime_value)
 {
 	SBI_CALL_1(SBI_SET_TIMER, stime_value);
 }

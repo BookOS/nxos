@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2022, BookOS Development Team
  * SPDX-License-Identifier: Apache-2.0
  * 
- * Contains: I386 registers 
+ * Contains: nxos types header
  * 
  * Change Logs:
  * Date           Author            Notes
@@ -26,8 +26,8 @@ typedef signed long         NX_IArch;
 
 typedef unsigned long       NX_Addr;
 
-typedef unsigned long       NX_USize;
-typedef signed long         NX_ISize;
+typedef unsigned long       NX_Size;
+typedef signed long         NX_SSize;
 
 typedef long NX_PtrDiff;
 typedef long NX_Offset;

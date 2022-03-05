@@ -16,12 +16,12 @@
 
 NX_PRIVATE struct CPU_TSS tss;
 
-NX_PUBLIC struct CPU_TSS *CPU_GetTSS(void)
+struct CPU_TSS *CPU_GetTSS(void)
 {
     return &tss;
 }
 
-NX_PUBLIC void CPU_SetTssStack(NX_UArch top)
+void CPU_SetTssStack(NX_UArch top)
 {
     tss.esp0 = top; /* esp0 is kernel mode */
 }

@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2022, BookOS Development Team
  * SPDX-License-Identifier: Apache-2.0
  * 
- * Contains: NX_Atomic
+ * Contains: Atomic header
  * 
  * Change Logs:
  * Date           Author            Notes

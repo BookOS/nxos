@@ -58,12 +58,12 @@ NX_PRIVATE char *ExceptionName[] = {
     "Reserved",
 };
 
-NX_PUBLIC void CPU_InitInterrupt(void)
+void CPU_InitInterrupt(void)
 {
     PIC_Init();
 }
 
-NX_PUBLIC void CPU_TrapFrameDump(HAL_TrapFrame *frame)
+void CPU_TrapFrameDump(HAL_TrapFrame *frame)
 {
     NX_LOG_E("edi:%x esi:%x ebp:%x esp dummy:%x ebx:%x edx:%x ecx:%x eax:%x",
             frame->edi, frame->esi, frame->ebp, frame->espDummy,
@@ -141,7 +141,7 @@ NX_PRIVATE void CPU_ExceptionDump(HAL_TrapFrame *frame)
     }
 }
 
-NX_PUBLIC void HAL_InterruptDispatch(void *stackFrame)
+void HAL_InterruptDispatch(void *stackFrame)
 {
     HAL_TrapFrame *frame = (HAL_TrapFrame *) stackFrame;
     NX_U32 vector = frame->vectorNumber;

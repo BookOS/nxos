@@ -19,7 +19,7 @@
 NX_PRIVATE NX_List DelayIrqListTable[NX_IRQ_QUEUE_NR];
 NX_PRIVATE NX_VOLATILE NX_U32 DelayIrqEvent;
 
-NX_PUBLIC void NX_IRQ_DelayQueueInit(void)
+void NX_IRQ_DelayQueueInit(void)
 {
     int i;
     for (i = 0; i < NX_IRQ_QUEUE_NR; i++)
@@ -44,7 +44,7 @@ NX_PRIVATE void IRQ_DelayEventClear(void)
     DelayIrqEvent = 0;
 }
 
-NX_PUBLIC NX_Error NX_IRQ_DelayQueueEnter(NX_IRQ_DelayQueue queue, NX_IRQ_DelayWork *work)
+NX_Error NX_IRQ_DelayQueueEnter(NX_IRQ_DelayQueue queue, NX_IRQ_DelayWork *work)
 {
     if (queue < 0 || queue >= NX_IRQ_QUEUE_NR || work == NX_NULL)
     {
@@ -64,7 +64,7 @@ NX_PUBLIC NX_Error NX_IRQ_DelayQueueEnter(NX_IRQ_DelayQueue queue, NX_IRQ_DelayW
     return NX_EOK;
 }
 
-NX_PUBLIC NX_Error NX_IRQ_DelayQueueLeave(NX_IRQ_DelayQueue queue, NX_IRQ_DelayWork *work)
+NX_Error NX_IRQ_DelayQueueLeave(NX_IRQ_DelayQueue queue, NX_IRQ_DelayWork *work)
 {
     if (queue < 0 || queue >= NX_IRQ_QUEUE_NR || work == NX_NULL)
     {
@@ -85,7 +85,7 @@ NX_PUBLIC NX_Error NX_IRQ_DelayQueueLeave(NX_IRQ_DelayQueue queue, NX_IRQ_DelayW
     return NX_EOK;
 }
 
-NX_PUBLIC NX_Error NX_IRQ_DelayWorkInit(NX_IRQ_DelayWork *work, NX_IRQ_WorkHandler handler, void *arg, NX_U32 flags)
+NX_Error NX_IRQ_DelayWorkInit(NX_IRQ_DelayWork *work, NX_IRQ_WorkHandler handler, void *arg, NX_U32 flags)
 {
     if (work == NX_NULL || handler == NX_NULL)
     {
@@ -99,7 +99,7 @@ NX_PUBLIC NX_Error NX_IRQ_DelayWorkInit(NX_IRQ_DelayWork *work, NX_IRQ_WorkHandl
     return NX_EOK;
 }
 
-NX_PUBLIC NX_IRQ_DelayWork *NX_IRQ_DelayWorkCreate(NX_IRQ_WorkHandler handler, void *arg, NX_U32 flags)
+NX_IRQ_DelayWork *NX_IRQ_DelayWorkCreate(NX_IRQ_WorkHandler handler, void *arg, NX_U32 flags)
 {
     NX_IRQ_DelayWork *work = NX_MemAlloc(sizeof(NX_IRQ_DelayWork));
     if (work == NX_NULL)
@@ -114,7 +114,7 @@ NX_PUBLIC NX_IRQ_DelayWork *NX_IRQ_DelayWorkCreate(NX_IRQ_WorkHandler handler, v
     return work;
 }
 
-NX_PUBLIC NX_Error NX_IRQ_DelayWorkDestroy(NX_IRQ_DelayWork *work)
+NX_Error NX_IRQ_DelayWorkDestroy(NX_IRQ_DelayWork *work)
 {
     if (work == NX_NULL)
     {
@@ -127,7 +127,7 @@ NX_PUBLIC NX_Error NX_IRQ_DelayWorkDestroy(NX_IRQ_DelayWork *work)
 /**
  * Must called with interrupt disabled
  */
-NX_PUBLIC NX_Error NX_IRQ_DelayWorkHandle(NX_IRQ_DelayWork *work)
+NX_Error NX_IRQ_DelayWorkHandle(NX_IRQ_DelayWork *work)
 {
     if (work == NX_NULL)
     {

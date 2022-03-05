@@ -12,7 +12,7 @@
 #include <utils/string.h>
 #include <utils/log.h>
 
-NX_PUBLIC char *NX_StrCopy(const char *dst, const char *src)
+char *NX_StrCopy(const char *dst, const char *src)
 {
     if (dst == NX_NULL || src == NX_NULL)
     {
@@ -26,7 +26,7 @@ NX_PUBLIC char *NX_StrCopy(const char *dst, const char *src)
     return (char *)dst;
 }
 
-NX_PUBLIC char *NX_StrCopyN(const char *dst, const char *src, NX_USize len)
+char *NX_StrCopyN(const char *dst, const char *src, NX_Size len)
 {
     if (dst == NX_NULL || src == NX_NULL || !len)
     {
@@ -40,7 +40,7 @@ NX_PUBLIC char *NX_StrCopyN(const char *dst, const char *src, NX_USize len)
     return (char *)dst;
 }
 
-NX_PUBLIC int NX_StrCmp(const char *a, const char *b)
+int NX_StrCmp(const char *a, const char *b)
 {
     if (a == NX_NULL || b == NX_NULL)
     {
@@ -57,7 +57,7 @@ NX_PUBLIC int NX_StrCmp(const char *a, const char *b)
     return (*a - *b);
 }
 
-NX_PUBLIC int NX_StrLen(const char *str)
+int NX_StrLen(const char *str)
 {
     if (str == NX_NULL)
     {

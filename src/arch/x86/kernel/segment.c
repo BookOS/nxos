@@ -12,7 +12,7 @@
 #include <segment.h>
 #include <tss.h>
 
-NX_PUBLIC void CPU_LoadGDT(NX_UArch NX_USize, NX_UArch gdtr);
+void CPU_LoadGDT(NX_UArch NX_Size, NX_UArch gdtr);
 
 struct CPU_Segment
 {
@@ -32,7 +32,7 @@ NX_PRIVATE void SetSegment(struct CPU_Segment *seg, NX_UArch limit,
     seg->baseHigh    = (base >> 24) & 0xff;
 }
 
-NX_PUBLIC void CPU_InitSegment(void)
+void CPU_InitSegment(void)
 {
     /* Global segment table */
     struct CPU_Segment *gdt = (struct CPU_Segment *) GDT_VADDR;

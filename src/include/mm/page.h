@@ -30,14 +30,14 @@
 #define NX_PAGE_ALIGNUP(value) (((value) + NX_PAGE_MASK) & NX_PAGE_UMASK)
 #define NX_PAGE_ALIGNDOWN(value) ((value) & NX_PAGE_UMASK)
 
-NX_PUBLIC void NX_PageInitZone(NX_PageZone zone, void *mem, NX_USize size);
-NX_PUBLIC void *NX_PageAllocInZone(NX_PageZone zone, NX_USize count);
-NX_PUBLIC NX_Error NX_PageFreeInZone(NX_PageZone zone, void *ptr);
-NX_PUBLIC NX_Error NX_PageIncreaseInZone(NX_PageZone zone, void *ptr);
-NX_PUBLIC void *NX_PageZoneGetBase(NX_PageZone zone);
-NX_PUBLIC NX_USize NX_PageZoneGetPages(NX_PageZone zone);
+void NX_PageInitZone(NX_PageZone zone, void *mem, NX_Size size);
+void *NX_PageAllocInZone(NX_PageZone zone, NX_Size count);
+NX_Error NX_PageFreeInZone(NX_PageZone zone, void *ptr);
+NX_Error NX_PageIncreaseInZone(NX_PageZone zone, void *ptr);
+void *NX_PageZoneGetBase(NX_PageZone zone);
+NX_Size NX_PageZoneGetPages(NX_PageZone zone);
 
-NX_PUBLIC void *NX_PageZoneGetBuddySystem(NX_PageZone zone);
+void *NX_PageZoneGetBuddySystem(NX_PageZone zone);
 
 #define NX_PageAlloc(count) NX_PageAllocInZone(NX_PAGE_ZONE_NORMAL, count)
 #define NX_PageFree(ptr) NX_PageFreeInZone(NX_PAGE_ZONE_NORMAL, ptr)

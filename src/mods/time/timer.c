@@ -31,7 +31,7 @@ NX_PRIVATE NX_Timer IdleTimer;
 
 NX_PRIVATE NX_Spin TimersSpin;
 
-NX_PUBLIC NX_Error NX_TimerInit(NX_Timer *timer, NX_UArch milliseconds, 
+NX_Error NX_TimerInit(NX_Timer *timer, NX_UArch milliseconds, 
                           NX_Bool (*handler)(struct NX_Timer *, void *arg), void *arg, 
                           int flags)
 {
@@ -59,7 +59,7 @@ NX_PUBLIC NX_Error NX_TimerInit(NX_Timer *timer, NX_UArch milliseconds,
     return NX_EOK;
 }
 
-NX_PUBLIC NX_Timer *NX_TimerCreate(NX_UArch milliseconds, 
+NX_Timer *NX_TimerCreate(NX_UArch milliseconds, 
                           NX_Bool (*handler)(struct NX_Timer *, void *arg), void *arg, 
                           int flags)
 {
@@ -108,7 +108,7 @@ NX_PRIVATE void NX_TimerRemove(NX_Timer *timer, NX_Bool onTimerList, NX_Bool des
 /**
  * destroy a timer, timer must stopped or inited, not waiting and processing.
  */
-NX_PUBLIC NX_Error NX_TimerDestroy(NX_Timer *timer)
+NX_Error NX_TimerDestroy(NX_Timer *timer)
 {
     if (timer == NX_NULL)
     {
@@ -134,7 +134,7 @@ NX_PUBLIC NX_Error NX_TimerDestroy(NX_Timer *timer)
     return NX_EOK;
 }
 
-NX_PUBLIC NX_Error NX_TimerStart(NX_Timer *timer)
+NX_Error NX_TimerStart(NX_Timer *timer)
 {
     if (timer == NX_NULL)
     {
@@ -227,7 +227,7 @@ NX_PRIVATE NX_Error NX_TimerStopUnlocked(NX_Timer *timer)
 /**
  * only stop a timer, not destroy
  */
-NX_PUBLIC NX_Error NX_TimerStop(NX_Timer *timer)
+NX_Error NX_TimerStop(NX_Timer *timer)
 {
     if (timer == NX_NULL)
     {
@@ -283,7 +283,7 @@ NX_PRIVATE void NX_TimerInvoke(NX_Timer *timer)
 /**
  * only master cpu will call this
  */
-NX_PUBLIC void NX_TimerGo(void)
+void NX_TimerGo(void)
 {
     NX_Timer *timer = NX_NULL;
     NX_Timer *next = NX_NULL;
@@ -321,7 +321,7 @@ NX_PUBLIC void NX_TimerGo(void)
     NX_SpinUnlockIRQ(&TimersSpin, level);
 }
 
-NX_PUBLIC void NX_TimerDump(NX_Timer *timer)
+void NX_TimerDump(NX_Timer *timer)
 {
     NX_LOG_I("==== NX_Timer ====");
     NX_LOG_I("addr:%p", timer);
@@ -349,7 +349,7 @@ NX_PRIVATE NX_Bool IdleTimerHandler(NX_Timer *timer, void *arg)
     return NX_True;
 }
 
-NX_PUBLIC void NX_TimersInit(void)
+void NX_TimersInit(void)
 {
     NX_SpinInit(&TimersSpin);
     NX_ASSERT(NX_TimerInit(&IdleTimer, NX_IDLE_TIMER_TIMEOUT, IdleTimerHandler, NX_NULL, NX_True) == NX_EOK);

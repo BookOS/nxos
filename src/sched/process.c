@@ -46,7 +46,7 @@ NX_PRIVATE void ProcessDeleteThread(NX_Process *process, NX_Thread *thread)
     NX_SpinUnlockIRQ(&process->lock, level);
 }
 
-NX_PUBLIC NX_Process *NX_ProcessCreate(NX_U32 flags)
+NX_Process *NX_ProcessCreate(NX_U32 flags)
 {
     NX_Process *process = NX_MemAlloc(sizeof(NX_Process));
     if (process == NX_NULL)
@@ -86,7 +86,7 @@ NX_PUBLIC NX_Process *NX_ProcessCreate(NX_U32 flags)
     return process;
 }
 
-NX_PUBLIC NX_Error NX_ProcessDestroy(NX_Process *process)
+NX_Error NX_ProcessDestroy(NX_Process *process)
 {
     if (process == NX_NULL)
     {
@@ -118,7 +118,7 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
     NX_Error err;
     NX_Offset len;
     void *addr = NX_NULL;
-    NX_USize imageMaxSize;
+    NX_Size imageMaxSize;
     NX_Vmspace *space;
 
     err = NX_RomfsOpen(path, 0, &file);
@@ -166,8 +166,8 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
     NX_Addr vaddr = space->imageStart;
     NX_Addr paddr;
     NX_Addr vaddrSelf;
-    NX_USize chunk;
-    NX_USize chunkRead;
+    NX_Size chunk;
+    NX_Size chunkRead;
     
     while (len > 0)
     {
@@ -205,7 +205,7 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
 /**
  * execute a process with image
  */
-NX_PUBLIC NX_Error NX_ProcessExecute(char *name, char *path, NX_U32 flags)
+NX_Error NX_ProcessExecute(char *name, char *path, NX_U32 flags)
 {
     NX_Vmspace *space;
 
@@ -261,7 +261,7 @@ NX_PUBLIC NX_Error NX_ProcessExecute(char *name, char *path, NX_U32 flags)
     return NX_EOK;
 }
 
-NX_PUBLIC void NX_ProcessExit(int exitCode)
+void NX_ProcessExit(int exitCode)
 {
     NX_Thread *thread, *next;
     NX_Thread *cur = NX_ThreadSelf();
@@ -290,7 +290,7 @@ NX_PUBLIC void NX_ProcessExit(int exitCode)
     NX_PANIC("NX_ProcessExit should never be here!");
 }
 
-NX_PUBLIC void NX_ThreadExitProcess(NX_Thread *thread, NX_Process *process)
+void NX_ThreadExitProcess(NX_Thread *thread, NX_Process *process)
 {
     NX_ASSERT(process != NX_NULL && thread != NX_NULL);
     ProcessDeleteThread(process, thread);

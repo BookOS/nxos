@@ -2,16 +2,29 @@
  * Copyright (c) 2018-2022, BookOS Development Team
  * SPDX-License-Identifier: Apache-2.0
  * 
- * Contains: I386 registers 
+ * Contains: nxos defines header
  * 
  * Change Logs:
  * Date           Author            Notes
  * 2021-9-23      JasonHu           Init
+ * 2022-2-24      JasonHu           Add version
  */
 
 #ifndef __XBOOK_DEFINES__
 #define __XBOOK_DEFINES__
 
+#define NX_SYSTEM_NAME  "nxos"
+
+/**
+ * Version
+ */
+#define NX_VERSION_MAJOR    0
+#define NX_VERSION_MINOR    1
+#define NX_VERSION_REVISE   0
+
+/**
+ * Null pointer
+ */
 #define NX_NULL ((void *) 0)
 
 /**
@@ -20,14 +33,9 @@
 #define NX_PRIVATE static
 
 /**
- * Public variable or function 
- */
-#define NX_PUBLIC 
-
-/**
  * Operating system interface
  */
-#define NX_INTERFACE NX_PUBLIC 
+#define NX_INTERFACE 
 
 /**
  * Import variable or function 
@@ -60,7 +68,7 @@
 /**
  * Offset of struct
  */
-#define NX_OFFSET_OF_STRUCT(type, member) ((NX_USize) &((type *)0)->member)
+#define NX_OFFSET_OF_STRUCT(type, member) ((NX_Size) &((type *)0)->member)
 
 /**
  * Ptr of struct base addr 

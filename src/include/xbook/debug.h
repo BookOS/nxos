@@ -17,7 +17,7 @@
 
 #ifdef CONFIG_NX_DEBUG
 
-NX_PUBLIC void NX_DebugAssertionFailure(char *exp, char *file, char *baseFile, int line);
+void NX_DebugAssertionFailure(char *exp, char *file, char *baseFile, int line);
 
 #define NX_ASSERT(exp) \
     do \
@@ -34,13 +34,13 @@ NX_PUBLIC void NX_DebugAssertionFailure(char *exp, char *file, char *baseFile, i
 /**
  * Spin here
  */
-NX_PUBLIC void NX_DebugSpin(const char *str);
+void NX_DebugSpin(const char *str);
 #define NX_SPIN(str) NX_DebugSpin(str)
 
 /**
  * OS Panic
  */
-NX_PUBLIC void NX_DebugPanic(const char *str);
+void NX_DebugPanic(const char *str);
 #define NX_PANIC(str) NX_DebugPanic(str)
 
 #endif  /* __XBOOK_NX_DEBUG__ */

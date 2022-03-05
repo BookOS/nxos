@@ -22,8 +22,8 @@ struct NX_Mutex
 };
 typedef struct NX_Mutex NX_Mutex;
 
-NX_PUBLIC NX_Error NX_MutexInit(NX_Mutex *mutex);
-NX_PUBLIC NX_Error NX_MutexLock(NX_Mutex *mutex, NX_Bool forever);
-NX_PUBLIC NX_Error NX_MutexUnlock(NX_Mutex *mutex);
+NX_Error NX_MutexInit(NX_Mutex *mutex);
+NX_Error NX_MutexLock(NX_Mutex *mutex, NX_Bool forever);
+NX_Error NX_MutexUnlock(NX_Mutex *mutex);
 
 #endif /* __SCHED_MUTEX___ */

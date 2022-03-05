@@ -79,7 +79,7 @@
 #define GDT_USER_TLS_ATTR           (DA_DR | DA_DPL3 | DA_32 | DA_G)  /* read only data seg */
 
 #ifndef __ASSEMBLY__
-NX_PUBLIC void CPU_InitSegment(void);
+void CPU_InitSegment(void);
 #endif
 
 #endif  /*__I386_SEGMENT__*/

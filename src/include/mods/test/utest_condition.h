@@ -131,9 +131,9 @@
 #define NX_EXPECT_NI_RANGE_EX(value, min, max, msg) __UTestExpectEx(!((value >= min) && (value <= max)), msg)
 
 /* functions */
-NX_PUBLIC void NX_UTestAssert(int value, const char *file, int line, const char *func, const char *msg, NX_Bool dieAction);
-NX_PUBLIC void NX_UTestAssertString(const char *a, const char *b, NX_Bool equal, const char *file, int line, const char *func, const char *msg, NX_Bool dieAction);
-NX_PUBLIC void NX_UTestAssertBuf(const char *a, const char *b, NX_USize sz, NX_Bool equal, const char *file, int line, const char *func, const char *msg, NX_Bool dieAction);
+void NX_UTestAssert(int value, const char *file, int line, const char *func, const char *msg, NX_Bool dieAction);
+void NX_UTestAssertString(const char *a, const char *b, NX_Bool equal, const char *file, int line, const char *func, const char *msg, NX_Bool dieAction);
+void NX_UTestAssertBuf(const char *a, const char *b, NX_Size sz, NX_Bool equal, const char *file, int line, const char *func, const char *msg, NX_Bool dieAction);
 
 #endif /* CONFIG_NX_ENABLE_TEST_UTEST */
 

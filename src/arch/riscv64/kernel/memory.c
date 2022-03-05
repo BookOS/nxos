@@ -26,11 +26,11 @@
 #include <xbook/debug.h>
 #include <drivers/direct_uart.h>
 
-NX_PUBLIC NX_Mmu KernelMMU;
+NX_Mmu KernelMMU;
 
 NX_PRIVATE NX_U64 KernelTable[NX_PAGE_SIZE / sizeof(NX_U64)] NX_CALIGN(NX_PAGE_SIZE);
 
-NX_PRIVATE void HAL_EarlyMap(NX_Mmu *mmu, NX_Addr virStart, NX_USize size)
+NX_PRIVATE void HAL_EarlyMap(NX_Mmu *mmu, NX_Addr virStart, NX_Size size)
 {
     /* map kernel self */
     NX_MmuMapPageWithPhy(mmu, virStart, virStart, size,
@@ -53,15 +53,15 @@ NX_PRIVATE void HAL_EarlyMap(NX_Mmu *mmu, NX_Addr virStart, NX_USize size)
 /**
  * Init physic memory and map kernel on virtual memory.
  */
-NX_PUBLIC void HAL_PageZoneInit(void)
+void HAL_PageZoneInit(void)
 {    
-    NX_USize memSize = DRAM_SIZE_DEFAULT;
+    NX_Size memSize = DRAM_SIZE_DEFAULT;
     
-    NX_LOG_I("Memory NX_USize: %x Bytes %d MB", memSize, memSize / NX_MB);
+    NX_LOG_I("Memory NX_Size: %x Bytes %d MB", memSize, memSize / NX_MB);
 
     if (memSize == 0)
     {
-        NX_PANIC("Get Memory NX_USize Failed!");
+        NX_PANIC("Get Memory NX_Size Failed!");
     }
     if (memSize < MEM_MIN_SIZE)
     {
@@ -70,9 +70,9 @@ NX_PUBLIC void HAL_PageZoneInit(void)
     }
     
     /* calc normal base & size */
-    NX_USize avaliableSize = memSize - MEM_KERNEL_SZ - MEM_SBI_SZ;
+    NX_Size avaliableSize = memSize - MEM_KERNEL_SZ - MEM_SBI_SZ;
     
-    NX_USize normalSize = avaliableSize / 2;
+    NX_Size normalSize = avaliableSize / 2;
     if (normalSize > MEM_KERNEL_SPACE_SZ)
     {
         normalSize = MEM_KERNEL_SPACE_SZ;
@@ -80,10 +80,10 @@ NX_PUBLIC void HAL_PageZoneInit(void)
     
     /* calc user base & size */
     NX_Addr userBase = MEM_NORMAL_BASE + normalSize;
-    NX_USize userSize = avaliableSize - normalSize;
+    NX_Size userSize = avaliableSize - normalSize;
 
-    NX_LOG_I("Normal memory: %p~%p NX_USize:%d MB", MEM_NORMAL_BASE, MEM_NORMAL_BASE + normalSize, normalSize / NX_MB);
-    NX_LOG_I("User memory: %p~%p NX_USize:%d MB", userBase, userBase + userSize, userSize / NX_MB);
+    NX_LOG_I("Normal memory: %p~%p NX_Size:%d MB", MEM_NORMAL_BASE, MEM_NORMAL_BASE + normalSize, normalSize / NX_MB);
+    NX_LOG_I("User memory: %p~%p NX_Size:%d MB", userBase, userBase + userSize, userSize / NX_MB);
 
     /* init page zone */
     NX_PageInitZone(NX_PAGE_ZONE_NORMAL, (void *)MEM_NORMAL_BASE, normalSize);
@@ -101,7 +101,7 @@ NX_PUBLIC void HAL_PageZoneInit(void)
     NX_LOG_I("Memroy init done.");
 }
 
-NX_PUBLIC void *HAL_GetKernelPageTable(void)
+void *HAL_GetKernelPageTable(void)
 {
     return KernelMMU.table;
 }
@@ -109,7 +109,7 @@ NX_PUBLIC void *HAL_GetKernelPageTable(void)
 NX_IMPORT NX_Addr __NX_BssStart;
 NX_IMPORT NX_Addr __NX_BssEnd;
 
-NX_PUBLIC void HAL_ClearBSS(void)
+void HAL_ClearBSS(void)
 {
     NX_MemZero(&__NX_BssStart, &__NX_BssEnd - &__NX_BssStart);
 }

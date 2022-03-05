@@ -90,8 +90,8 @@
 #define NX_LOG_TIMELINE
 #endif
 
-NX_PUBLIC NX_Error LogLineLock(NX_UArch *level);
-NX_PUBLIC NX_Error LogLineUnlock(NX_UArch level);
+NX_Error LogLineLock(NX_UArch *level);
+NX_Error LogLineUnlock(NX_UArch level);
 
 #define NX_LOG_LINE(logName, color, ...) \
     do \

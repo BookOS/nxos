@@ -29,9 +29,9 @@ struct NX_MmuOps
     NX_Addr (*getPageTable)(void);
     void (*enable)(void);
 
-    void *(*mapPage)(NX_Mmu *mmu, NX_Addr virAddr, NX_USize size, NX_UArch attr);
-    void *(*mapPageWithPhy)(NX_Mmu *mmu, NX_Addr virAddr, NX_Addr phyAddr, NX_USize size, NX_UArch attr);
-    NX_Error (*unmapPage)(NX_Mmu *mmu, NX_Addr virAddr, NX_USize size);
+    void *(*mapPage)(NX_Mmu *mmu, NX_Addr virAddr, NX_Size size, NX_UArch attr);
+    void *(*mapPageWithPhy)(NX_Mmu *mmu, NX_Addr virAddr, NX_Addr phyAddr, NX_Size size, NX_UArch attr);
+    NX_Error (*unmapPage)(NX_Mmu *mmu, NX_Addr virAddr, NX_Size size);
     void *(*vir2Phy)(NX_Mmu *mmu, NX_Addr virAddr);
 };
 
@@ -46,6 +46,6 @@ NX_INTERFACE NX_IMPORT struct NX_MmuOps NX_MmuOpsInterface;
 #define NX_MmuUnmapPage             NX_MmuOpsInterface.unmapPage
 #define NX_MmuVir2Phy               NX_MmuOpsInterface.vir2Phy
 
-NX_PUBLIC void NX_MmuInit(NX_Mmu *mmu, void *pageTable, NX_Addr virStart, NX_USize size, NX_Addr earlyEnd);
+void NX_MmuInit(NX_Mmu *mmu, void *pageTable, NX_Addr virStart, NX_Size size, NX_Addr earlyEnd);
 
 #endif /* __MM_MMU__ */

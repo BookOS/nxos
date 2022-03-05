@@ -16,7 +16,7 @@
 /**
  * compatiable for gcc compiler with optimize
  */
-NX_PUBLIC void *memset(void *dst, NX_U8 value, NX_USize sz)
+void *memset(void *dst, NX_U8 value, NX_Size sz)
 {
     NX_U8 *dstPtr = (NX_U8 *)dst;
 	while (sz > 0)

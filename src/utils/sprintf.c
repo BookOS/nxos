@@ -150,7 +150,7 @@ NX_PRIVATE char *_Number(char * str, long num, int base, int size, int precision
 	return str;
 }
 
-NX_PUBLIC int NX_VSNPrintf(char *buf, int bufLen, const char *fmt, NX_VarList args)
+int NX_VSNPrintf(char *buf, int bufLen, const char *fmt, NX_VarList args)
 {
 	char *str, *s;
 	int flags;
@@ -359,7 +359,7 @@ NX_PUBLIC int NX_VSNPrintf(char *buf, int bufLen, const char *fmt, NX_VarList ar
 	return str - buf;
 }
 
-NX_PUBLIC int NX_SNPrintf(char *buf, int buflen, const char *fmt, ...)
+int NX_SNPrintf(char *buf, int buflen, const char *fmt, ...)
 {
 	NX_VarList arg;
 	NX_VarStart(arg, fmt);

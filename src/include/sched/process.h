@@ -39,7 +39,7 @@ typedef struct NX_Process NX_Process;
 
 struct NX_ProcessOps
 {
-    NX_Error (*initUserSpace)(NX_Process *process, NX_Addr virStart, NX_USize size);
+    NX_Error (*initUserSpace)(NX_Process *process, NX_Addr virStart, NX_Size size);
     NX_Error (*switchPageTable)(void *pageTable);
     void *(*getKernelPageTable)(void);
     void (*executeUser)(const void *text, void *userStack, void *kernelStack, void *args);
@@ -54,9 +54,9 @@ NX_INTERFACE NX_IMPORT struct NX_ProcessOps NX_ProcessOpsInterface;
 #define NX_ProcessExecuteUser           NX_ProcessOpsInterface.executeUser
 #define NX_ProcessFreePageTable         NX_ProcessOpsInterface.freePageTable
 
-NX_PUBLIC NX_Process *NX_ProcessCreate(NX_U32 flags);
-NX_PUBLIC NX_Error NX_ProcessDestroy(NX_Process *process);
-NX_PUBLIC NX_Error NX_ProcessExecute(char *name, char *path, NX_U32 flags);
-NX_PUBLIC void NX_ProcessExit(int exitCode);
+NX_Process *NX_ProcessCreate(NX_U32 flags);
+NX_Error NX_ProcessDestroy(NX_Process *process);
+NX_Error NX_ProcessExecute(char *name, char *path, NX_U32 flags);
+void NX_ProcessExit(int exitCode);
 
 #endif /* __SCHED_PROCESS___ */

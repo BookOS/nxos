@@ -21,7 +21,7 @@ NX_INTERFACE void HAL_PlatformMain(void)
 
 }
 
-NX_PUBLIC void HAL_DirectUartGetcHandler(char data)
+void HAL_DirectUartGetcHandler(char data)
 {
     switch (data)
     {

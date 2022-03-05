@@ -23,12 +23,12 @@
 /* Conosle HAL */
 NX_INTERFACE NX_WEAK_SYM void HAL_ConsoleOutChar(char ch) {}
 
-NX_PUBLIC void NX_ConsoleOutChar(char ch)
+void NX_ConsoleOutChar(char ch)
 {
     HAL_ConsoleOutChar(ch);
 }
 
-NX_PUBLIC void NX_ConsoleOutStr(const char *str)
+void NX_ConsoleOutStr(const char *str)
 {
     char *p = (char *)str;
     while (*p)
@@ -37,7 +37,7 @@ NX_PUBLIC void NX_ConsoleOutStr(const char *str)
     }
 }
 
-NX_PUBLIC void NX_Printf(const char *fmt, ...)
+void NX_Printf(const char *fmt, ...)
 {
 	char buf[NX_PRINT_BUF_LEN] = {0};
 	NX_VarList arg;
