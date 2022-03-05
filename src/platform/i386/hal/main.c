@@ -12,7 +12,7 @@
 #include <xbook.h>
 #include <drivers/direct_uart.h>
 
-#define NX_LOG_NAME "HAL_PlatformMain"
+#define NX_LOG_NAME "Hal Main"
 #include <utils/log.h>
 
 NX_INTERFACE void NX_HalPlatformMain(void)
