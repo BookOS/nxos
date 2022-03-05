@@ -39,7 +39,7 @@ void NX_ExitCallInvoke(void)
     NX_CallInvoke(__NX_ExitCallStart, __NX_ExitCallEnd);
 }
 
-NX_INTERFACE NX_WEAK_SYM void HAL_PlatformMain(void)
+NX_INTERFACE NX_WEAK_SYM void NX_HalPlatformMain(void)
 {
     NX_LOG_I("Deafult platform main running...\n");
 }
@@ -47,7 +47,7 @@ NX_INTERFACE NX_WEAK_SYM void HAL_PlatformMain(void)
 NX_PRIVATE void CallsEntry(void *arg)
 {
     NX_InitCallInvoke();
-    HAL_PlatformMain();
+    NX_HalPlatformMain();
 }
 
 void NX_CallsInit(void)

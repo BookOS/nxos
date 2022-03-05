@@ -279,7 +279,7 @@ err:
     return NX_NULL;
 }
 
-NX_PRIVATE void *HAL_MapPage(NX_Mmu *mmu, NX_Addr virAddr, NX_Size size, NX_UArch attr)
+NX_PRIVATE void *NX_HalMapPage(NX_Mmu *mmu, NX_Addr virAddr, NX_Size size, NX_UArch attr)
 {
     NX_ASSERT(mmu);
     if (!attr)
@@ -296,7 +296,7 @@ NX_PRIVATE void *HAL_MapPage(NX_Mmu *mmu, NX_Addr virAddr, NX_Size size, NX_UArc
     return addr;
 }
 
-NX_PRIVATE void *HAL_MapPageWithPhy(NX_Mmu *mmu, NX_Addr virAddr, NX_Addr phyAddr, NX_Size size, NX_UArch attr)
+NX_PRIVATE void *NX_HalMapPageWithPhy(NX_Mmu *mmu, NX_Addr virAddr, NX_Addr phyAddr, NX_Size size, NX_UArch attr)
 {
     NX_ASSERT(mmu);
     if (!attr)
@@ -314,7 +314,7 @@ NX_PRIVATE void *HAL_MapPageWithPhy(NX_Mmu *mmu, NX_Addr virAddr, NX_Addr phyAdd
     return addr;
 }
 
-NX_PRIVATE NX_Error HAL_UnmapPage(NX_Mmu *mmu, NX_Addr virAddr, NX_Size size)
+NX_PRIVATE NX_Error NX_HalUnmapPage(NX_Mmu *mmu, NX_Addr virAddr, NX_Size size)
 {
     NX_ASSERT(mmu);
 
@@ -331,7 +331,7 @@ NX_PRIVATE NX_Error HAL_UnmapPage(NX_Mmu *mmu, NX_Addr virAddr, NX_Size size)
     return err;
 }
 
-NX_PRIVATE void *HAL_Vir2Phy(NX_Mmu *mmu, NX_Addr virAddr)
+NX_PRIVATE void *NX_HalVir2Phy(NX_Mmu *mmu, NX_Addr virAddr)
 {
     NX_ASSERT(mmu);
 
@@ -356,30 +356,30 @@ NX_PRIVATE void *HAL_Vir2Phy(NX_Mmu *mmu, NX_Addr virAddr)
     return (void *)(pagePhy + pageOffset);
 }
 
-NX_PRIVATE void HAL_SetPageTable(NX_Addr addr)
+NX_PRIVATE void NX_HalSetPageTable(NX_Addr addr)
 {
     WriteCSR(satp, MAKE_SATP(addr));
     MMU_FlushTLB();
 }
 
-NX_PRIVATE NX_Addr HAL_GetPageTable(void)
+NX_PRIVATE NX_Addr NX_HalGetPageTable(void)
 {
     NX_Addr addr = ReadCSR(satp);
     return (NX_Addr)GET_ADDR_FROM_SATP(addr);
 }
 
-NX_PRIVATE void HAL_Enable(void)
+NX_PRIVATE void NX_HalEnable(void)
 {
     MMU_FlushTLB();
 }
 
 NX_INTERFACE struct NX_MmuOps NX_MmuOpsInterface = 
 {
-    .setPageTable   = HAL_SetPageTable,
-    .getPageTable   = HAL_GetPageTable,
-    .enable         = HAL_Enable,
-    .mapPage        = HAL_MapPage,
-    .mapPageWithPhy = HAL_MapPageWithPhy,
-    .unmapPage      = HAL_UnmapPage,
-    .vir2Phy        = HAL_Vir2Phy,
+    .setPageTable   = NX_HalSetPageTable,
+    .getPageTable   = NX_HalGetPageTable,
+    .enable         = NX_HalEnable,
+    .mapPage        = NX_HalMapPage,
+    .mapPageWithPhy = NX_HalMapPageWithPhy,
+    .unmapPage      = NX_HalUnmapPage,
+    .vir2Phy        = NX_HalVir2Phy,
 };

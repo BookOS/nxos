@@ -15,7 +15,7 @@
 #include <context.h>
 
 #ifndef __ASSEMBLY__
-#define HAL_TrapFrame HAL_Context
+#define NX_HalTrapFrame NX_HalContext
 #endif
 
 #endif  /* __INTERRUPT_HEADER__ */

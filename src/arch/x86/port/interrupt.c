@@ -63,7 +63,7 @@ void CPU_InitInterrupt(void)
     PIC_Init();
 }
 
-void CPU_TrapFrameDump(HAL_TrapFrame *frame)
+void CPU_TrapFrameDump(NX_HalTrapFrame *frame)
 {
     NX_LOG_E("edi:%x esi:%x ebp:%x esp dummy:%x ebx:%x edx:%x ecx:%x eax:%x",
             frame->edi, frame->esi, frame->ebp, frame->espDummy,
@@ -73,7 +73,7 @@ void CPU_TrapFrameDump(HAL_TrapFrame *frame)
             frame->eip, frame->cs, frame->eflags, frame->esp, frame->ss);
 }
 
-NX_PRIVATE void CPU_ExceptionDump(HAL_TrapFrame *frame)
+NX_PRIVATE void CPU_ExceptionDump(NX_HalTrapFrame *frame)
 {
     NX_LOG_E("Stack frame: exception name %s", ExceptionName[frame->vectorNumber]);
     if (frame->vectorNumber == 14)
@@ -141,9 +141,9 @@ NX_PRIVATE void CPU_ExceptionDump(HAL_TrapFrame *frame)
     }
 }
 
-void HAL_InterruptDispatch(void *stackFrame)
+void NX_HalInterruptDispatch(void *stackFrame)
 {
-    HAL_TrapFrame *frame = (HAL_TrapFrame *) stackFrame;
+    NX_HalTrapFrame *frame = (NX_HalTrapFrame *) stackFrame;
     NX_U32 vector = frame->vectorNumber;
 
     /* call handler with different vector */
@@ -186,7 +186,7 @@ void HAL_InterruptDispatch(void *stackFrame)
     }
 }
 
-NX_PRIVATE NX_Error HAL_IrqUnmask(NX_IRQ_Number irqno)
+NX_PRIVATE NX_Error NX_HalIrqUnmask(NX_IRQ_Number irqno)
 {
     if (irqno < 0 || irqno >= NX_NR_IRQS)
     {
@@ -197,7 +197,7 @@ NX_PRIVATE NX_Error HAL_IrqUnmask(NX_IRQ_Number irqno)
     return NX_EOK;
 }
 
-NX_PRIVATE NX_Error HAL_IrqMask(NX_IRQ_Number irqno)
+NX_PRIVATE NX_Error NX_HalIrqMask(NX_IRQ_Number irqno)
 {
     if (irqno < 0 || irqno >= NX_NR_IRQS)
     {
@@ -207,7 +207,7 @@ NX_PRIVATE NX_Error HAL_IrqMask(NX_IRQ_Number irqno)
     return NX_EOK;
 }
 
-NX_PRIVATE NX_Error HAL_IrqAck(NX_IRQ_Number irqno)
+NX_PRIVATE NX_Error NX_HalIrqAck(NX_IRQ_Number irqno)
 {
     if (irqno < 0 || irqno >= NX_NR_IRQS)
     {
@@ -217,35 +217,35 @@ NX_PRIVATE NX_Error HAL_IrqAck(NX_IRQ_Number irqno)
     return NX_EOK;
 }
 
-NX_PRIVATE void HAL_IrqEnable(void)
+NX_PRIVATE void NX_HalIrqEnable(void)
 {
     NX_CASM("sti");
 }
 
-NX_PRIVATE void HAL_IrqDisable(void)
+NX_PRIVATE void NX_HalIrqDisable(void)
 {
     NX_CASM("cli");
 }
 
-NX_PRIVATE NX_UArch HAL_IrqSaveLevel(void)
+NX_PRIVATE NX_UArch NX_HalIrqSaveLevel(void)
 {
     NX_UArch level = 0;
     NX_CASM("pushfl; popl %0; cli":"=g" (level): :"memory");
     return level;
 }
 
-NX_PRIVATE void HAL_IrqRestoreLevel(NX_UArch level)
+NX_PRIVATE void NX_HalIrqRestoreLevel(NX_UArch level)
 {
     NX_CASM("pushl %0; popfl": :"g" (level):"memory", "cc");
 }
 
 NX_INTERFACE NX_IRQ_Controller NX_IRQ_ControllerInterface = 
 {
-    .unmask = HAL_IrqUnmask,
-    .mask = HAL_IrqMask,
-    .ack = HAL_IrqAck,
-    .enable = HAL_IrqEnable,
-    .disable = HAL_IrqDisable,
-    .saveLevel = HAL_IrqSaveLevel,
-    .restoreLevel = HAL_IrqRestoreLevel,
+    .unmask = NX_HalIrqUnmask,
+    .mask = NX_HalIrqMask,
+    .ack = NX_HalIrqAck,
+    .enable = NX_HalIrqEnable,
+    .disable = NX_HalIrqDisable,
+    .saveLevel = NX_HalIrqSaveLevel,
+    .restoreLevel = NX_HalIrqRestoreLevel,
 };

@@ -15,26 +15,26 @@
 #define NX_LOG_NAME "HAL_PlatformMain"
 #include <utils/log.h>
 
-NX_INTERFACE void HAL_PlatformMain(void)
+NX_INTERFACE void NX_HalPlatformMain(void)
 {
     NX_LOG_I("QEMU platform main running...\n");
 }
 
-void HAL_DirectUartGetcHandler(char data)
+void NX_HalDirectUartGetcHandler(char data)
 {
     switch (data)
     {
     case '\r':
     case '\n':
-        HAL_DirectUartPutc('\n');
+        NX_HalDirectUartPutc('\n');
         break;
     case '\b':
-        HAL_DirectUartPutc('\b');
-        HAL_DirectUartPutc(' ');
-        HAL_DirectUartPutc('\b');
+        NX_HalDirectUartPutc('\b');
+        NX_HalDirectUartPutc(' ');
+        NX_HalDirectUartPutc('\b');
         break;
     default:
-        HAL_DirectUartPutc(data);
+        NX_HalDirectUartPutc(data);
         break;
     }
 }

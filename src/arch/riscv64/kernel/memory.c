@@ -30,7 +30,7 @@ NX_Mmu KernelMMU;
 
 NX_PRIVATE NX_U64 KernelTable[NX_PAGE_SIZE / sizeof(NX_U64)] NX_CALIGN(NX_PAGE_SIZE);
 
-NX_PRIVATE void HAL_EarlyMap(NX_Mmu *mmu, NX_Addr virStart, NX_Size size)
+NX_PRIVATE void NX_HalEarlyMap(NX_Mmu *mmu, NX_Addr virStart, NX_Size size)
 {
     /* map kernel self */
     NX_MmuMapPageWithPhy(mmu, virStart, virStart, size,
@@ -53,7 +53,7 @@ NX_PRIVATE void HAL_EarlyMap(NX_Mmu *mmu, NX_Addr virStart, NX_Size size)
 /**
  * Init physic memory and map kernel on virtual memory.
  */
-void HAL_PageZoneInit(void)
+void NX_HalPageZoneInit(void)
 {    
     NX_Size memSize = DRAM_SIZE_DEFAULT;
     
@@ -91,7 +91,7 @@ void HAL_PageZoneInit(void)
 
     NX_MmuInit(&KernelMMU, KernelTable, MEM_KERNEL_BASE, MEM_KERNEL_TOP, MEM_NORMAL_BASE + normalSize);
 
-    HAL_EarlyMap(&KernelMMU, KernelMMU.virStart, KernelMMU.earlyEnd - KernelMMU.virStart);
+    NX_HalEarlyMap(&KernelMMU, KernelMMU.virStart, KernelMMU.earlyEnd - KernelMMU.virStart);
 
     NX_MmuSetPageTable((NX_UArch)KernelMMU.table);
     NX_MmuEnable();
@@ -101,7 +101,7 @@ void HAL_PageZoneInit(void)
     NX_LOG_I("Memroy init done.");
 }
 
-void *HAL_GetKernelPageTable(void)
+void *NX_HalGetKernelPageTable(void)
 {
     return KernelMMU.table;
 }
@@ -109,7 +109,7 @@ void *HAL_GetKernelPageTable(void)
 NX_IMPORT NX_Addr __NX_BssStart;
 NX_IMPORT NX_Addr __NX_BssEnd;
 
-void HAL_ClearBSS(void)
+void NX_HalClearBSS(void)
 {
     NX_MemZero(&__NX_BssStart, &__NX_BssEnd - &__NX_BssStart);
 }

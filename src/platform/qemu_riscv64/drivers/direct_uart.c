@@ -42,7 +42,7 @@
 #define LSR_RX_READY (1 << 0)   // input is waiting to be read from RHR
 #define LSR_TX_IDLE (1 << 5)    // THR can accept another character to send
 
-void HAL_DirectUartPutc(char ch)
+void NX_HalDirectUartPutc(char ch)
 {
 #ifdef CONFIG_NX_UART0_FROM_SBI
     sbi_console_putchar(ch);
@@ -56,7 +56,7 @@ void HAL_DirectUartPutc(char ch)
 #endif
 }
 
-int HAL_DirectUartGetc(void)
+int NX_HalDirectUartGetc(void)
 {
 #ifdef CONFIG_NX_UART0_FROM_SBI
     return sbi_console_getchar();
@@ -73,12 +73,12 @@ int HAL_DirectUartGetc(void)
 #endif
 }
 
-NX_INTERFACE void HAL_ConsoleOutChar(char ch)
+NX_INTERFACE void NX_HalConsoleOutChar(char ch)
 {
-    HAL_DirectUartPutc(ch);
+    NX_HalDirectUartPutc(ch);
 }
 
-void HAL_DirectUartInit(void)
+void NX_HalDirectUartInit(void)
 {
     // disable interrupts.
     Write8(UART0_PHY_ADDR + IER, 0x00);
@@ -98,25 +98,25 @@ void HAL_DirectUartInit(void)
 /**
  * default handler
 */
-NX_WEAK_SYM void HAL_DirectUartGetcHandler(char data)
+NX_WEAK_SYM void NX_HalDirectUartGetcHandler(char data)
 {
     NX_LOG_I("Deafult uart handler:%x/%c\n", data, data);
 }
 
 NX_PRIVATE NX_Error UartIrqHandler(NX_IRQ_Number irqno, void *arg)
 {
-    int data = HAL_DirectUartGetc();
+    int data = NX_HalDirectUartGetc();
     if (data != -1)
     {
-        if (HAL_DirectUartGetcHandler != NX_NULL)
+        if (NX_HalDirectUartGetcHandler != NX_NULL)
         {
-            HAL_DirectUartGetcHandler(data);
+            NX_HalDirectUartGetcHandler(data);
         }
     }
     return data != -1 ? NX_EOK : NX_EIO;
 }
 
-void HAL_DirectUartStage2(void)
+void NX_HalDirectUartStage2(void)
 {
     /* enable receive interrupts. */
     Write8(UART0_PHY_ADDR + IER, IER_RX_ENABLE);

@@ -21,11 +21,11 @@
 #endif
 
 /* Conosle HAL */
-NX_INTERFACE NX_WEAK_SYM void HAL_ConsoleOutChar(char ch) {}
+NX_INTERFACE NX_WEAK_SYM void NX_HalConsoleOutChar(char ch) {}
 
 void NX_ConsoleOutChar(char ch)
 {
-    HAL_ConsoleOutChar(ch);
+    NX_HalConsoleOutChar(ch);
 }
 
 void NX_ConsoleOutStr(const char *str)
@@ -33,7 +33,7 @@ void NX_ConsoleOutStr(const char *str)
     char *p = (char *)str;
     while (*p)
     {
-        HAL_ConsoleOutChar(*p++);
+        NX_HalConsoleOutChar(*p++);
     }
 }
 

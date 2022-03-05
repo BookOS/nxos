@@ -60,14 +60,14 @@ NX_PRIVATE void thread_entry3(void *arg)
 
 void Demo_HAL_Context(void)
 {
-    NX_LOG_I("start demo: HAL_Context");
+    NX_LOG_I("start demo: NX_HalContext");
     threadSP1 = NX_ContextInit(thread_entry1, NX_NULL, (void *) 0x12345678, threadStack1 + STACK_SZ);
     threadSP2 = NX_ContextInit(thread_entry2, NX_NULL, (void *) 0x12345678, threadStack2 + STACK_SZ);
     threadSP3 = NX_ContextInit(thread_entry3, NX_NULL, (void *) 0x12345678, threadStack3 + STACK_SZ);
     
-    NX_LOG_I("demo: HAL_Context: switch");
+    NX_LOG_I("demo: NX_HalContext: switch");
     NX_ContextSwitchNext((NX_UArch)&threadSP1);
-    NX_LOG_I("end demo: HAL_Context");
+    NX_LOG_I("end demo: NX_HalContext");
 }
 
 #endif
