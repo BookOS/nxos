@@ -21,6 +21,8 @@
 #define NX_LOG_NAME "Interrupt"
 #include <utils/log.h>
 
+#include <sched/thread.h>
+
 NX_PRIVATE char *ExceptionName[] = {
     "#DE Divide Error",
     "#DB Debug Exception",
@@ -81,31 +83,61 @@ NX_PRIVATE void CPU_ExceptionDump(HAL_TrapFrame *frame)
     CPU_TrapFrameDump(frame);
     if (frame->errorCode != 0xFFFFFFFF)
     {
-        if (frame->errorCode & 1)
+        if (frame->vectorNumber == 14) /* page fault */
         {
-            NX_LOG_E("    External Event: NMI,hard interruption,ect.");
+            if (frame->errorCode & 1)
+            {
+                NX_LOG_E("    Page protect.");
+            }
+            else
+            {
+                NX_LOG_E("    Page no present");
+            }
+            if (frame->errorCode & (1 << 1))
+            {
+                NX_LOG_E("    Page no write attr.");
+            }
+            else
+            {
+                NX_LOG_E("    Page no read attr.");
+            }
+            if(frame->errorCode & (1 <<2 ))
+            {
+                NX_LOG_E("    Page from user.");
+            }
+            else
+            {
+                NX_LOG_E("    Page from supervisor.");
+            }
         }
         else
         {
-            NX_LOG_E("    Not External Event: inside.");
+            if (frame->errorCode & 1)
+            {
+                NX_LOG_E("    External Event: NMI,hard interruption,ect.");
+            }
+            else
+            {
+                NX_LOG_E("    Not External Event: inside.");
+            }
+            if (frame->errorCode & (1 << 1))
+            {
+                NX_LOG_E("    IDT: selector in idt.");
+            }
+            else
+            {
+                NX_LOG_E("    IDT: selector in gdt or ldt.");
+            }
+            if(frame->errorCode & (1 <<2 ))
+            {
+                NX_LOG_E("    TI: selector in ldt.");
+            }
+            else
+            {
+                NX_LOG_E("    TI: selector in gdt.");
+            }
+            NX_LOG_E("    Selector: idx %d", (frame->errorCode & 0xfff8) >> 3);
         }
-        if (frame->errorCode & (1 << 1))
-        {
-            NX_LOG_E("    IDT: selector in idt.");
-        }
-        else
-        {
-            NX_LOG_E("    IDT: selector in gdt or ldt.");
-        }
-        if(frame->errorCode & (1 <<2 ))
-        {
-            NX_LOG_E("    TI: selector in ldt.");
-        }
-        else
-        {
-            NX_LOG_E("    TI: selector in gdt.");
-        }
-        NX_LOG_E("    Selector: idx %d", (frame->errorCode & 0xfff8) >> 3);
     }
 }
 
@@ -119,6 +151,22 @@ NX_PUBLIC void HAL_InterruptDispatch(void *stackFrame)
     {
         /* exception */
         NX_LOG_E("unhandled exception vector %x/%s", vector, ExceptionName[vector]);
+        NX_Thread *cur = NX_ThreadSelf();
+        NX_LOG_E("thread:%s/%d", cur->name, cur->tid);
+        
+        NX_Process *process = cur->resource.process;
+        if (process)
+        {
+            NX_Addr faultAddr = CPU_ReadCR2();
+            NX_LOG_E("mmu table:%p", process->vmspace.mmu.table);
+            
+            NX_LOG_E("fault vir addr:%p", faultAddr);
+        }
+        else
+        {
+            NX_LOG_E("mmu table: kernel");
+        }
+
         CPU_ExceptionDump(frame);
         while (1);
     }

@@ -15,29 +15,40 @@
 #include <xbook.h>
 #include <xbook/atomic.h>
 #include <utils/list.h>
+#include <sched/mutex.h>
+#include <mm/page_cache.h>
 
 struct NX_HeapCache
 {
-    NX_List spanFreeList;
     NX_List objectFreeList;
-    NX_USize classSize; /* heap cache size */
-    NX_Atomic spanFreeCount;
-    NX_Atomic objectFreeCount;
+    NX_USize classSize;         /* heap cache size */
+    NX_USize objectFreeCount;
+    NX_Mutex lock;              /* lock for cache list */
 };
 typedef struct NX_HeapCache NX_HeapCache;
 
-struct NX_SizeClass
+struct NX_HeapSizeClass
 {
     NX_USize size;
     struct NX_HeapCache cache;
 };
 
-/* small object struct */
-struct NX_SmallCacheObject
+/* small cache object */
+struct NX_HeapSmallCacheObject
 {
     NX_List list;
 };
-typedef struct NX_SmallCacheObject NX_SmallCacheObject;
+typedef struct NX_HeapSmallCacheObject NX_HeapSmallCacheObject;
+
+/* small cache system */
+struct NX_HeapSmallCacheSystem
+{
+    NX_PageSpan pageSpan;
+    NX_List objectFreeList;     /* free list for small objects */
+    NX_USize objectFreeCount;   /* counts for small objects */
+    NX_USize maxObjects;        /* max objects on this cache system */
+};
+typedef struct NX_HeapSmallCacheSystem NX_HeapSmallCacheSystem;
 
 NX_PUBLIC void NX_HeapCacheInit(void);
 

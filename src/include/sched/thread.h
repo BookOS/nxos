@@ -54,13 +54,14 @@ struct NX_Thread
     /* thread list */
     NX_List list;
     NX_List globalList;
+    NX_List exitList;
     NX_List processList;    /* list for process */
 
     NX_Spin lock;  /* lock for thread */
 
     /* thread info */
     NX_ThreadState state;
-    NX_U32 tid;     /* thread id */
+    NX_I32 tid;     /* thread id, -1 means no alloc failed */
     NX_ThreadHandler handler;
     void *threadArg;
     char name[NX_THREAD_NAME_LEN];
@@ -120,6 +121,8 @@ NX_PUBLIC void NX_ThreadsInit(void);
 NX_PUBLIC void NX_SchedToFirstThread(void);
 
 NX_PUBLIC void NX_ThreadEnququeExitList(NX_Thread *thread);
+NX_PUBLIC NX_Thread *NX_ThreadDeququeExitList(void);
+
 NX_PUBLIC void NX_ThreadEnqueuePendingList(NX_Thread *thread);
 NX_PUBLIC NX_Thread *NX_ThreadDequeuePendingList(void);
 

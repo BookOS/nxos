@@ -21,6 +21,7 @@
 #include <sched/smp.h>
 #include <sched/context.h>
 #include <mm/alloc.h>
+#include <mm/page.h>
 #include <utils/string.h>
 #include <mods/time/timer.h>
 
@@ -38,6 +39,7 @@ NX_PRIVATE NX_Error ThreadInit(NX_Thread *thread,
 
     NX_ListInit(&thread->list);
     NX_ListInit(&thread->globalList);
+    NX_ListInit(&thread->exitList);
     NX_ListInit(&thread->processList);
     
     NX_StrCopy(thread->name, name);
@@ -97,7 +99,7 @@ NX_PUBLIC NX_Thread *NX_ThreadCreate(const char *name, NX_ThreadHandler handler,
     }
     if (ThreadInit(thread, name, handler, arg, stack, NX_THREAD_STACK_SIZE_DEFAULT) != NX_EOK)
     {
-        NX_MemFree(stack);
+        NX_PageFree(stack);
         NX_MemFree(thread);
         return NX_NULL;
     }
@@ -123,7 +125,6 @@ NX_PUBLIC NX_Error NX_ThreadDestroy(NX_Thread *thread)
     }
 
     NX_MemFree(stackBase);
-
     NX_MemFree(thread);
     return NX_EOK;
 }
@@ -219,9 +220,6 @@ NX_PUBLIC NX_Error NX_ThreadTerminate(NX_Thread *thread)
  */
 NX_PRIVATE void ThreadReleaseResouce(NX_Thread *thread)
 {
-    /* free tid */
-    NX_ThreadIdFree(thread->tid);
-
     /* NOTE: add other resource here. */
     if (thread->resource.sleepTimer != NX_NULL)
     {
@@ -235,23 +233,6 @@ NX_PRIVATE void ThreadReleaseResouce(NX_Thread *thread)
         NX_ThreadExitProcess(thread, thread->resource.process);
     }
 
-}
-
-/**
- * release resouce must for a thread run
- */
-NX_PRIVATE void ThreadReleaseSelf(NX_Thread *thread)
-{
-    /* release thread with process */
-    if (thread->resource.process != NX_NULL)
-    {
-        NX_ASSERT(NX_ProcessDestroy(thread->resource.process) == NX_EOK);
-    }
-
-    /* free stack */
-    NX_MemFree(thread->stackBase);
-    /* free thread struct */
-    NX_MemFree(thread);
 }
 
 NX_PUBLIC void NX_ThreadExit(void)
@@ -270,7 +251,7 @@ NX_PUBLIC void NX_ThreadExit(void)
     NX_SpinUnlockIRQ(&NX_ThreadManagerObject.lock, level);
     
     NX_SchedExit();
-    NX_PANIC("Thread Exit should never arrival here!");
+    NX_PANIC("Thread Exit should never arrive here!");
 }
 
 NX_PUBLIC NX_Thread *NX_ThreadSelf(void)
@@ -432,8 +413,24 @@ NX_PUBLIC void NX_ThreadEnququeExitList(NX_Thread *thread)
 {
     NX_UArch level;
     NX_SpinLockIRQ(&NX_ThreadManagerObject.exitLock, &level);
-    NX_ListAdd(&thread->globalList, &NX_ThreadManagerObject.exitList);
+    NX_ASSERT(!NX_ListFind(&thread->exitList, &NX_ThreadManagerObject.exitList));
+    NX_ListAdd(&thread->exitList, &NX_ThreadManagerObject.exitList);
     NX_SpinUnlockIRQ(&NX_ThreadManagerObject.exitLock, level);
+}
+
+NX_PUBLIC NX_Thread *NX_ThreadDeququeExitList(void)
+{
+    NX_Thread *thread;
+    NX_UArch level;
+    NX_SpinLockIRQ(&NX_ThreadManagerObject.exitLock, &level);
+    thread = NX_ListFirstEntryOrNULL(&NX_ThreadManagerObject.exitList, NX_Thread, exitList);
+    if (thread != NX_NULL)
+    {
+        NX_ListDelInit(&thread->exitList);
+        NX_ASSERT(!NX_ListFind(&thread->exitList, &NX_ThreadManagerObject.exitList));
+    }
+    NX_SpinUnlockIRQ(&NX_ThreadManagerObject.exitLock, level);
+    return thread;
 }
 
 NX_PUBLIC NX_Thread *NX_ThreadFindById(NX_U32 tid)
@@ -456,46 +453,6 @@ NX_PUBLIC NX_Thread *NX_ThreadFindById(NX_U32 tid)
     return find;
 }
 
-/**
- * system idle thread on per cpu.
- */
-NX_PRIVATE void IdleThreadEntry(void *arg)
-{
-    NX_LOG_I("Idle thread: %s startting...", NX_ThreadSelf()->name);
-    int i = 0;
-    while (1)
-    {
-        i++;
-        NX_ThreadYield();
-    }
-}
-
-/**
- * system deamon thread for all cpus 
- */
-NX_PRIVATE void DaemonThreadEntry(void *arg)
-{
-    NX_LOG_I("Daemon thread started.\n");
-    NX_Thread *thread, *safe;
-    NX_UArch level;
-    while (1)
-    {
-        NX_SpinLockIRQ(&NX_ThreadManagerObject.exitLock, &level);
-        NX_ListForEachEntrySafe (thread, safe, &NX_ThreadManagerObject.exitList, globalList)
-        {
-            /* del from exit list */
-            NX_ListDel(&thread->globalList);
-            NX_LOG_D("---> daemon release thread: %s/%d", thread->name, thread->tid);
-            ThreadReleaseSelf(thread);
-        }
-        NX_SpinUnlockIRQ(&NX_ThreadManagerObject.exitLock, level);
-
-        /* do delay or timeout, sleep 0.5s */
-        //NX_ThreadYield();
-        NX_ThreadSleep(500);
-    }
-}
-
 NX_PUBLIC void NX_ThreadManagerInit(void)
 {
     NX_AtomicSet(&NX_ThreadManagerObject.averageThreadThreshold, 0);
@@ -509,29 +466,13 @@ NX_PUBLIC void NX_ThreadManagerInit(void)
     NX_SpinInit(&NX_ThreadManagerObject.exitLock);
 }
 
+NX_IMPORT void NX_ThreadInitIdle(void);
+NX_IMPORT void NX_ThreadInitDeamon(void);
+
 NX_PUBLIC void NX_ThreadsInit(void)
 {
-    NX_Thread *idleThread;
-    NX_Thread *deamonThread;
-    int coreId;
-    char name[8];
     NX_ThreadsInitID();
     NX_ThreadManagerInit();
-
-    /* init idle thread */
-    for (coreId = 0; coreId < NX_MULTI_CORES_NR; coreId++)
-    {
-        NX_SNPrintf(name, 8, "Idle%d", coreId);
-        idleThread = NX_ThreadCreate(name, IdleThreadEntry, NX_NULL);
-        NX_ASSERT(idleThread != NX_NULL);
-        /* bind idle on each core */
-        NX_ThreadSetAffinity(idleThread, coreId);
-
-        NX_ASSERT(NX_ThreadRun(idleThread) == NX_EOK);
-    }
-
-    /* init daemon thread */
-    deamonThread = NX_ThreadCreate("daemon", DaemonThreadEntry, NX_NULL);
-    NX_ASSERT(deamonThread != NX_NULL);
-    NX_ASSERT(NX_ThreadRun(deamonThread) == NX_EOK);
+    NX_ThreadInitIdle();
+    NX_ThreadInitDeamon();
 }

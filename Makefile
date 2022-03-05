@@ -127,7 +127,7 @@ endif
 #
 # Run OS
 #
-run: all
+run: all 
 	@$(MAKE) -s -C src/platform/$(PLATFORM) -f cmd.mk run
 
 #

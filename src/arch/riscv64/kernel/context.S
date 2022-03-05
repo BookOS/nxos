@@ -36,7 +36,7 @@ HAL_ContextSwitchPrevNext:
      * set as supervisor mode and enable interupt 
      * make sure kernel mode thread do context switch
      */
-    li t1, SSTATUS_SPP | SSTATUS_SPIE 
+    li t1, SSTATUS_SPP | SSTATUS_SPIE | SSTATUS_SUM
     csrs sstatus, t1
 
     /**

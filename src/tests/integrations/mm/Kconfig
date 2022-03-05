@@ -6,6 +6,6 @@ config NX_TEST_INTEGRATION_PAGE
     bool "Enable integration for page"
     default n
 
-config NX_TEST_INTEGRATION_PAGE_HEAP
-    bool "Enable integration for page heap"
+config NX_TEST_INTEGRATION_PAGE_CACHE
+    bool "Enable integration for page cache"
     default n

@@ -34,7 +34,7 @@ NX_INLINE void SchedSwithProcess(NX_Thread *thread)
     }
     else
     {
-        pageTable = process->pageTable;
+        pageTable = process->vmspace.mmu.table;
     }
 
     NX_ASSERT(pageTable != NX_NULL);
@@ -128,6 +128,7 @@ NX_PUBLIC void NX_SchedWithInterruptDisabled(NX_UArch irqLevel)
 
     /* get next from local list */
     next = NX_SMP_DeququeThreadIrqDisabled(coreId);
+    NX_ASSERT(next != NX_NULL);
     NX_SMP_SetRunning(coreId, next);
 
     if (prev != NX_NULL)

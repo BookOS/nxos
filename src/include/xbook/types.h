@@ -30,6 +30,7 @@ typedef unsigned long       NX_USize;
 typedef signed long         NX_ISize;
 
 typedef long NX_PtrDiff;
+typedef long NX_Offset;
 
 enum NX_Bool
 {

@@ -61,3 +61,5 @@ Mkfile.old
 dkms.conf
 
 fixdep
+init/rootfs.c
+build

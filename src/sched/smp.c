@@ -182,6 +182,7 @@ NX_PUBLIC NX_Thread *NX_SMP_GetRunning(void)
 {
     NX_Thread *thread;
     NX_Cpu *cpu = NX_CpuGetPtr();
+    NX_ASSERT(cpu != NX_NULL);
     NX_UArch level;
     NX_SpinLockIRQ(&cpu->lock, &level);
     thread = cpu->threadRunning;

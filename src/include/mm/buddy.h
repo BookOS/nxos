@@ -32,7 +32,6 @@ struct NX_Page
     NX_U32 flags;
     NX_I32 order;
     NX_USize sizeClass;         /* size class on this span */
-    NX_USize maxObjectsOnSpan;  /* max memory objects on this span */
     NX_Atomic reference;        /* page reference */
 };
 typedef struct NX_Page NX_Page;

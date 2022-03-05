@@ -14,7 +14,9 @@
 #include <platform.h>
 #include <page_zone.h>
 #include <mm/page.h>
-#include <mmu.h>
+#include <mm/mmu.h>
+#include <mm/page.h>
+#include <arch/mmu.h>
 #include <riscv.h>
 
 #define NX_LOG_LEVEL NX_LOG_INFO
@@ -24,40 +26,28 @@
 #include <xbook/debug.h>
 #include <drivers/direct_uart.h>
 
-NX_PUBLIC MMU KernelMMU;
+NX_PUBLIC NX_Mmu KernelMMU;
 
-NX_PRIVATE NX_VOLATILE NX_U64 KernelTable[NX_PAGE_SIZE / sizeof(NX_U64)] NX_CALIGN(NX_PAGE_SIZE);
+NX_PRIVATE NX_U64 KernelTable[NX_PAGE_SIZE / sizeof(NX_U64)] NX_CALIGN(NX_PAGE_SIZE);
 
-NX_PUBLIC void MMU_EarlyMap(void)
+NX_PRIVATE void HAL_EarlyMap(NX_Mmu *mmu, NX_Addr virStart, NX_USize size)
 {
-    MMU *mmu = &KernelMMU;
-    MMU_InitTable(mmu, (void *)KernelTable, 0, MEM_KERNEL_TOP);
-
     /* map kernel self */
-    MMU_MapPageWithPhy(mmu, MEM_KERNEL_BASE, MEM_KERNEL_BASE, KernelMMU.earlyEnd - MEM_KERNEL_BASE,
-                       PAGE_DEFAULT_ATTR_KERNEL);
+    NX_MmuMapPageWithPhy(mmu, virStart, virStart, size,
+                       ARCH_PAGE_ATTR_KERNEL);
     /* uart0 */
-    MMU_MapPageWithPhy(mmu, UART0_PHY_ADDR, UART0_PHY_ADDR, NX_PAGE_SIZE,
-                       PAGE_DEFAULT_ATTR_KERNEL);
+    NX_MmuMapPageWithPhy(mmu, UART0_PHY_ADDR, UART0_PHY_ADDR, NX_PAGE_SIZE,
+                       ARCH_PAGE_ATTR_KERNEL);
     /* CLINT */
-    MMU_MapPageWithPhy(mmu, RISCV_CLINT_PADDR, RISCV_CLINT_PADDR, 0x10000,
-                       PAGE_DEFAULT_ATTR_KERNEL);
+    NX_MmuMapPageWithPhy(mmu, RISCV_CLINT_PADDR, RISCV_CLINT_PADDR, 0x10000,
+                       ARCH_PAGE_ATTR_KERNEL);
     /* PLIC */
-    MMU_MapPageWithPhy(mmu, RISCV_PLIC_PADDR, RISCV_PLIC_PADDR, 0x4000,
-                       PAGE_DEFAULT_ATTR_KERNEL);
-    MMU_MapPageWithPhy(mmu, RISCV_PLIC_PADDR + 0x200000, RISCV_PLIC_PADDR + 0x200000, 0x4000,
-                       PAGE_DEFAULT_ATTR_KERNEL);
+    NX_MmuMapPageWithPhy(mmu, RISCV_PLIC_PADDR, RISCV_PLIC_PADDR, 0x4000,
+                       ARCH_PAGE_ATTR_KERNEL);
+    NX_MmuMapPageWithPhy(mmu, RISCV_PLIC_PADDR + 0x200000, RISCV_PLIC_PADDR + 0x200000, 0x4000,
+                       ARCH_PAGE_ATTR_KERNEL);
     
     NX_LOG_I("OS map early on [%p~%p]", MEM_KERNEL_BASE, KernelMMU.earlyEnd);
-
-    MMU_SetPageTable((NX_Addr)mmu->table);
-    
-    NX_LOG_I("MMU enabled!");
-}
-
-NX_PUBLIC void *HAL_GetKernelPageTable(void)
-{
-    return KernelMMU.table;
 }
 
 /**
@@ -99,9 +89,21 @@ NX_PUBLIC void HAL_PageZoneInit(void)
     NX_PageInitZone(NX_PAGE_ZONE_NORMAL, (void *)MEM_NORMAL_BASE, normalSize);
     NX_PageInitZone(NX_PAGE_ZONE_USER, (void *)userBase, userSize);
 
-    KernelMMU.earlyEnd = MEM_NORMAL_BASE + normalSize;
+    NX_MmuInit(&KernelMMU, KernelTable, MEM_KERNEL_BASE, MEM_KERNEL_TOP, MEM_NORMAL_BASE + normalSize);
 
+    HAL_EarlyMap(&KernelMMU, KernelMMU.virStart, KernelMMU.earlyEnd - KernelMMU.virStart);
+
+    NX_MmuSetPageTable((NX_UArch)KernelMMU.table);
+    NX_MmuEnable();
+
+    NX_LOG_I("MMU enabled");
+    
     NX_LOG_I("Memroy init done.");
+}
+
+NX_PUBLIC void *HAL_GetKernelPageTable(void)
+{
+    return KernelMMU.table;
 }
 
 NX_IMPORT NX_Addr __NX_BssStart;

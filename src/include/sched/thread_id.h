@@ -13,7 +13,7 @@
 #define __SCHED_THREAD_ID__
 
 #include <xbook.h>
-#include <sched/mutex.h>
+#include <sched/spin.h>
 
 #ifdef CONFIG_NX_MAX_THREAD_NR
 #define NX_MAX_THREAD_NR CONFIG_NX_MAX_THREAD_NR
@@ -25,7 +25,7 @@ struct NX_ThreadID
 {
     NX_U32 *maps;
     NX_U32 nextID;
-    NX_Mutex idLock;
+    NX_Spin idLock;
 };
 
 NX_PUBLIC int NX_ThreadIdAlloc(void);

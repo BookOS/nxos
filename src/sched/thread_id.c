@@ -18,7 +18,8 @@ NX_PRIVATE struct NX_ThreadID ThreadIdObject;
 
 NX_PUBLIC int NX_ThreadIdAlloc(void)
 {
-    NX_MutexLock(&ThreadIdObject.idLock, NX_True);
+    NX_UArch level;
+    NX_SpinLockIRQ(&ThreadIdObject.idLock, &level);
 
     NX_U32 nextID = ThreadIdObject.nextID;
     do 
@@ -38,7 +39,7 @@ NX_PUBLIC int NX_ThreadIdAlloc(void)
 
     /* nextID == ThreadIdObject.nextID means no id free */
     int id = (nextID != ThreadIdObject.nextID) ? nextID : -1;
-    NX_MutexUnlock(&ThreadIdObject.idLock);
+    NX_SpinUnlockIRQ(&ThreadIdObject.idLock, level);
     return id;
 }
 
@@ -49,12 +50,13 @@ NX_PUBLIC void NX_ThreadIdFree(int id)
         return;
     }
     
-    NX_MutexLock(&ThreadIdObject.idLock, NX_True);
+    NX_UArch level;
+    NX_SpinLockIRQ(&ThreadIdObject.idLock, &level);
     NX_U32 idx = id / 32;
     NX_U32 odd = id % 32;
     NX_ASSERT(ThreadIdObject.maps[idx] & (1 << odd));
     ThreadIdObject.maps[idx] &= ~(1 << odd);   /* clear id */
-    NX_MutexUnlock(&ThreadIdObject.idLock);  
+    NX_SpinUnlockIRQ(&ThreadIdObject.idLock, level);
 }
 
 NX_PUBLIC void NX_ThreadsInitID(void)
@@ -63,5 +65,5 @@ NX_PUBLIC void NX_ThreadsInitID(void)
     NX_ASSERT(ThreadIdObject.maps != NX_NULL);
     NX_MemZero(ThreadIdObject.maps, NX_MAX_THREAD_NR / 8);
     ThreadIdObject.nextID = 0;
-    NX_MutexInit(&ThreadIdObject.idLock);
+    NX_SpinInit(&ThreadIdObject.idLock);
 }
