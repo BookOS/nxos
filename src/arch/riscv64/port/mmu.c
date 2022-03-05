@@ -22,7 +22,7 @@
 #define NX_LOG_NAME "MMU"
 #include <utils/log.h>
 
-#define PAGE_IS_LEAF(pte) ((pte) & ARCH_PAGE_ATTR_RWX)
+#define PAGE_IS_LEAF(pte) ((pte) & NX_PAGE_ATTR_RWX)
 #define PTE_USED(pte) ((pte) & PTE_V)
 
 #define GET_PF_ID(addr) ((addr) >> NX_PAGE_SHIFT)

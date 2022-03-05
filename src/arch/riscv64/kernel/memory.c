@@ -34,18 +34,18 @@ NX_PRIVATE void HAL_EarlyMap(NX_Mmu *mmu, NX_Addr virStart, NX_Size size)
 {
     /* map kernel self */
     NX_MmuMapPageWithPhy(mmu, virStart, virStart, size,
-                       ARCH_PAGE_ATTR_KERNEL);
+                         NX_PAGE_ATTR_KERNEL);
     /* uart0 */
     NX_MmuMapPageWithPhy(mmu, UART0_PHY_ADDR, UART0_PHY_ADDR, NX_PAGE_SIZE,
-                       ARCH_PAGE_ATTR_KERNEL);
+                         NX_PAGE_ATTR_KERNEL);
     /* CLINT */
     NX_MmuMapPageWithPhy(mmu, RISCV_CLINT_PADDR, RISCV_CLINT_PADDR, 0x10000,
-                       ARCH_PAGE_ATTR_KERNEL);
+                         NX_PAGE_ATTR_KERNEL);
     /* PLIC */
     NX_MmuMapPageWithPhy(mmu, RISCV_PLIC_PADDR, RISCV_PLIC_PADDR, 0x4000,
-                       ARCH_PAGE_ATTR_KERNEL);
+                         NX_PAGE_ATTR_KERNEL);
     NX_MmuMapPageWithPhy(mmu, RISCV_PLIC_PADDR + 0x200000, RISCV_PLIC_PADDR + 0x200000, 0x4000,
-                       ARCH_PAGE_ATTR_KERNEL);
+                         NX_PAGE_ATTR_KERNEL);
     
     NX_LOG_I("OS map early on [%p~%p]", MEM_KERNEL_BASE, KernelMMU.earlyEnd);
 }
