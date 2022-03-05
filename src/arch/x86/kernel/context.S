@@ -13,10 +13,10 @@
 .text
 
 /**
- * void HAL_ContextSwitchNext(NX_Addr nextSP);
+ * void NX_HalContextSwitchNext(NX_Addr nextSP);
  */
-.globl HAL_ContextSwitchNext
-HAL_ContextSwitchNext:
+.globl NX_HalContextSwitchNext
+NX_HalContextSwitchNext:
     movl 0x4(%esp), %eax    // get thread "nextSP"
     movl (%eax), %esp       // restore sp
     
@@ -27,10 +27,10 @@ HAL_ContextSwitchNext:
     ret
 
 /**
- * void HAL_ContextSwitchPrevNext(NX_Addr prevSP, NX_Addr nextSP);
+ * void NX_HalContextSwitchPrevNext(NX_Addr prevSP, NX_Addr nextSP);
  */
-.globl HAL_ContextSwitchPrevNext
-HAL_ContextSwitchPrevNext:
+.globl NX_HalContextSwitchPrevNext
+NX_HalContextSwitchPrevNext:
     pushl %esi
     pushl %edi
     pushl %ebx

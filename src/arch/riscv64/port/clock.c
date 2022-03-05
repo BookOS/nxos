@@ -31,14 +31,14 @@ NX_PRIVATE NX_U64 GetTimerCounter()
     return ret;
 }
 
-void HAL_ClockHandler(void)
+void NX_HalClockHandler(void)
 {
     NX_ClockTickGo();
     /* update timer */
     sbi_set_timer(GetTimerCounter() + TickDelta);
 }
 
-NX_INTERFACE NX_Error HAL_InitClock(void)
+NX_INTERFACE NX_Error NX_HalInitClock(void)
 {
     /* Clear the Supervisor-Timer bit in SIE */
     ClearCSR(sie, SIE_STIE);

@@ -26,9 +26,9 @@
 #include <regs.h>
 #include <tss.h>
 
-NX_IMPORT void HAL_ProcessEnterUserMode(HAL_TrapFrame *frame);
+NX_IMPORT void NX_HalProcessEnterUserMode(NX_HalTrapFrame *frame);
 
-NX_PRIVATE NX_Error HAL_ProcessInitUserSpace(NX_Process *process, NX_Addr virStart, NX_Size size)
+NX_PRIVATE NX_Error NX_HalProcessInitUserSpace(NX_Process *process, NX_Addr virStart, NX_Size size)
 {
     void *table = NX_MemAlloc(NX_PAGE_SIZE);
     if (table == NX_NULL)
@@ -36,12 +36,12 @@ NX_PRIVATE NX_Error HAL_ProcessInitUserSpace(NX_Process *process, NX_Addr virSta
         return NX_ENOMEM;
     }
     NX_MemZero(table, NX_PAGE_SIZE);
-    NX_MemCopy(table, HAL_GetKernelPageTable(), NX_PAGE_SIZE);
+    NX_MemCopy(table, NX_HalGetKernelPageTable(), NX_PAGE_SIZE);
     NX_MmuInit(&process->vmspace.mmu, table, virStart, size, 0);
     return NX_EOK;
 }
 
-NX_PRIVATE NX_Error HAL_ProcessFreePageTable(NX_Vmspace *vmspace)
+NX_PRIVATE NX_Error NX_HalProcessFreePageTable(NX_Vmspace *vmspace)
 {
     NX_ASSERT(vmspace);
     if(vmspace->mmu.table == NX_NULL)
@@ -52,7 +52,7 @@ NX_PRIVATE NX_Error HAL_ProcessFreePageTable(NX_Vmspace *vmspace)
     return NX_EOK;
 }
 
-NX_PRIVATE NX_Error HAL_ProcessSwitchPageTable(void *pageTableVir)
+NX_PRIVATE NX_Error NX_HalProcessSwitchPageTable(void *pageTableVir)
 {
     NX_Thread *cur = NX_ThreadSelf();
     /* need set new kernel esp as next thread */
@@ -67,12 +67,12 @@ NX_PRIVATE NX_Error HAL_ProcessSwitchPageTable(void *pageTableVir)
     return NX_EOK;
 }
 
-NX_PRIVATE void *HAL_ProcessGetKernelPageTable(void)
+NX_PRIVATE void *NX_HalProcessGetKernelPageTable(void)
 {
-    return HAL_GetKernelPageTable();
+    return NX_HalGetKernelPageTable();
 }
 
-void HAL_ProcessSyscallDispatch(HAL_TrapFrame *frame)
+void NX_HalProcessSyscallDispatch(NX_HalTrapFrame *frame)
 {
     NX_SyscallWithArgHandler handler = (NX_SyscallWithArgHandler)NX_SyscallGetHandler((NX_SyscallApi)frame->eax);
     NX_ASSERT(handler);
@@ -88,7 +88,7 @@ void HAL_ProcessSyscallDispatch(HAL_TrapFrame *frame)
     NX_LOG_D("x86 syscall return: %x", frame->eax);
 }
 
-NX_PRIVATE void MakeUserTrapFrame(HAL_TrapFrame *frame)
+NX_PRIVATE void MakeUserTrapFrame(NX_HalTrapFrame *frame)
 {
     frame->ds = frame->es = USER_DATA_SEL;
     frame->cs = USER_CODE_SEL;
@@ -112,11 +112,11 @@ NX_PRIVATE void MakeUserTrapFrame(HAL_TrapFrame *frame)
  * in x86, we can set stack, arg, text entry in a stack frame,
  * then pop them into register, final use iret to switch kernel mode to user mode.
  */
-NX_PRIVATE void HAL_ProcessExecuteUser(const void *text, void *userStack, void *kernelStack, void *args)
+NX_PRIVATE void NX_HalProcessExecuteUser(const void *text, void *userStack, void *kernelStack, void *args)
 {
     NX_U8 *stk = kernelStack;
-    stk -= sizeof(HAL_TrapFrame);
-    HAL_TrapFrame *frame = (HAL_TrapFrame *)stk;
+    stk -= sizeof(NX_HalTrapFrame);
+    NX_HalTrapFrame *frame = (NX_HalTrapFrame *)stk;
 
     MakeUserTrapFrame(frame);
     
@@ -125,15 +125,15 @@ NX_PRIVATE void HAL_ProcessExecuteUser(const void *text, void *userStack, void *
     *(NX_U32 *)frame->esp = (NX_U32)args; /* push args into stack */
 
     frame->eip = (NX_U32)text; /* set user entry */
-    HAL_ProcessEnterUserMode(frame);
+    NX_HalProcessEnterUserMode(frame);
     NX_PANIC("should never return after into user");
 }
 
 NX_INTERFACE struct NX_ProcessOps NX_ProcessOpsInterface = 
 {
-    .initUserSpace      = HAL_ProcessInitUserSpace,
-    .switchPageTable    = HAL_ProcessSwitchPageTable,
-    .getKernelPageTable = HAL_ProcessGetKernelPageTable,
-    .executeUser        = HAL_ProcessExecuteUser,
-    .freePageTable      = HAL_ProcessFreePageTable,
+    .initUserSpace      = NX_HalProcessInitUserSpace,
+    .switchPageTable    = NX_HalProcessSwitchPageTable,
+    .getKernelPageTable = NX_HalProcessGetKernelPageTable,
+    .executeUser        = NX_HalProcessExecuteUser,
+    .freePageTable      = NX_HalProcessFreePageTable,
 };

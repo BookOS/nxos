@@ -71,8 +71,8 @@
  * +------------------------+ <- 0x00000000
  */
 
-NX_IMPORT void HAL_ClearBSS(void);
+NX_IMPORT void NX_HalClearBSS(void);
 NX_IMPORT void MMU_EarlyMap(void);
-void *HAL_GetKernelPageTable(void);
+void *NX_HalGetKernelPageTable(void);
 
 #endif /* __PLATFORM_HEADER__ */

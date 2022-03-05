@@ -28,29 +28,29 @@
 
 NX_IMPORT char CPU_StackTop0[];
 
-NX_INTERFACE NX_Error HAL_PlatformInit(NX_UArch coreId)
+NX_INTERFACE NX_Error NX_HalPlatformInit(NX_UArch coreId)
 {
-    HAL_ClearBSS();
+    NX_HalClearBSS();
 
     /* NOTE: init trap first before do anything */
     CPU_InitTrap(coreId);
 
-    HAL_DirectUartInit();
+    NX_HalDirectUartInit();
     
     NX_LOG_I("Hello, world!");
     
     PLIC_Init(NX_True);
     
-    HAL_PageZoneInit();
+    NX_HalPageZoneInit();
     
     return NX_EOK;
 }
 
-NX_INTERFACE NX_Error HAL_PlatformStage2(void)
+NX_INTERFACE NX_Error NX_HalPlatformStage2(void)
 {
     NX_LOG_I("stage2!");
 
-    HAL_DirectUartStage2();
+    NX_HalDirectUartStage2();
 
     return NX_EOK;
 }

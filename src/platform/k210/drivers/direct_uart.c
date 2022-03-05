@@ -18,22 +18,22 @@
 
 #include <regs.h>
 
-void HAL_DirectUartPutc(char ch)
+void NX_HalDirectUartPutc(char ch)
 {
     sbi_console_putchar(ch);
 }
 
-int HAL_DirectUartGetc(void)
+int NX_HalDirectUartGetc(void)
 {
     return sbi_console_getchar();
 }
 
-NX_INTERFACE void HAL_ConsoleOutChar(char ch)
+NX_INTERFACE void NX_HalConsoleOutChar(char ch)
 {
-    HAL_DirectUartPutc(ch);
+    NX_HalDirectUartPutc(ch);
 }
 
-void HAL_DirectUartInit(void)
+void NX_HalDirectUartInit(void)
 {
     /* k210 do nothing */
 }
@@ -41,25 +41,25 @@ void HAL_DirectUartInit(void)
 /**
  * default handler
 */
-NX_WEAK_SYM void HAL_DirectUartGetcHandler(char data)
+NX_WEAK_SYM void NX_HalDirectUartGetcHandler(char data)
 {
     NX_LOG_I("Deafult uart handler:%x/%c\n", data, data);
 }
 
 NX_PRIVATE NX_Error UartIrqHandler(NX_IRQ_Number irqno, void *arg)
 {
-    int data = HAL_DirectUartGetc();
+    int data = NX_HalDirectUartGetc();
     if (data != -1)
     {
-        if (HAL_DirectUartGetcHandler != NX_NULL)
+        if (NX_HalDirectUartGetcHandler != NX_NULL)
         {
-            HAL_DirectUartGetcHandler(data);
+            NX_HalDirectUartGetcHandler(data);
         }
     }
     return data != -1 ? NX_EOK : NX_EIO;
 }
 
-void HAL_DirectUartStage2(void)
+void NX_HalDirectUartStage2(void)
 {
     NX_ASSERT(NX_IRQ_Bind(UART0_IRQ, UartIrqHandler, NX_NULL, "Uart0", 0) == NX_EOK);
     NX_ASSERT(NX_IRQ_Unmask(UART0_IRQ) == NX_EOK);

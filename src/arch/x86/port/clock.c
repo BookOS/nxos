@@ -140,7 +140,7 @@ NX_PRIVATE NX_Error ClockHandler(NX_U32 irq, void *arg)
     return NX_EOK;
 }
 
-NX_INTERFACE NX_Error HAL_InitClock(void)
+NX_INTERFACE NX_Error NX_HalInitClock(void)
 {
     IO_Out8(PIT_CTRL, PIT_MODE_2 | PIT_MODE_MSB_LSB |
             PIT_MODE_COUNTER_0 | PIT_MODE_BINARY);

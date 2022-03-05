@@ -65,7 +65,7 @@ NX_PRIVATE const char *ExceptionName[] =
     "Store/AMO Page Fault"
 };
 
-void TrapFrameDump(HAL_TrapFrame *frame)
+void TrapFrameDump(NX_HalTrapFrame *frame)
 {
     NX_LOG_RAW("------------ Trap frame Dump ------------\n");
     NX_LOG_RAW("Function Registers:\n");
@@ -174,9 +174,9 @@ void CPU_InitTrap(NX_UArch coreId)
     SetCSR(sie, SIE_SSIE);
 }
 
-NX_IMPORT void HAL_ProcessSyscallDispatch(HAL_TrapFrame *frame);
+NX_IMPORT void NX_HalProcessSyscallDispatch(NX_HalTrapFrame *frame);
 
-void TrapDispatch(HAL_TrapFrame *frame)
+void TrapDispatch(NX_HalTrapFrame *frame)
 {
     NX_U64 cause = ReadCSR(scause);
     NX_U64 stval = ReadCSR(stval);
@@ -208,7 +208,7 @@ void TrapDispatch(HAL_TrapFrame *frame)
     else if ((SCAUSE_INTERRUPT | SCAUSE_S_TIMER_INTR) == cause)
     {
         /* supervisor timer */
-        HAL_ClockHandler();
+        NX_HalClockHandler();
         return;
     }
     else if (SCAUSE_INTERRUPT & cause)
@@ -229,7 +229,7 @@ void TrapDispatch(HAL_TrapFrame *frame)
         {
             /* NOTICE: need enable interrupt while dispatch syscall */
             NX_IRQ_Enable();
-            HAL_ProcessSyscallDispatch(frame);
+            NX_HalProcessSyscallDispatch(frame);
             NX_IRQ_Disable();
             return;
         }
@@ -253,7 +253,7 @@ void TrapDispatch(HAL_TrapFrame *frame)
 /**
  * switch CPU stack to thread stack, thread stack maybe stack top or stack middle.
  */
-NX_U8 *TrapSwitchStack(HAL_TrapFrame *frame)
+NX_U8 *TrapSwitchStack(NX_HalTrapFrame *frame)
 {
     NX_UArch sstatus = ReadCSR(sstatus);
     NX_U8 *sp;
@@ -267,8 +267,8 @@ NX_U8 *TrapSwitchStack(HAL_TrapFrame *frame)
         NX_Thread *thread = NX_ThreadSelf();
         sp = (NX_U8 *)(thread->stackBase + thread->stackSize);
     }
-    sp -= sizeof(HAL_TrapFrame);
+    sp -= sizeof(NX_HalTrapFrame);
     /* copy TrapFrame to new stack */
-    NX_MemCopy((void *)sp, frame, sizeof(HAL_TrapFrame));
+    NX_MemCopy((void *)sp, frame, sizeof(NX_HalTrapFrame));
     return sp; 
 }

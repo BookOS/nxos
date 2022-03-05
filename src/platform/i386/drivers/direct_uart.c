@@ -150,7 +150,7 @@ NX_PRIVATE void UartSent(struct DirectUart *uart, char data)
     IO_Out8(uart->data, data);
 }
 
-void HAL_DirectUartPutc(char ch)
+void NX_HalDirectUartPutc(char ch)
 {
     if(ch == '\n') {
         UartSent(&DirectUart, '\r');
@@ -158,12 +158,12 @@ void HAL_DirectUartPutc(char ch)
     UartSent(&DirectUart, ch);
 }
 
-NX_INTERFACE void HAL_ConsoleOutChar(char ch)
+NX_INTERFACE void NX_HalConsoleOutChar(char ch)
 {
-    HAL_DirectUartPutc(ch);
+    NX_HalDirectUartPutc(ch);
 }
 
-void HAL_DirectUartInit(void)
+void NX_HalDirectUartInit(void)
 {
     struct DirectUart *uart = &DirectUart;
     NX_U16 iobase = UART0_BASE;
@@ -210,12 +210,12 @@ void HAL_DirectUartInit(void)
 /**
  * default handler
 */
-NX_WEAK_SYM void HAL_DirectUartGetcHandler(char data)
+NX_WEAK_SYM void NX_HalDirectUartGetcHandler(char data)
 {
     NX_Printf("Deafult uart handler:%x/%c\n", data, data);
 }
 
-int HAL_DirectUartGetc(void)
+int NX_HalDirectUartGetc(void)
 {
     struct DirectUart *uart = &DirectUart;
     
@@ -233,12 +233,12 @@ int HAL_DirectUartGetc(void)
 
 NX_PRIVATE void UartWorkHandler(void *arg)
 {
-    int data = HAL_DirectUartGetc();
+    int data = NX_HalDirectUartGetc();
     if (data != -1)
     {
-        if (HAL_DirectUartGetcHandler != NX_NULL)
+        if (NX_HalDirectUartGetcHandler != NX_NULL)
         {
-            HAL_DirectUartGetcHandler(data);
+            NX_HalDirectUartGetcHandler(data);
         }
     }
 }
@@ -249,7 +249,7 @@ NX_PRIVATE NX_Error UartIrqHandler(NX_IRQ_Number irqno, void *arg)
     return NX_EOK;
 }
 
-void HAL_DirectUartStage2(void)
+void NX_HalDirectUartStage2(void)
 {
     struct DirectUart *uart = &DirectUart;
     

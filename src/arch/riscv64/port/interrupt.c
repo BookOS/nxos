@@ -15,7 +15,7 @@
 #include <plic.h>
 #include <sched/smp.h>
 
-NX_PRIVATE NX_Error HAL_IrqUnmask(NX_IRQ_Number irqno)
+NX_PRIVATE NX_Error NX_HalIrqUnmask(NX_IRQ_Number irqno)
 {
     if (irqno < 0 || irqno >= NX_NR_IRQS)
     {
@@ -25,7 +25,7 @@ NX_PRIVATE NX_Error HAL_IrqUnmask(NX_IRQ_Number irqno)
     return PLIC_EnableIRQ(NX_SMP_GetBootCore(), irqno);
 }
 
-NX_PRIVATE NX_Error HAL_IrqMask(NX_IRQ_Number irqno)
+NX_PRIVATE NX_Error NX_HalIrqMask(NX_IRQ_Number irqno)
 {
     if (irqno < 0 || irqno >= NX_NR_IRQS)
     {
@@ -35,7 +35,7 @@ NX_PRIVATE NX_Error HAL_IrqMask(NX_IRQ_Number irqno)
     return PLIC_DisableIRQ(NX_SMP_GetBootCore(), irqno);
 }
 
-NX_PRIVATE NX_Error HAL_IrqAck(NX_IRQ_Number irqno)
+NX_PRIVATE NX_Error NX_HalIrqAck(NX_IRQ_Number irqno)
 {
     if (irqno < 0 || irqno >= NX_NR_IRQS)
     {
@@ -45,17 +45,17 @@ NX_PRIVATE NX_Error HAL_IrqAck(NX_IRQ_Number irqno)
     return PLIC_Complete(NX_SMP_GetBootCore(), irqno);
 }
 
-NX_PRIVATE void HAL_IrqEnable(void)
+NX_PRIVATE void NX_HalIrqEnable(void)
 {
     WriteCSR(sstatus, ReadCSR(sstatus) | SSTATUS_SIE);
 }
 
-NX_PRIVATE void HAL_IrqDisable(void)
+NX_PRIVATE void NX_HalIrqDisable(void)
 {
     WriteCSR(sstatus, ReadCSR(sstatus) & ~SSTATUS_SIE);
 }
 
-NX_PRIVATE NX_UArch HAL_IrqSaveLevel(void)
+NX_PRIVATE NX_UArch NX_HalIrqSaveLevel(void)
 {
     NX_UArch level = 0;
     level = ReadCSR(sstatus);
@@ -63,18 +63,18 @@ NX_PRIVATE NX_UArch HAL_IrqSaveLevel(void)
     return level & SSTATUS_SIE;
 }
 
-NX_PRIVATE void HAL_IrqRestoreLevel(NX_UArch level)
+NX_PRIVATE void NX_HalIrqRestoreLevel(NX_UArch level)
 {
     WriteCSR(sstatus, ReadCSR(sstatus) | (level & SSTATUS_SIE));
 }
 
 NX_INTERFACE NX_IRQ_Controller NX_IRQ_ControllerInterface = 
 {
-    .unmask = HAL_IrqUnmask,
-    .mask = HAL_IrqMask,
-    .ack = HAL_IrqAck,
-    .enable = HAL_IrqEnable,
-    .disable = HAL_IrqDisable,
-    .saveLevel = HAL_IrqSaveLevel,
-    .restoreLevel = HAL_IrqRestoreLevel,
+    .unmask = NX_HalIrqUnmask,
+    .mask = NX_HalIrqMask,
+    .ack = NX_HalIrqAck,
+    .enable = NX_HalIrqEnable,
+    .disable = NX_HalIrqDisable,
+    .saveLevel = NX_HalIrqSaveLevel,
+    .restoreLevel = NX_HalIrqRestoreLevel,
 };

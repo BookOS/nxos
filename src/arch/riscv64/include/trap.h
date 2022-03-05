@@ -17,6 +17,6 @@
 
 void CPU_InitTrap(NX_UArch coreId);
 
-void TrapFrameDump(HAL_TrapFrame *frame);
+void TrapFrameDump(NX_HalTrapFrame *frame);
 
 #endif  /* __RISCV_TRAP__ */

@@ -25,6 +25,6 @@ enum NX_PageZone
 };
 typedef enum NX_PageZone NX_PageZone;
 
-void HAL_PageZoneInit(void);
+void NX_HalPageZoneInit(void);
 
 #endif  /* __PLATFORM_PAGE_ZONE__ */
