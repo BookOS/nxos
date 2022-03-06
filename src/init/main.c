@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018-2022, BookOS Development Team
+ * Copyright (c) 2018-2022, NXOS Development Team
  * SPDX-License-Identifier: Apache-2.0
  * 
  * Contains: Init OS 
@@ -57,7 +57,7 @@ NX_PRIVATE void ShowLogVersion(void)
     NX_Printf("Version   : %d.%d.%d\n", NX_VERSION_MAJOR, NX_VERSION_MINOR, NX_VERSION_REVISE);
     NX_Printf("Build     : %s\n", __DATE__);
     NX_Printf("Platform  : %s\n", CONFIG_NX_PLATFROM_NAME);
-    NX_Printf("Copyright (c) 2018-2022, BookOS Development Team\n");
+    NX_Printf("Copyright (c) 2018-2022, NXOS Development Team\n");
 }
 
 int NX_Main(NX_UArch coreId)

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018-2022, BookOS Development Team
+ * Copyright (c) 2018-2022, NXOS Development Team
  * SPDX-License-Identifier: Apache-2.0
  * 
  * Contains: Init Riscv64 Qemu platfrom 
