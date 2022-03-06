@@ -27,9 +27,9 @@
 #define PTE_SOFT  0x300 // Reserved for Software
 #define PTE_S     0x000 // system
 
-#define ARCH_PAGE_ATTR_RWX      (PTE_X | PTE_W | PTE_R)
+#define NX_PAGE_ATTR_RWX    (PTE_X | PTE_W | PTE_R)
 
-#define ARCH_PAGE_ATTR_KERNEL (PTE_V | ARCH_PAGE_ATTR_RWX | PTE_S | PTE_G)
-#define ARCH_PAGE_ATTR_USER   (PTE_V | ARCH_PAGE_ATTR_RWX | PTE_U | PTE_G)
+#define NX_PAGE_ATTR_KERNEL (PTE_V | NX_PAGE_ATTR_RWX | PTE_S | PTE_G)
+#define NX_PAGE_ATTR_USER   (PTE_V | NX_PAGE_ATTR_RWX | PTE_U | PTE_G)
 
 #endif  /* __ARCH_MMU__ */

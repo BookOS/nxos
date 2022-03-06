@@ -39,7 +39,7 @@
 #define IRQ_HARDDISK        (14)
 #define IRQ_RESERVE         (15)
 
-struct HAL_TrapFrame
+struct NX_HalTrapFrame
 {
     NX_U32 vectorNumber;
 
@@ -67,10 +67,10 @@ struct HAL_TrapFrame
     NX_U32 esp;
     NX_U32 ss;
 } NX_PACKED;
-typedef struct HAL_TrapFrame HAL_TrapFrame;
+typedef struct NX_HalTrapFrame NX_HalTrapFrame;
 
 void CPU_InitInterrupt(void);
 
-void CPU_TrapFrameDump(HAL_TrapFrame *frame);
+void CPU_TrapFrameDump(NX_HalTrapFrame *frame);
 
 #endif  /* __PLATFORM_INTERRUPT__ */

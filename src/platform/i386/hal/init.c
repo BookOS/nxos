@@ -23,11 +23,11 @@
 
 #include <drivers/direct_uart.h>
 
-NX_INTERFACE NX_Error HAL_PlatformInit(NX_UArch coreId)
+NX_INTERFACE NX_Error NX_HalPlatformInit(NX_UArch coreId)
 {
-    HAL_ClearBSS();
+    NX_HalClearBSS();
     
-    HAL_DirectUartInit();
+    NX_HalDirectUartInit();
     
     NX_Printf("hello, world!\na=%x b=%d c=%c e=%s\n", 0x1234abcd, 123456789, 'A', "hello");
     
@@ -38,14 +38,14 @@ NX_INTERFACE NX_Error HAL_PlatformInit(NX_UArch coreId)
     CPU_InitTSS();
     CPU_InitInterrupt();
     
-    HAL_PageZoneInit();
+    NX_HalPageZoneInit();
 
     return NX_EOK;
 }
 
-NX_INTERFACE NX_Error HAL_PlatformStage2(void)
+NX_INTERFACE NX_Error NX_HalPlatformStage2(void)
 {
-    HAL_DirectUartStage2();
+    NX_HalDirectUartStage2();
     
     return NX_EOK;
 }

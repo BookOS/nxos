@@ -26,9 +26,9 @@
 #define PTE_A     0x020 // Accessed
 #define PTE_D     0x040 // Dirty
 
-#define ARCH_PAGE_ATTR_RWX      (PTE_X | PTE_W | PTE_R)
+#define NX_PAGE_ATTR_RWX      (PTE_X | PTE_W | PTE_R)
 
-#define ARCH_PAGE_ATTR_KERNEL   (PTE_P | ARCH_PAGE_ATTR_RWX | PTE_S)
-#define ARCH_PAGE_ATTR_USER     (PTE_P | ARCH_PAGE_ATTR_RWX | PTE_U)
+#define NX_PAGE_ATTR_KERNEL   (PTE_P | NX_PAGE_ATTR_RWX | PTE_S)
+#define NX_PAGE_ATTR_USER     (PTE_P | NX_PAGE_ATTR_RWX | PTE_U)
 
 #endif  /* __ARCH_MMU__ */

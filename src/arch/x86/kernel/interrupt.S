@@ -6,13 +6,13 @@
  * Change Logs:
  * Date           Author       Notes
  * 2021/10/1      JasonHu      The first version
- * 2022/2/9       JasonHu      add HAL_ProcessEnterUserMode
+ * 2022/2/9       JasonHu      add NX_HalProcessEnterUserMode
  */
 
 .code32
 .text
 
-.extern HAL_InterruptDispatch
+.extern NX_HalInterruptDispatch
 .extern NX_ReSchedCheck
 .extern NX_IRQ_DelayQueueCheck
 
@@ -36,10 +36,10 @@ CPU_TrapEntry\p1:
     pushl $\p1
 
     pushl %esp
-    call HAL_InterruptDispatch
+    call NX_HalInterruptDispatch
     addl $4, %esp
 
-    jmp HAL_InterruptExit
+    jmp NX_HalInterruptExit
 .endm
 
 /* cpu with error code */
@@ -61,10 +61,10 @@ CPU_TrapEntry\p1:
     pushl $\p1
     
     pushl %esp
-    call HAL_InterruptDispatch
+    call NX_HalInterruptDispatch
     addl $4, %esp
 
-    jmp HAL_InterruptExit
+    jmp NX_HalInterruptExit
 .endm
 
 CPU_TrapEntryNoErrCode 0x00
@@ -116,7 +116,7 @@ CPU_TrapEntryNoErrCode 0x2d
 CPU_TrapEntryNoErrCode 0x2e
 CPU_TrapEntryNoErrCode 0x2f
 
-.extern HAL_ProcessSyscallDispatch
+.extern NX_HalProcessSyscallDispatch
 
 .global CPU_SyscallEntry
 CPU_SyscallEntry:
@@ -138,17 +138,17 @@ CPU_SyscallEntry:
     sti /* enable interrupt */
 
     pushl %esp
-    call HAL_ProcessSyscallDispatch
+    call NX_HalProcessSyscallDispatch
     addl $4, %esp
 
     cli /* disable interrupt */
     
-    jmp HAL_InterruptExit
+    jmp NX_HalInterruptExit
 
-.global HAL_SyscallExit
-HAL_SyscallExit:
-.global HAL_InterruptExit
-HAL_InterruptExit:
+.global NX_HalSyscallExit
+NX_HalSyscallExit:
+.global NX_HalInterruptExit
+NX_HalInterruptExit:
 
     /* do exit check */
     call NX_IRQ_DelayQueueCheck
@@ -171,10 +171,10 @@ HAL_InterruptExit:
     iretl
 
 /*
- * void HAL_ProcessEnterUserMode(frame);
+ * void NX_HalProcessEnterUserMode(frame);
  */
-.global HAL_ProcessEnterUserMode
-HAL_ProcessEnterUserMode:
+.global NX_HalProcessEnterUserMode
+NX_HalProcessEnterUserMode:
     movl 0x4(%esp), %esp
     addl $4,%esp    // skip intr no
     popal

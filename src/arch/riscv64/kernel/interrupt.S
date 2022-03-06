@@ -93,10 +93,10 @@ TrapReturn:
     sret
 
 /*
- * void HAL_ProcessEnterUserMode(args, text, userStack);
+ * void NX_HalProcessEnterUserMode(args, text, userStack);
  */
-.global HAL_ProcessEnterUserMode
-HAL_ProcessEnterUserMode:
+.global NX_HalProcessEnterUserMode
+NX_HalProcessEnterUserMode:
     /* set as user mode, close interrupt */
     li t0, SSTATUS_SPP | SSTATUS_SIE
     csrc sstatus, t0

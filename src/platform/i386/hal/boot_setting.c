@@ -16,7 +16,7 @@
 NX_INLINE void BootModInit(struct multiboot_tag *tag);
 NX_INLINE void BootMemModInit(struct multiboot_tag *tag);
 
-int HAL_BootSetting(unsigned long magic, unsigned long addr)
+int NX_HalBootSetting(unsigned long magic, unsigned long addr)
 {
     // whether a multiboot
     if (magic != MULTIBOOT2_BOOTLOADER_MAGIC || addr & 7)

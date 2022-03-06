@@ -20,7 +20,7 @@
 .section .text.start
 .globl Start, _start
 .extern NX_Main
-.extern HAL_BootSetting
+.extern NX_HalBootSetting
 
 Start:
 _start:
@@ -54,7 +54,7 @@ MultibootEntry:
     # push the magic value
     pushl %eax
     
-    call HAL_BootSetting
+    call NX_HalBootSetting
     cmpl $-1, %eax
     je BootSetupFail
 

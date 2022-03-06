@@ -55,22 +55,22 @@ NX_Process *NX_ProcessCreate(NX_U32 flags)
     }
 
     if(NX_VmspaceInit(&process->vmspace,
-        ARCH_USER_SPACE_VADDR,
-        ARCH_USER_SPACE_TOP,
-        ARCH_USER_IMAGE_VADDR,
-        ARCH_USER_IMAGE_TOP,
-        ARCH_USER_HEAP_VADDR,
-        ARCH_USER_HEAP_TOP,
-        ARCH_USER_MAP_VADDR,
-        ARCH_USER_MAP_TOP,
-        ARCH_USER_STACK_VADDR,
-        ARCH_USER_STACK_TOP) != NX_EOK)
+        NX_USER_SPACE_VADDR,
+        NX_USER_SPACE_TOP,
+        NX_USER_IMAGE_VADDR,
+        NX_USER_IMAGE_TOP,
+        NX_USER_HEAP_VADDR,
+        NX_USER_HEAP_TOP,
+        NX_USER_MAP_VADDR,
+        NX_USER_MAP_TOP,
+        NX_USER_STACK_VADDR,
+        NX_USER_STACK_TOP) != NX_EOK)
     {
         NX_MemFree(process);
         return NX_NULL;
     }
 
-    if (NX_ProcessInitUserSpace(process, ARCH_USER_SPACE_VADDR, ARCH_USER_SPACE_SIZE) != NX_EOK)
+    if (NX_ProcessInitUserSpace(process, NX_USER_SPACE_VADDR, NX_USER_SPACE_SIZE) != NX_EOK)
     {
         NX_MemFree(process);
         return NX_NULL;
@@ -105,7 +105,7 @@ NX_PRIVATE void ProcessThreadEntry(void *arg)
     NX_Thread *thread = NX_ThreadSelf();
     NX_LOG_I("Process %s/%d running...", thread->name, thread->tid);
     /* Jump into userspace to run app */
-    NX_ProcessExecuteUser((void *)ARCH_USER_IMAGE_VADDR, (void *)ARCH_USER_STACK_TOP, thread->stackBase + thread->stackSize, NX_NULL);
+    NX_ProcessExecuteUser((void *)NX_USER_IMAGE_VADDR, (void *)NX_USER_STACK_TOP, thread->stackBase + thread->stackSize, NX_NULL);
 }
 
 /**
@@ -156,7 +156,7 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
     }
 
     /* map code & data memory */
-    if (NX_VmspaceMap(space, space->imageStart, len, ARCH_PAGE_ATTR_USER, 0, &addr) != NX_EOK)
+    if (NX_VmspaceMap(space, space->imageStart, len, NX_PAGE_ATTR_USER, 0, &addr) != NX_EOK)
     {
         NX_RomfsClose(file);
         return NX_ENOMEM;
@@ -240,7 +240,7 @@ NX_Error NX_ProcessExecute(char *name, char *path, NX_U32 flags)
 
     space = &process->vmspace;
     /* map user stack */
-    if (NX_VmspaceMap(space, space->stackEnd - NX_PAGE_SIZE, NX_PAGE_SIZE, ARCH_PAGE_ATTR_USER, 0, NX_NULL) != NX_EOK)
+    if (NX_VmspaceMap(space, space->stackEnd - NX_PAGE_SIZE, NX_PAGE_SIZE, NX_PAGE_ATTR_USER, 0, NX_NULL) != NX_EOK)
     {
         NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
         NX_ProcessDestroy(process);

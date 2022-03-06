@@ -17,7 +17,7 @@
 
 #include <xbook/debug.h>
 
-NX_IMPORT NX_Error HAL_InitClock(void);
+NX_IMPORT NX_Error NX_HalInitClock(void);
 
 NX_STATIC_ATOMIC_INIT(NX_ActivedCoreCount, 0);
 
@@ -85,7 +85,7 @@ void NX_SMP_Stage2(NX_UArch appCoreId)
     }
     else
     {
-        if (HAL_InitClock() != NX_EOK)
+        if (NX_HalInitClock() != NX_EOK)
         {
             NX_LOG_E("app core: %d init clock failed!", appCoreId);
         }

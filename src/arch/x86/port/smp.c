@@ -13,25 +13,25 @@
 #define NX_LOG_NAME "Multi Core"
 #include <utils/log.h>
 
-NX_UArch HAL_CoreGetIndex(void)
+NX_UArch NX_HalCoreGetIndex(void)
 {
     return 0;
 }
 
-NX_Error HAL_CoreBootApp(NX_UArch bootCoreId)
+NX_Error NX_HalCoreBootApp(NX_UArch bootCoreId)
 {
     NX_LOG_I("boot core is:%d", bootCoreId);
     return NX_ENORES;
 }
 
-NX_Error HAL_CoreEnterApp(NX_UArch appCoreId)
+NX_Error NX_HalCoreEnterApp(NX_UArch appCoreId)
 {
     return NX_ENORES;
 }
 
 NX_INTERFACE struct NX_SMP_Ops NX_SMP_OpsInterface = 
 {
-    .getIdx = HAL_CoreGetIndex,
-    .bootApp = HAL_CoreBootApp,
-    .enterApp = HAL_CoreEnterApp,
+    .getIdx = NX_HalCoreGetIndex,
+    .bootApp = NX_HalCoreBootApp,
+    .enterApp = NX_HalCoreEnterApp,
 };

@@ -36,7 +36,7 @@ NX_PRIVATE char *LogString = \
 NX_IMPORT NX_Atomic NX_ActivedCoreCount;
 
 /* Platform init */
-NX_INTERFACE NX_Error HAL_PlatformInit(NX_UArch coreId);
+NX_INTERFACE NX_Error NX_HalPlatformInit(NX_UArch coreId);
 
 /**
  * stage2 means you can do:
@@ -45,7 +45,7 @@ NX_INTERFACE NX_Error HAL_PlatformInit(NX_UArch coreId);
  * 3. use NX_Thread
  * 4. use Timer
  */
-NX_INTERFACE NX_WEAK_SYM NX_Error HAL_PlatformStage2(void)
+NX_INTERFACE NX_WEAK_SYM NX_Error NX_HalPlatformStage2(void)
 {
     return NX_EOK;
 }
@@ -69,7 +69,7 @@ int NX_Main(NX_UArch coreId)
         NX_SMP_Preload(coreId);
         
         /* platfrom init */
-        if (HAL_PlatformInit(coreId) != NX_EOK)
+        if (NX_HalPlatformInit(coreId) != NX_EOK)
         {
             NX_PANIC("Platfrom init failed!");
         }
@@ -103,7 +103,7 @@ int NX_Main(NX_UArch coreId)
         NX_CallsInit();
         
         /* platform stage2 call */
-        if (HAL_PlatformStage2() != NX_EOK)
+        if (NX_HalPlatformStage2() != NX_EOK)
         {
             NX_PANIC("Platform stage2 failed!");
         }

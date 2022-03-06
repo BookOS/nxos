@@ -30,7 +30,7 @@ NX_IMPORT NX_Addr TrapEntry3;
 /**
  * Within SBI, we can't read mhartid, so I try to use `trap entry` to see who am I.
  */
-NX_PRIVATE NX_UArch HAL_CoreGetIndex(void)
+NX_PRIVATE NX_UArch NX_HalCoreGetIndex(void)
 {
     NX_Addr trapEntry = ReadCSR(stvec);
 
@@ -54,7 +54,7 @@ NX_PRIVATE NX_UArch HAL_CoreGetIndex(void)
     while (1);
 }
 
-NX_PRIVATE NX_Error HAL_CoreBootApp(NX_UArch bootCoreId)
+NX_PRIVATE NX_Error NX_HalCoreBootApp(NX_UArch bootCoreId)
 {
 #ifdef CONFIG_NX_PLATFROM_K210
     return NX_ENORES;   /* not support smp on k210 */
@@ -78,7 +78,7 @@ NX_PRIVATE NX_Error HAL_CoreBootApp(NX_UArch bootCoreId)
 #endif
 }
 
-NX_PRIVATE NX_Error HAL_CoreEnterApp(NX_UArch appCoreId)
+NX_PRIVATE NX_Error NX_HalCoreEnterApp(NX_UArch appCoreId)
 {
     /* NOTE: init trap first before do anything */
     CPU_InitTrap(appCoreId);
@@ -90,7 +90,7 @@ NX_PRIVATE NX_Error HAL_CoreEnterApp(NX_UArch appCoreId)
 
 NX_INTERFACE struct NX_SMP_Ops NX_SMP_OpsInterface = 
 {
-    .getIdx = HAL_CoreGetIndex,
-    .bootApp = HAL_CoreBootApp,
-    .enterApp = HAL_CoreEnterApp,
+    .getIdx = NX_HalCoreGetIndex,
+    .bootApp = NX_HalCoreBootApp,
+    .enterApp = NX_HalCoreEnterApp,
 };

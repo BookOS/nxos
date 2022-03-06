@@ -121,7 +121,7 @@
 .endm
 #else
 
-struct HAL_Context
+struct NX_HalContext
 {
     NX_UArch epc;   //sepc
     NX_UArch ra;    // Return address
@@ -157,7 +157,7 @@ struct HAL_Context
     NX_UArch t6;    // Temporary
     NX_UArch sstatus;// sstatus
 } NX_PACKED;
-typedef struct HAL_Context HAL_Context;
+typedef struct NX_HalContext NX_HalContext;
 #endif /* __ASSEMBLY__ */
 
 #endif  /* __CONTEXT_HEADER__ */
