@@ -57,7 +57,7 @@ endif
 ifeq ($(strip $(ARCH)), amd64)
 DEFINES		+=	-D__AMD64__
 endif
-ifeq ($(strip $(ARCH)), i386)
+ifeq ($(strip $(ARCH)), x86)
 DEFINES		+=	-D__I386__
 endif
 

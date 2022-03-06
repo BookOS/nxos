@@ -82,6 +82,7 @@
 #define NX_ARRAY_CAST(p, size) (((char(*)[size])(p)))
 
 #define NX_MIN(x, y) ({typeof(x) _x = (x);typeof(y) _y = (y);(void)(&_x == &_y);_x < _y ? _x : _y; })
+#define NX_MAX(x, y) ({typeof(x) _x = (x);typeof(y) _y = (y);(void)(&_x == &_y);_x > _y ? _x : _y; })
 
 #define NX_KB   1024
 #define NX_MB   (NX_KB * 1024)

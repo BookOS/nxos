@@ -17,6 +17,8 @@
 #include <sched/spin.h>
 #include <mm/vmspace.h>
 
+#define NX_PROCESS_USER_SATCK_SIZE (NX_PAGE_SIZE * 4)
+
 struct NX_Process
 {
     NX_U32 flags;
