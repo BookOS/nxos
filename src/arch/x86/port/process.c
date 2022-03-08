@@ -9,7 +9,7 @@
  * 2022-1-8       JasonHu           Init
  */
 
-#include <sched/process.h>
+#include <process/process.h>
 #include <arch/process.h>
 #include <mm/alloc.h>
 #include <utils/memory.h>
@@ -20,7 +20,7 @@
 #include <xbook/debug.h>
 #include <platform.h>
 #include <interrupt.h>
-#include <sched/syscall.h>
+#include <process/syscall.h>
 #include <sched/thread.h>
 #include <segment.h>
 #include <regs.h>

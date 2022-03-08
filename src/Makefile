@@ -90,6 +90,7 @@ SRCDIRS		+=	mm/
 SRCDIRS		+=	tests/
 SRCDIRS		+=	sched/
 SRCDIRS		+=	io/
+SRCDIRS		+=	process/
 
 #
 # XBuild variables

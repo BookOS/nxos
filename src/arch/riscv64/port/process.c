@@ -9,8 +9,8 @@
  * 2022-1-16      JasonHu           Init
  */
 
-#include <sched/process.h>
-#include <sched/syscall.h>
+#include <process/process.h>
+#include <process/syscall.h>
 #include <mm/alloc.h>
 #include <utils/memory.h>
 #include <mm/page.h>

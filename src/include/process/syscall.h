@@ -9,8 +9,8 @@
  * 2022-1-31      JasonHu           Init
  */
 
-#ifndef __SCHED_SYSCALL___
-#define __SCHED_SYSCALL___
+#ifndef __PROCESS_SYSCALL___
+#define __PROCESS_SYSCALL___
 
 #include <xbook.h>
 
@@ -36,4 +36,4 @@ typedef NX_U32 NX_SyscallApi;
 
 NX_SyscallHandler NX_SyscallGetHandler(NX_SyscallApi api);
 
-#endif /* __SCHED_SYSCALL___ */
+#endif /* __PROCESS_SYSCALL___ */

@@ -13,7 +13,7 @@
 #include <mm/page.h>
 #include <mm/alloc.h>
 #include <mm/mmu.h>
-#include <sched/process.h>
+#include <process/process.h>
 #include <xbook/debug.h>
 
 #define NX_LOG_NAME "vmspace"

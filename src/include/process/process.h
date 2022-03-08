@@ -9,8 +9,8 @@
  * 2022-1-7       JasonHu           Init
  */
 
-#ifndef __SCHED_PROCESS___
-#define __SCHED_PROCESS___
+#ifndef __PROCESS_PROCESS___
+#define __PROCESS_PROCESS___
 
 #include <xbook.h>
 #include <utils/list.h>
@@ -61,4 +61,4 @@ NX_Error NX_ProcessDestroy(NX_Process *process);
 NX_Error NX_ProcessExecute(char *name, char *path, NX_U32 flags);
 void NX_ProcessExit(int exitCode);
 
-#endif /* __SCHED_PROCESS___ */
+#endif /* __PROCESS_PROCESS___ */

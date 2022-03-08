@@ -18,7 +18,7 @@
 #include <sched/thread.h>
 #include <sched/smp.h>
 #include <sched/context.h>
-#include <sched/process.h>
+#include <process/process.h>
 
 NX_IMPORT NX_ThreadManager NX_ThreadManagerObject;
 NX_IMPORT NX_Atomic NX_ActivedCoreCount;
