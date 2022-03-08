@@ -33,7 +33,12 @@ menu "OS Kernel"
     #
     # Sched
     #
-    source "$NXOS_SRC_DIR/sched/Kconfig"    
+    source "$NXOS_SRC_DIR/sched/Kconfig"
+
+    #
+    # Process
+    #
+    source "$NXOS_SRC_DIR/process/Kconfig"    
 endmenu
 
 #

@@ -15,7 +15,7 @@
 #include <utils/list.h>
 #include <mods/time/timer.h>
 #include <sched/spin.h>
-#include <sched/process.h>
+#include <process/process.h>
 
 #ifdef CONFIG_NX_THREAD_NAME_LEN
 #define NX_THREAD_NAME_LEN CONFIG_NX_THREAD_NAME_LEN

@@ -10,7 +10,7 @@
  */
 
 #include <mods/test/utest.h>
-#include <sched/process.h>
+#include <process/process.h>
 
 #ifdef CONFIG_NX_UTEST_SCHED_PROCESS
 

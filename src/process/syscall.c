@@ -9,11 +9,11 @@
  * 2022-1-31      JasonHu           Init
  */
 
-#include <sched/syscall.h>
+#include <process/syscall.h>
 #include <sched/thread.h>
 #define NX_LOG_NAME "syscall"
 #include <utils/log.h>
-#include <sched/process.h>
+#include <process/process.h>
 #include <xbook/debug.h>
 
 NX_PRIVATE int SYS_InvalidCall(void)

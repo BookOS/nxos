@@ -19,8 +19,8 @@
  * @TAG(NICTA_BSD)
  */
 
-#ifndef __UTILS_LIB_CPIO__
-#define __UTILS_LIB_CPIO__
+#ifndef __THIRDPART_CPIO__
+#define __THIRDPART_CPIO__
 
 /* Magic identifiers for the "cpio" file format. */
 #define CPIO_HEADER_MAGIC "070701"
@@ -96,4 +96,4 @@ int cpio_info(void *archive, struct cpio_info *info);
  */
 void cpio_ls(void *archive, char **buf, unsigned long buf_len);
 
-#endif /* __UTILS_LIB_CPIO__ */
+#endif /* __THIRDPART_CPIO__ */
