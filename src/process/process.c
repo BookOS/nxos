@@ -520,7 +520,7 @@ NX_Error NX_ProcessExecute(char *name, char *path, NX_U32 flags)
         return NX_ENOMEM;
     }
 
-    NX_Thread *thread = NX_ThreadCreate(name, ProcessThreadEntry, NX_NULL);
+    NX_Thread *thread = NX_ThreadCreate(name, ProcessThreadEntry, NX_NULL, NX_THREAD_PRIORITY_NORMAL);
 
     if (thread == NX_NULL)
     {

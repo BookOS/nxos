@@ -57,7 +57,7 @@ void NX_ThreadInitDeamon(void)
 {
     NX_Thread *deamonThread;
     /* init daemon thread */
-    deamonThread = NX_ThreadCreate("daemon", DaemonThreadEntry, NX_NULL);
+    deamonThread = NX_ThreadCreate("daemon", DaemonThreadEntry, NX_NULL, NX_THREAD_PRIORITY_LOW);
     NX_ASSERT(deamonThread != NX_NULL);
     NX_ASSERT(NX_ThreadRun(deamonThread) == NX_EOK);
 }

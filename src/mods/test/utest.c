@@ -229,7 +229,7 @@ NX_PRIVATE void NX_UTestEntry(void *arg)
 
 NX_PRIVATE void NX_UTestInit(void)
 {
-    NX_Thread *thread = NX_ThreadCreate("UTest", NX_UTestEntry, NX_NULL);
+    NX_Thread *thread = NX_ThreadCreate("UTest", NX_UTestEntry, NX_NULL, NX_THREAD_PRIORITY_HIGH);
     NX_ASSERT(thread != NX_NULL);
     NX_ASSERT(NX_ThreadRun(thread) == NX_EOK);
 }

@@ -40,7 +40,7 @@ void NX_ThreadInitIdle(void)
     for (coreId = 0; coreId < NX_MULTI_CORES_NR; coreId++)
     {
         NX_SNPrintf(name, 8, "idle%d", coreId);
-        idleThread = NX_ThreadCreate(name, IdleThreadEntry, NX_NULL);
+        idleThread = NX_ThreadCreate(name, IdleThreadEntry, NX_NULL, NX_THREAD_PRIORITY_IDLE);
         NX_ASSERT(idleThread != NX_NULL);
         /* bind idle on each core */
         NX_ASSERT(NX_ThreadSetAffinity(idleThread, coreId) == NX_EOK);

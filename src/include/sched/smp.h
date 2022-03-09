@@ -20,7 +20,7 @@
 
 struct NX_Cpu
 {
-    NX_List threadReadyList;   /* list for thread ready to run */
+    NX_List threadReadyList[NX_THREAD_MAX_PRIORITY_NR];   /* list for thread ready to run */
     NX_Thread *threadRunning;  /* the thread running on core */
 
     NX_Spin lock;     /* lock for CPU */

@@ -43,11 +43,14 @@ NX_UArch NX_SMP_GetBootCore(void)
 void NX_SMP_Init(NX_UArch coreId)
 {
     /* init core array */
-    int i;
+    int i, j;
     for (i = 0; i < NX_MULTI_CORES_NR; i++)
     {
         CpuArray[i].threadRunning = NX_NULL;
-        NX_ListInit(&CpuArray[i].threadReadyList);
+        for (j = 0; j < NX_THREAD_MAX_PRIORITY_NR; j++)
+        {
+            NX_ListInit(&CpuArray[i].threadReadyList[j]);
+        }
         NX_SpinInit(&CpuArray[i].lock);
         NX_AtomicSet(&CpuArray[i].threadCount, 0);
     }
@@ -98,17 +101,19 @@ void NX_SMP_Stage2(NX_UArch appCoreId)
 
 void NX_SMP_EnqueueThreadIrqDisabled(NX_UArch coreId, NX_Thread *thread, int flags)
 {
+    NX_ASSERT(thread->priority >= 0 && thread->priority < NX_THREAD_MAX_PRIORITY_NR);
+
     NX_Cpu *cpu = NX_CpuGetIndex(coreId);
 
     NX_SpinLock(&cpu->lock, NX_True);
 
     if (flags & NX_SCHED_HEAD)
     {
-        NX_ListAdd(&thread->list, &cpu->threadReadyList);
+        NX_ListAdd(&thread->list, &cpu->threadReadyList[thread->priority]);
     }
     else
     {
-        NX_ListAddTail(&thread->list, &cpu->threadReadyList);
+        NX_ListAddTail(&thread->list, &cpu->threadReadyList[thread->priority]);
     }
 
     NX_AtomicInc(&cpu->threadCount);
@@ -118,12 +123,24 @@ void NX_SMP_EnqueueThreadIrqDisabled(NX_UArch coreId, NX_Thread *thread, int fla
 
 NX_Thread *NX_SMP_DeququeThreadIrqDisabled(NX_UArch coreId)
 {
-    NX_Thread *thread;
+    NX_Thread *thread = NX_NULL;
+    int i;
     NX_Cpu *cpu = NX_CpuGetIndex(coreId);
     
     NX_SpinLock(&cpu->lock, NX_True);
     
-    thread = NX_ListFirstEntry(&cpu->threadReadyList, NX_Thread, list);
+    for (i = NX_THREAD_MAX_PRIORITY_NR - 1; i >= 0; i--)
+    {
+        thread = NX_ListFirstEntryOrNULL(&cpu->threadReadyList[i], NX_Thread, list);
+        if (thread != NX_NULL)
+        {
+            break;
+        }
+    }
+
+    /* at least one idle thread on core */
+    NX_ASSERT(thread);
+
     NX_ListDel(&thread->list);
 
     NX_AtomicDec(&cpu->threadCount);
@@ -140,20 +157,26 @@ NX_Thread *NX_SMP_DeququeNoAffinityThread(NX_UArch coreId)
 {
     NX_Thread *thread, *findThread = NX_NULL;
     NX_Cpu *cpu = NX_CpuGetIndex(coreId);
-    
+    int i;
+
     NX_SpinLock(&cpu->lock, NX_True);
     
-    NX_ListForEachEntry(thread, &cpu->threadReadyList, list)
+    for (i = NX_THREAD_MAX_PRIORITY_NR - 1; i >= 0; i--)
     {
-        if (thread->coreAffinity >= NX_MULTI_CORES_NR) /* no affinity on any core */
+        NX_ListForEachEntry(thread, &cpu->threadReadyList[i], list)
         {
-            findThread = thread;
-            NX_ListDel(&thread->list);
-            NX_AtomicDec(&cpu->threadCount);
-            break;
+            if (thread->coreAffinity >= NX_MULTI_CORES_NR) /* no affinity on any core */
+            {
+                findThread = thread;
+                NX_ListDel(&thread->list);
+                NX_AtomicDec(&cpu->threadCount);
+                goto out;
+            }
         }
     }
-    
+
+out:
+
     NX_SpinUnlock(&cpu->lock);
 
     return findThread;
