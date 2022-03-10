@@ -12,7 +12,8 @@
 #include <sched/smp.h>
 #include <sched/thread.h>
 #include <sched/sched.h>
-#define NX_LOG_NAME "Core"
+#define NX_LOG_NAME "smp"
+#define NX_LOG_LEVEL NX_LOG_INFO
 #include <utils/log.h>
 
 #include <xbook/debug.h>
@@ -121,17 +122,33 @@ void NX_SMP_EnqueueThreadIrqDisabled(NX_UArch coreId, NX_Thread *thread, int fla
     NX_SpinUnlock(&cpu->lock);
 }
 
+/**
+ * This is based on a multi-level feedback queue scheduling algorithm to do the calculations.
+ */
+NX_PRIVATE void NX_ThreadLowerPriority(NX_Thread *thread)
+{
+    /* Time-sharing scheduling requires lowering the priority of threads */
+    if (thread->fixedPriority >= NX_THREAD_PRIORITY_LOW && thread->fixedPriority <= NX_THREAD_PRIORITY_HIGH)
+    {
+        --thread->priority;
+        if (thread->priority < NX_THREAD_PRIORITY_LOW)
+        {
+            thread->priority = thread->fixedPriority; /* rebase priority */
+        }
+    }
+}
+
 NX_Thread *NX_SMP_DeququeThreadIrqDisabled(NX_UArch coreId)
 {
     NX_Thread *thread = NX_NULL;
-    int i;
+    int prio;
     NX_Cpu *cpu = NX_CpuGetIndex(coreId);
     
     NX_SpinLock(&cpu->lock, NX_True);
     
-    for (i = NX_THREAD_MAX_PRIORITY_NR - 1; i >= 0; i--)
+    for (prio = NX_THREAD_MAX_PRIORITY_NR - 1; prio >= 0; prio--)
     {
-        thread = NX_ListFirstEntryOrNULL(&cpu->threadReadyList[i], NX_Thread, list);
+        thread = NX_ListFirstEntryOrNULL(&cpu->threadReadyList[prio], NX_Thread, list);
         if (thread != NX_NULL)
         {
             break;
@@ -142,6 +159,8 @@ NX_Thread *NX_SMP_DeququeThreadIrqDisabled(NX_UArch coreId)
     NX_ASSERT(thread);
 
     NX_ListDel(&thread->list);
+
+    NX_ThreadLowerPriority(thread);
 
     NX_AtomicDec(&cpu->threadCount);
 
@@ -157,13 +176,13 @@ NX_Thread *NX_SMP_DeququeNoAffinityThread(NX_UArch coreId)
 {
     NX_Thread *thread, *findThread = NX_NULL;
     NX_Cpu *cpu = NX_CpuGetIndex(coreId);
-    int i;
+    int prio;
 
     NX_SpinLock(&cpu->lock, NX_True);
     
-    for (i = NX_THREAD_MAX_PRIORITY_NR - 1; i >= 0; i--)
+    for (prio = NX_THREAD_MAX_PRIORITY_NR - 1; prio >= 0; prio--)
     {
-        NX_ListForEachEntry(thread, &cpu->threadReadyList[i], list)
+        NX_ListForEachEntry(thread, &cpu->threadReadyList[prio], list)
         {
             if (thread->coreAffinity >= NX_MULTI_CORES_NR) /* no affinity on any core */
             {

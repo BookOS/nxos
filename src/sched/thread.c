@@ -54,6 +54,7 @@ NX_PRIVATE NX_Error ThreadInit(NX_Thread *thread,
     thread->threadArg = arg;
     thread->timeslice = 3;
     thread->ticks = thread->timeslice;
+    thread->fixedPriority = priority;
     thread->priority = priority;
     thread->needSched = 0;
     thread->isTerminated = 0;
@@ -325,7 +326,7 @@ NX_PRIVATE NX_Bool TimerThreadSleepTimeout(NX_Timer *timer, void *arg)
     return NX_True;
 }
 
-/* if thread sleep less equal than 2s, use delay instead */
+/* if thread sleep less equal than 2ms, use delay instead */
 #define THREAD_SLEEP_TIMEOUT_THRESHOLD 2
 
 NX_Error NX_ThreadSleep(NX_UArch microseconds)
