@@ -50,8 +50,7 @@ NX_Error NX_TimerInit(NX_Timer *timer, NX_UArch milliseconds,
 
     timer->timeTicks = NX_MILLISECOND_TO_TICKS(milliseconds);
     
-    /* calc timeout here */
-    timer->timeout = timer->timeTicks + TimerTicks;
+    timer->timeout = 0;
     
     timer->handler = handler;
     timer->arg = arg;
@@ -145,6 +144,9 @@ NX_Error NX_TimerStart(NX_Timer *timer)
 
     NX_SpinLockIRQ(&TimersSpin, &level);
 
+    /* calc timeout here */
+    timer->timeout = timer->timeTicks + TimerTicks;
+
     /* timeout is invalid */
     if (NX_IDLE_TIMER_TIMEOUT_TICKS - timer->timeTicks < TimerTicks)
     {
@@ -179,12 +181,12 @@ NX_Error NX_TimerStart(NX_Timer *timer)
         else
         {
             /* insert after nearly timer */
-            NX_Timer *prev;
-            NX_ListForEachEntry(prev, &TimerListHead, list)
+            NX_Timer *prev = NX_NULL;
+            NX_ListForEachEntryReverse(prev, &TimerListHead, list)
             {
-                if (prev->timeout <= timer->timeout)
+                if (timer->timeout >= prev->timeout)
                 {
-                    NX_ListAddAfter(&timer->list, &prev->list);
+                    NX_ListAdd(&timer->list, &prev->list);
                     break;
                 }
             }
