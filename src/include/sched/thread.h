@@ -29,6 +29,22 @@
 #define NX_THREAD_STACK_SIZE_DEFAULT 8192
 #endif
 
+/* time-sharing priority */
+#define NX_THREAD_PRIORITY_IDLE     0   /* idle thread priority */
+#define NX_THREAD_PRIORITY_LOW      1   /* low level priority */
+#define NX_THREAD_PRIORITY_NORMAL   3   /* normal level priority */
+#define NX_THREAD_PRIORITY_HIGH     6   /* high level priority */
+
+/* max thread priority */
+#ifdef CONFIG_NX_THREAD_MAX_PRIORITY_NR
+#define NX_THREAD_MAX_PRIORITY_NR CONFIG_NX_THREAD_MAX_PRIORITY_NR
+#else
+#define NX_THREAD_MAX_PRIORITY_NR 16
+#endif
+
+#define NX_THREAD_PRIORITY_RT_MIN (NX_THREAD_PRIORITY_HIGH + 1)     /* real time min priority */
+#define NX_THREAD_PRIORITY_RT_MAX (NX_THREAD_MAX_PRIORITY_NR - 1)   /* real time max priority */
+
 typedef void (*NX_ThreadHandler)(void *arg);
 
 enum NX_ThreadState
@@ -74,6 +90,8 @@ struct NX_Thread
     /* thread sched */
     NX_U32 timeslice;
     NX_U32 ticks;
+    NX_U32 fixedPriority;  /* fixed priority, does not change dynamically  */
+    NX_U32 priority;    /* dynamic priority, or in the case of time-sharing scheduling priority will change dynamically */
     NX_U32 needSched;
     NX_U32 isTerminated;
     NX_UArch onCore;        /* thread on which core */
@@ -100,7 +118,7 @@ typedef struct NX_ThreadManager NX_ThreadManager;
 
 #define NX_CurrentThread NX_ThreadSelf()
 
-NX_Thread *NX_ThreadCreate(const char *name, NX_ThreadHandler handler, void *arg);
+NX_Thread *NX_ThreadCreate(const char *name, NX_ThreadHandler handler, void *arg, NX_U32 priority);
 NX_Error NX_ThreadDestroy(NX_Thread *thread);
 
 NX_Error NX_ThreadTerminate(NX_Thread *thread);

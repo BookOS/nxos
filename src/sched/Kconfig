@@ -13,3 +13,7 @@ config NX_THREAD_STACK_SIZE
 config NX_ENABLE_SCHED
     bool "Enable thread scheduler"
     default n
+
+config NX_THREAD_MAX_PRIORITY_NR
+    int "Max thread priority numbers"
+    default 16

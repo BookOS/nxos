@@ -53,7 +53,7 @@ NX_PRIVATE void NX_ThreadSleep1(void *arg)
 NX_TEST(NX_ThreadSleepIntr)
 {
     
-    NX_Thread *thread = NX_ThreadCreate("sleep1", NX_ThreadSleep1, NX_NULL);
+    NX_Thread *thread = NX_ThreadCreate("sleep1", NX_ThreadSleep1, NX_NULL, NX_THREAD_PRIORITY_NORMAL);
     NX_EXPECT_NOT_NULL(thread);
     NX_EXPECT_EQ(NX_ThreadRun(thread), NX_EOK);
 

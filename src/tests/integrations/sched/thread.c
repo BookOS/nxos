@@ -115,7 +115,7 @@ NX_INTEGRATION_TEST(TestThread)
 {
     /* thread */
     threadTick = 0;
-    NX_Thread *thread = NX_ThreadCreate("test thread 1", TestThread1, (void *) 0x1234abcd);
+    NX_Thread *thread = NX_ThreadCreate("test thread 1", TestThread1, (void *) 0x1234abcd, NX_THREAD_PRIORITY_NORMAL);
     /* make sure has enough memory */
     if (thread == NX_NULL)
     {
@@ -124,7 +124,7 @@ NX_INTEGRATION_TEST(TestThread)
     NX_ASSERT(thread != NX_NULL);
     NX_ASSERT(NX_ThreadRun(thread) == NX_EOK);
 
-    thread = NX_ThreadCreate("test thread 2", TestThread2, (void *) 0x1234abcd);
+    thread = NX_ThreadCreate("test thread 2", TestThread2, (void *) 0x1234abcd, NX_THREAD_PRIORITY_NORMAL);
     /* make sure has enough memory */
     if (thread == NX_NULL)
     {
@@ -133,7 +133,7 @@ NX_INTEGRATION_TEST(TestThread)
     NX_ASSERT(thread != NX_NULL);
     NX_ASSERT(NX_ThreadRun(thread) == NX_EOK);
 
-    thread = NX_ThreadCreate("test thread 3", TestThread3, (void *) 0x1234abcd);
+    thread = NX_ThreadCreate("test thread 3", TestThread3, (void *) 0x1234abcd, NX_THREAD_PRIORITY_NORMAL);
     /* make sure has enough memory */
     if (thread == NX_NULL)
     {
@@ -144,7 +144,7 @@ NX_INTEGRATION_TEST(TestThread)
 
     thread3ID = thread->tid;
     
-    thread = NX_ThreadCreate("test thread 4", TestThread4, (void *) 0x1234abcd);
+    thread = NX_ThreadCreate("test thread 4", TestThread4, (void *) 0x1234abcd, NX_THREAD_PRIORITY_NORMAL);
     NX_ASSERT(thread != NX_NULL);
     NX_ASSERT(NX_ThreadRun(thread) == NX_EOK);
 
@@ -154,15 +154,15 @@ NX_INTEGRATION_TEST(TestThread)
     threadTick = 0;
 
     NX_MutexInit(&mutexLock);
-    NX_Thread *mutexThread = NX_ThreadCreate("mutex thread 1", TestMutex1, NX_NULL);
+    NX_Thread *mutexThread = NX_ThreadCreate("mutex thread 1", TestMutex1, NX_NULL, NX_THREAD_PRIORITY_NORMAL);
     NX_ASSERT(mutexThread != NX_NULL);
     NX_ASSERT(NX_ThreadRun(mutexThread) == NX_EOK);
 
-    mutexThread = NX_ThreadCreate("mutex thread 2", TestMutex1, NX_NULL);
+    mutexThread = NX_ThreadCreate("mutex thread 2", TestMutex1, NX_NULL, NX_THREAD_PRIORITY_NORMAL);
     NX_ASSERT(mutexThread != NX_NULL);
     NX_ASSERT(NX_ThreadRun(mutexThread) == NX_EOK);
     
-    mutexThread = NX_ThreadCreate("mutex thread 3", TestMutex1, NX_NULL);
+    mutexThread = NX_ThreadCreate("mutex thread 3", TestMutex1, NX_NULL, NX_THREAD_PRIORITY_NORMAL);
     NX_ASSERT(mutexThread != NX_NULL);
     NX_ASSERT(NX_ThreadRun(mutexThread) == NX_EOK);
 

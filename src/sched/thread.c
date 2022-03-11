@@ -30,7 +30,8 @@ NX_ThreadManager NX_ThreadManagerObject;
 NX_PRIVATE NX_Error ThreadInit(NX_Thread *thread, 
     const char *name,
     NX_ThreadHandler handler, void *arg,
-    NX_U8 *stack, NX_Size stackSize)
+    NX_U8 *stack, NX_Size stackSize,
+    NX_U32 priority)
 {
     if (thread == NX_NULL || name == NX_NULL || handler == NX_NULL || stack == NX_NULL || !stackSize)
     {
@@ -53,6 +54,8 @@ NX_PRIVATE NX_Error ThreadInit(NX_Thread *thread,
     thread->threadArg = arg;
     thread->timeslice = 3;
     thread->ticks = thread->timeslice;
+    thread->fixedPriority = priority;
+    thread->priority = priority;
     thread->needSched = 0;
     thread->isTerminated = 0;
     thread->stackBase = stack;
@@ -84,8 +87,13 @@ NX_PRIVATE NX_Error ThreadDeInit(NX_Thread *thread)
     return NX_EOK;
 }
 
-NX_Thread *NX_ThreadCreate(const char *name, NX_ThreadHandler handler, void *arg)
+NX_Thread *NX_ThreadCreate(const char *name, NX_ThreadHandler handler, void *arg, NX_U32 priority)
 {
+    if (!name || !handler || priority >= NX_THREAD_MAX_PRIORITY_NR)
+    {
+        return NX_NULL;
+    }
+
     NX_Thread *thread = (NX_Thread *)NX_MemAlloc(sizeof(NX_Thread));
     if (thread == NX_NULL)
     {
@@ -97,7 +105,7 @@ NX_Thread *NX_ThreadCreate(const char *name, NX_ThreadHandler handler, void *arg
         NX_MemFree(thread);
         return NX_NULL;
     }
-    if (ThreadInit(thread, name, handler, arg, stack, NX_THREAD_STACK_SIZE_DEFAULT) != NX_EOK)
+    if (ThreadInit(thread, name, handler, arg, stack, NX_THREAD_STACK_SIZE_DEFAULT, priority) != NX_EOK)
     {
         NX_PageFree(stack);
         NX_MemFree(thread);
@@ -129,25 +137,30 @@ NX_Error NX_ThreadDestroy(NX_Thread *thread)
     return NX_EOK;
 }
 
+NX_PRIVATE void NX_ThreadAddToGlobalPendingList(NX_Thread *thread, int flags)
+{
+    if (flags & NX_SCHED_HEAD)
+    {
+        NX_ListAdd(&thread->list, &NX_ThreadManagerObject.pendingList);
+    }
+    else
+    {
+        NX_ListAddTail(&thread->list, &NX_ThreadManagerObject.pendingList);
+    }
+    NX_AtomicInc(&NX_ThreadManagerObject.pendingThreadCount);
+}
+
 void NX_ThreadReadyRunLocked(NX_Thread *thread, int flags)
 {
     thread->state = NX_THREAD_READY;
 
-    if (thread->onCore < NX_MULTI_CORES_NR)
+    if (thread->onCore < NX_MULTI_CORES_NR) /* add to core pending list */
     {
         NX_SMP_EnqueueThreadIrqDisabled(thread->onCore, thread, flags);
     }
-    else
+    else /* add to global pending list */
     {
-        if (flags & NX_SCHED_HEAD)
-        {
-            NX_ListAdd(&thread->list, &NX_ThreadManagerObject.pendingList);
-        }
-        else
-        {
-            NX_ListAddTail(&thread->list, &NX_ThreadManagerObject.pendingList);
-        }
-        NX_AtomicInc(&NX_ThreadManagerObject.pendingThreadCount);
+        NX_ThreadAddToGlobalPendingList(thread, flags);
     }
 }
 
@@ -313,7 +326,7 @@ NX_PRIVATE NX_Bool TimerThreadSleepTimeout(NX_Timer *timer, void *arg)
     return NX_True;
 }
 
-/* if thread sleep less equal than 2s, use delay instead */
+/* if thread sleep less equal than 2ms, use delay instead */
 #define THREAD_SLEEP_TIMEOUT_THRESHOLD 2
 
 NX_Error NX_ThreadSleep(NX_UArch microseconds)
