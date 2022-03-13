@@ -3,8 +3,8 @@
 <h1 align="center" style="margin: 30px 0 30px; font-weight: bold;">NXOS</h1>
 <h4 align="center">下一代XBook操作系统内核</h4>
 <p align="center">
-	<a href="https://gitee.com/BookOS/NXOS/stargazers"><img src="https://gitee.com/BookOS/NXOS/badge/star.svg"></a>
-	<a href="https://gitee.com/BookOS/NXOS/members"><img src="https://gitee.com/BookOS/NXOS/badge/fork.svg"></a>
+	<a href="https://gitee.com/BookOS/nxos/stargazers"><img src="https://gitee.com/BookOS/nxos/badge/star.svg"></a>
+	<a href="https://gitee.com/BookOS/nxos/members"><img src="https://gitee.com/BookOS/nxos/badge/fork.svg"></a>
 </p>
 
 ## 简介
