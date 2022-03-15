@@ -300,7 +300,7 @@ NX_Error NX_DeviceOpen(char *name, NX_U32 flags, NX_Device **outDevice)
         {
             if (ops->open)
             {
-                /* call open if no recursion or only one reference */
+                /* call open if has ope new one device flags  or only one reference */
                 if ((driver->flags & NX_DEVICE_OPEN_NEW_ONE) || NX_AtomicGet(&device->reference) == 1)
                 {
                     NX_Error err = ops->open(device, flags);
@@ -345,7 +345,7 @@ NX_Error NX_DeviceClose(NX_Device *device)
     {
         if (ops->close)
         {
-            /* call close if no recursion or only zero reference */
+            /* call close if has ope new one device flags or only zero reference */
             if ((driver->flags & NX_DEVICE_OPEN_NEW_ONE) || NX_AtomicGet(&device->reference) == 0)
             {
                 NX_Error err = ops->close(device);
