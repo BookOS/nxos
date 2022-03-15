@@ -10,32 +10,60 @@
  */
 
 #include <io/driver.h>
+
+#ifdef CONFIG_NX_DRIVER_DUMMY
+
 #define NX_LOG_NAME "dummy driver"
 #include <utils/log.h>
 
-#define DRV_NAME "dummy"
+#define DRV_NAME "dummy device"
 #define DEV0_NAME "dummy0"
 #define DEV1_NAME "dummy1"
 
 NX_PRIVATE NX_Error DummyOpen(struct NX_Device *device, NX_U32 flags)
 {
-    NX_LOG_D("Dummy open");
     return NX_EOK;
 }
 
 NX_PRIVATE NX_Error DummyClose(struct NX_Device *device)
 {
-    NX_LOG_D("Dummy close");
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error DummyRead(struct NX_Device *device, void *buf, NX_Size len, NX_Size *outLen)
+{
+    if (outLen)
+    {
+        *outLen = len;
+    }
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error DummyWrite(struct NX_Device *device, void *buf, NX_Size len, NX_Size *outLen)
+{
+    if (outLen)
+    {
+        *outLen = len;
+    }
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error DummyControl(struct NX_Device *device, NX_U32 cmd, void *arg)
+{
     return NX_EOK;
 }
 
 NX_PRIVATE NX_DriverOps DummyDriverOps = {
     .open = DummyOpen,
     .close = DummyClose,
+    .read = DummyRead,
+    .write = DummyWrite,
+    .control = DummyControl,
 };
 
 NX_PRIVATE void DummyDriverInit(void)
 {
+    NX_Device *device;
     NX_Driver *driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_VIRT, 0, &DummyDriverOps);
     if (driver == NX_NULL)
     {
@@ -43,14 +71,14 @@ NX_PRIVATE void DummyDriverInit(void)
         return;
     }
 
-    if (NX_DriverAttachDevice(driver, DEV0_NAME) != NX_EOK)
+    if (NX_DriverAttachDevice(driver, DEV0_NAME, &device) != NX_EOK)
     {
         NX_LOG_E("attach device %s failed!", DEV0_NAME);
         NX_DriverDestroy(driver);
         return;
     }
 
-    if (NX_DriverAttachDevice(driver, DEV1_NAME) != NX_EOK)
+    if (NX_DriverAttachDevice(driver, DEV1_NAME, &device) != NX_EOK)
     {
         NX_LOG_E("attach device %s failed!", DEV1_NAME);
         NX_DriverDetachDevice(driver, DEV0_NAME);
@@ -72,16 +100,10 @@ NX_PRIVATE void DummyDriverInit(void)
 
 NX_PRIVATE void DummyDriverExit(void)
 {
-    NX_Driver *driver = NX_DriverSearch(DRV_NAME);
-    if (driver)
-    {
-        NX_Device *device, *n;
-        NX_ListForEachEntrySafe(device, n, &driver->deviceListHead, list)
-        {
-            NX_DriverDetachDevice(driver, device->name);
-        }
-    }
+    NX_DriverCleanup(DRV_NAME);
 }
 
 NX_DRV_INIT(DummyDriverInit);
 NX_DRV_EXIT(DummyDriverExit);
+
+#endif

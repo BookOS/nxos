@@ -76,15 +76,16 @@ struct NX_Device
 };
 typedef struct NX_Device NX_Device;
 
-void NX_DeviceDumpTree(void);
+void NX_DriverDumpTree(void);
 
 NX_Driver *NX_DriverCreate(char *name, NX_DeviceType type, NX_U32 flags, NX_DriverOps *ops);
 NX_Error NX_DriverDestroy(NX_Driver *driver);
 NX_Error NX_DriverRegister(NX_Driver *driver);
 NX_Error NX_DriverUnregister(NX_Driver *driver);
 NX_Driver *NX_DriverSearch(char *name);
+NX_Error NX_DriverCleanup(char *name);
 
-NX_Error NX_DriverAttachDevice(NX_Driver *driver, char *name);
+NX_Error NX_DriverAttachDevice(NX_Driver *driver, char *name, NX_Device **outDevice);
 NX_Error NX_DriverDetachDevice(NX_Driver *driver, char *name);
 
 NX_Error NX_DeviceOpen(char *name, NX_U32 flags, NX_Device **outDevice);

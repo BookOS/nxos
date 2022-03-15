@@ -1,8 +1,6 @@
-menu "Drivers"
-
 config NX_DRIVER_DUMMY
     bool "Enable dummy device"
-    default y
+    default n
 
 config NX_DRIVER_NULL
     bool "Enable null device"
@@ -11,5 +9,3 @@ config NX_DRIVER_NULL
 config NX_DRIVER_ZERO
     bool "Enable zero device"
     default y
-
-endmenu

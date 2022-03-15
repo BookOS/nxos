@@ -62,6 +62,13 @@ menu "Modules"
 endmenu
 
 #
+# Drivers
+#
+menu "Drivers"
+    source "$NXOS_SRC_DIR/drivers/Kconfig"
+endmenu
+
+#
 # Utils
 #
 menu "Utils"

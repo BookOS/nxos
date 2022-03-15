@@ -28,6 +28,11 @@ NX_Driver *NX_DriverCreate(char *name, NX_DeviceType type, NX_U32 flags, NX_Driv
         return NX_NULL;
     }
 
+    if (type < NX_DEVICE_TYPE_UNKNOWN || type >= NX_DEVICE_TYPE_NR)
+    {
+        return NX_NULL;
+    }
+
     NX_Driver *driver = NX_MemAlloc(sizeof(NX_Driver));
     if (driver == NX_NULL)
     {
@@ -113,6 +118,27 @@ NX_Driver *NX_DriverSearch(char *name)
     return NX_NULL;
 }
 
+NX_Error NX_DriverCleanup(char *name)
+{
+    if (!name)
+    {
+        return NX_EINVAL;
+    }
+    NX_Driver *driver = NX_DriverSearch(name);
+    if (driver)
+    {
+        NX_Device *device, *n;
+        NX_ListForEachEntrySafe(device, n, &driver->deviceListHead, list)
+        {
+            NX_DriverDetachDevice(driver, device->name);
+        }
+        NX_DriverUnregister(driver);
+        NX_DriverDestroy(driver);
+        return NX_EOK;
+    }
+    return NX_EOK;
+}
+
 NX_Device *NX_DeviceCreate(char *name)
 {
     if (name == NX_NULL)
@@ -195,7 +221,7 @@ NX_PRIVATE NX_Error NX_DriverDetachDeviceObject(NX_Driver *driver, char *name, N
     return NX_ENOSRCH;
 }
 
-NX_Error NX_DriverAttachDevice(NX_Driver *driver, char *name)
+NX_Error NX_DriverAttachDevice(NX_Driver *driver, char *name, NX_Device **outDevice)
 {
     if (!driver || !name)
     {
@@ -205,6 +231,10 @@ NX_Error NX_DriverAttachDevice(NX_Driver *driver, char *name)
     if (device == NX_NULL)
     {
         return NX_ENOMEM;
+    }
+    if (outDevice)
+    {
+        *outDevice = device;
     }
     return NX_DriverAttachDeviceObject(driver, device);
 }
@@ -247,6 +277,11 @@ NX_Device *NX_DeviceSearchLocked(char *name)
 
 NX_Error NX_DeviceOpen(char *name, NX_U32 flags, NX_Device **outDevice)
 {
+    if (!name)
+    {
+        return NX_EINVAL;
+    }
+
     NX_Device *device;
     NX_Driver *driver = NX_NULL;
     
@@ -450,7 +485,7 @@ NX_Device *NX_DeviceSearch(char *name)
     return device;
 }
 
-void NX_DeviceDumpTree(void)
+void NX_DriverDumpTree(void)
 {
     NX_Driver *driver;
     NX_Device *device;
