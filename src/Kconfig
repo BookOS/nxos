@@ -11,6 +11,11 @@ config NX_CPU_64BITS
 
 menu "OS Kernel"
     #
+    # Kernel
+    #
+    source "$NXOS_SRC_DIR/kernel/Kconfig"
+    
+    #
     # Init
     #
     source "$NXOS_SRC_DIR/init/Kconfig"
@@ -39,6 +44,7 @@ menu "OS Kernel"
     # Process
     #
     source "$NXOS_SRC_DIR/process/Kconfig"    
+
 endmenu
 
 #
