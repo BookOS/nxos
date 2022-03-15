@@ -30,6 +30,9 @@ typedef void (*NX_ExitCallHandler)(void);
 
 #define NX_MODS_CALL(fn)            __DEFINE_INITCALL("1", fn, 1)
 
+#define NX_DRV_INIT(fn)            __DEFINE_INITCALL("2", fn, 2)
+#define NX_DRV_EXIT(fn)            __DEFINE_INITCALL("2", fn, 2)
+
 #define NX_INIT_TEST(fn)            __DEFINE_INITCALL("9", fn, 9)
 
 void NX_CallInvoke(NX_InitCallHandler start[], NX_InitCallHandler end[]);

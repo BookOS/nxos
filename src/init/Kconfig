@@ -1,28 +1,3 @@
-menu "Debug"
-config NX_DEBUG
-    bool "Debug NXOS before release"
-    default y
-
-if NX_DEBUG
-    config NX_LOG_LEVEL
-        int "Log level(0: ERROR, 1: WARNING, 2: INFO, 3: DBG)"
-        default 3
-
-    config NX_DEBUG_COLOR
-        bool "Log output with color"
-        default y
-
-    config NX_DEBUG_TIMELINE
-        bool "Log output with timeline"
-        default y
-
-    config NX_DEBUG_LINENUMBER
-        bool "Log output with file line number"
-        default n
-
-endif
-endmenu
-
 config NX_PLATFROM_NAME
     string "Platform name"
     default "Unknown"

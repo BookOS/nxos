@@ -78,6 +78,14 @@ CONFIG_NX_DEMO_HAL_CONTEXT=y
 # end of Modules
 
 #
+# Drivers
+#
+# CONFIG_NX_DRIVER_DUMMY is not set
+CONFIG_NX_DRIVER_NULL=y
+CONFIG_NX_DRIVER_ZERO=y
+# end of Drivers
+
+#
 # Utils
 #
 
