@@ -92,6 +92,7 @@ SRCDIRS		+=	sched/
 SRCDIRS		+=	io/
 SRCDIRS		+=	process/
 SRCDIRS		+=	kernel/
+SRCDIRS		+=	drivers/
 
 #
 # XBuild variables

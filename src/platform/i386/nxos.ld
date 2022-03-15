@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018-2022, NXOS Development Team
+ * Copyright (c) 2018-2022, BookOS Development Team
  * SPDX-License-Identifier: Apache-2.0
  * 
  * Contains: Link script for PC32 Platfrom
@@ -35,6 +35,12 @@ SECTIONS {
         KEEP(*(.initCall0.text))
         KEEP(*(.initCall1.text))
         KEEP(*(.initCall2.text))
+        KEEP(*(.initCall3.text))
+        KEEP(*(.initCall4.text))
+        KEEP(*(.initCall5.text))
+        KEEP(*(.initCall6.text))
+        KEEP(*(.initCall7.text))
+        KEEP(*(.initCall8.text))
         KEEP(*(.initCall9.text))
         PROVIDE(__NX_InitCallEnd = .);
 
@@ -43,6 +49,13 @@ SECTIONS {
         KEEP(*(.exitcall0.text))
         KEEP(*(.exitcall1.text))
         KEEP(*(.exitcall2.text))
+        KEEP(*(.exitcall3.text))
+        KEEP(*(.exitcall4.text))
+        KEEP(*(.exitcall5.text))
+        KEEP(*(.exitcall6.text))
+        KEEP(*(.exitcall7.text))
+        KEEP(*(.exitcall8.text))
+        KEEP(*(.exitcall9.text))
         PROVIDE(__NX_ExitCallEnd = .);
     
         /* section information for utest */
