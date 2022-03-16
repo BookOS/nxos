@@ -1,12 +1,12 @@
 /**
- * Copyright (c) 2018-2022, BookOS Development Team
+ * Copyright (c) 2018-2022, NXOS Development Team
  * SPDX-License-Identifier: Apache-2.0
  * 
  * Contains: Device
  * 
  * Change Logs:
  * Date           Author            Notes
- * 2022-2-27      JasonHu           Init
+ * 2022-3-15      JasonHu           Init
  */
 
 #include <io/driver.h>
@@ -257,7 +257,7 @@ NX_Error NX_DriverDetachDevice(NX_Driver *driver, char *name)
     return NX_EOK;
 }
 
-NX_Device *NX_DeviceSearchLocked(char *name)
+NX_PRIVATE NX_Device *NX_DeviceSearchLocked(char *name)
 {
     NX_Device *device;
     NX_Driver *driver;
