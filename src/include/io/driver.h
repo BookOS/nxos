@@ -22,7 +22,7 @@
 #define NX_DEVICE_NAME_LEN 32
 
 /* device driver flags */
-#define NX_DEVICE_OPEN_NEW_ONE  0x01 /* open device no recursion */
+#define NX_DEVICE_OPEN_NEW_ONE  0x01 /* Every time NX_DeviceOpen is called, the open operation of ops will be called */
 
 enum NX_DeviceType
 {
@@ -35,7 +35,7 @@ enum NX_DeviceType
     NX_DEVICE_TYPE_SOUND,
     NX_DEVICE_TYPE_SCREEN,
     NX_DEVICE_TYPE_INPUT,
-    NX_DEVICE_TYPE_NR, /* Max device number */
+    NX_DEVICE_TYPE_NR, /* device type number */
 };
 typedef enum NX_DeviceType NX_DeviceType;
 
