@@ -1,0 +1,3 @@
+config NX_UTEST_XBOOK_ATOMIC
+    bool "Enable utest for atomic"
+    default n

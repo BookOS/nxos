@@ -1,0 +1,7 @@
+source "$NXOS_SRC_DIR/test/utests/mm/Kconfig"
+source "$NXOS_SRC_DIR/test/utests/time/Kconfig"
+source "$NXOS_SRC_DIR/test/utests/utest/Kconfig"
+source "$NXOS_SRC_DIR/test/utests/sched/Kconfig"
+source "$NXOS_SRC_DIR/test/utests/utils/Kconfig"
+source "$NXOS_SRC_DIR/test/utests/xbook/Kconfig"
+source "$NXOS_SRC_DIR/test/utests/io/Kconfig"

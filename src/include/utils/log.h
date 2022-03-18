@@ -39,8 +39,8 @@
 #endif /* NX_LOG_NAME */
 
 #ifdef NX_LOG_ENABLE
-#include <mods/console/console.h>
-#include <mods/time/clock.h>
+#include <drivers/console.h>
+#include <time/clock.h>
 
 #ifdef NX_LOG_LEVEL
 #ifndef NX_LOG_MOD_LEVEL

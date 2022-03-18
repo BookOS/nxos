@@ -239,7 +239,7 @@ void *NX_PageCacheAlloc(NX_Size count)
         return NX_NULL;
     }
     
-    NX_MutexLock(&PageCacheLock, NX_True);
+    NX_MutexLock(&PageCacheLock);
     void *ptr = __PageCacheAlloc(count);
     NX_MutexUnlock(&PageCacheLock);
     return ptr;
@@ -314,7 +314,7 @@ NX_Error NX_PageCacheFree(void *page)
         return NX_EINVAL;
     }
     
-    NX_MutexLock(&PageCacheLock, NX_True);
+    NX_MutexLock(&PageCacheLock);
     NX_Error err = __PageCacheFree(page);
     NX_MutexUnlock(&PageCacheLock);
     return err;

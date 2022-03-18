@@ -1,0 +1,7 @@
+config NX_TEST_INTEGRATION_THREAD
+    bool "Enable integration for thread"
+    default n
+
+config NX_TEST_INTEGRATION_THREAD_ID
+    bool "Enable integration for thread id"
+    default n

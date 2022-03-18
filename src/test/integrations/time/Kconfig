@@ -1,0 +1,3 @@
+config NX_TEST_INTEGRATION_TIMER
+    bool "Enable integration for timer"
+    default n

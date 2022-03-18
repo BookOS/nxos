@@ -30,10 +30,22 @@ NX_Error NX_MutexInit(NX_Mutex *mutex)
     return NX_EOK;
 }
 
-/**
- * forever: if true lock mutex forever, or not return NX_ETIMEOUT if lock falied
- */
-NX_Error NX_MutexLock(NX_Mutex *mutex, NX_Bool forever)
+NX_Error NX_MutexTryLock(NX_Mutex *mutex)
+{
+    if (mutex == NX_NULL || mutex->magic != MUTEX_MAGIC)
+    {
+        return NX_EFAULT;
+    }
+
+    /* disable interrupt for locking per cpu */
+    NX_UArch level = NX_IRQ_SaveLevel();
+    /* spin lock for mutex */
+    NX_Error err = NX_SpinTryLock(&mutex->lock);
+    NX_IRQ_RestoreLevel(level);
+    return err;
+}
+
+NX_Error NX_MutexLock(NX_Mutex *mutex)
 {
     if (mutex == NX_NULL || mutex->magic != MUTEX_MAGIC)
     {
@@ -42,25 +54,13 @@ NX_Error NX_MutexLock(NX_Mutex *mutex, NX_Bool forever)
 
     do
     {
-        /* disable interrupt for locking per cpu */
-        NX_UArch level = NX_IRQ_SaveLevel();
-
         /* spin lock for mutex */
-        if (NX_SpinLock(&mutex->lock, NX_False) == NX_EOK)
+        if (NX_MutexTryLock(mutex) == NX_EOK)
         {
-            NX_IRQ_RestoreLevel(level);
             break;
         }
         else
         {
-            /* restore interrupt for unlocking per cpu */
-            NX_IRQ_RestoreLevel(level);
-
-            /* checkout timeout */
-            if (forever == NX_False)
-            {
-                return NX_ETIMEOUT;
-            }
             /* yield to other thread */
             NX_ThreadYield();
         }

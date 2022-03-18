@@ -13,7 +13,7 @@
 #include <sched/spin.h>
 
 /* spin lock for log output */
-NX_PRIVATE STATIC_SPIN_UNLOCKED(LogOutputLock);
+NX_PRIVATE NX_SPIN_DEFINE_UNLOCKED(LogOutputLock);
 
 NX_Error LogLineLock(NX_UArch *level)
 {

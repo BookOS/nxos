@@ -7,6 +7,7 @@
  * Change Logs:
  * Date           Author            Notes
  * 2021-11-11     JasonHu           Init
+ * 2022-3-18      JasonHu           update ATOMIC_DEFINE macro
  */
 
 #ifndef __XBOOK_ATOMIC__
@@ -21,7 +22,7 @@ struct NX_Atomic
 typedef struct NX_Atomic NX_Atomic;
 
 #define NX_ATOMIC_INIT_VALUE(val) {val}
-#define NX_STATIC_ATOMIC_INIT(name, val) NX_Atomic name = NX_ATOMIC_INIT_VALUE(val);
+#define NX_ATOMIC_DEFINE(name, val) NX_Atomic name = NX_ATOMIC_INIT_VALUE(val);
 
 struct NX_AtomicOps
 {

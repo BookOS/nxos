@@ -11,7 +11,7 @@
 
 #include <io.h>
 #include <interrupt.h>
-#include <mods/time/clock.h>
+#include <time/clock.h>
 #include <io/irq.h>
 #include <io/delay_irq.h>
 

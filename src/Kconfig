@@ -44,7 +44,11 @@ menu "OS Kernel"
     # Process
     #
     source "$NXOS_SRC_DIR/process/Kconfig"    
-
+    
+    #
+    # Time or timer
+    #
+    source "$NXOS_SRC_DIR/time/Kconfig"
 endmenu
 
 #
@@ -55,29 +59,22 @@ menu "Platform"
 endmenu
 
 #
-# Mods
+# Device
 #
-menu "Modules"
-    source "$NXOS_SRC_DIR/mods/Kconfig"
-endmenu
-
-#
-# Drivers
-#
-menu "Drivers"
+menu "Device"
     source "$NXOS_SRC_DIR/drivers/Kconfig"
 endmenu
 
 #
-# Utils
+# File system
 #
-menu "Utils"
-    source "$NXOS_SRC_DIR/utils/Kconfig"
+menu "File System"
+    source "$NXOS_SRC_DIR/fs/Kconfig"
 endmenu
 
 #
-# Tests
+# Test framework and test code
 #
 menu "Tests"
-    source "$NXOS_SRC_DIR/tests/Kconfig"
+    source "$NXOS_SRC_DIR/test/Kconfig"
 endmenu

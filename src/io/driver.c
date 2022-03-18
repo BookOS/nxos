@@ -19,7 +19,7 @@
 #include <utils/log.h>
 
 NX_PRIVATE NX_LIST_HEAD(DriverListHead);
-NX_PRIVATE STATIC_SPIN_UNLOCKED(DriverLock);
+NX_PRIVATE NX_SPIN_DEFINE_UNLOCKED(DriverLock);
 
 NX_Driver *NX_DriverCreate(char *name, NX_DeviceType type, NX_U32 flags, NX_DriverOps *ops)
 {
@@ -338,7 +338,7 @@ NX_Error NX_DeviceClose(NX_Device *device)
 
     NX_AtomicDec(&device->reference);
 
-    NX_MutexLock(&device->lock, NX_True);
+    NX_MutexLock(&device->lock);
 
     NX_DriverOps *ops = driver->ops;
     if (ops)
@@ -371,7 +371,7 @@ NX_Error NX_DeviceRead(NX_Device *device, void *buf, NX_Size len, NX_Size *outLe
     NX_Driver *driver = device->driver;
     NX_ASSERT(driver);
 
-    NX_MutexLock(&device->lock, NX_True);
+    NX_MutexLock(&device->lock);
 
     NX_DriverOps *ops = driver->ops;
     NX_Error err = NX_EOK;
@@ -412,7 +412,7 @@ NX_Error NX_DeviceWrite(NX_Device *device, void *buf, NX_Size len, NX_Size *outL
     NX_Driver *driver = device->driver;
     NX_ASSERT(driver);
 
-    NX_MutexLock(&device->lock, NX_True);
+    NX_MutexLock(&device->lock);
 
     NX_DriverOps *ops = driver->ops;
     NX_Error err = NX_EOK;
@@ -451,7 +451,7 @@ NX_Error NX_DeviceControl(NX_Device *device, NX_U32 cmd, void *arg)
     NX_Driver *driver = device->driver;
     NX_ASSERT(driver);
 
-    NX_MutexLock(&device->lock, NX_True);
+    NX_MutexLock(&device->lock);
 
     NX_DriverOps *ops = driver->ops;
     NX_Error err = NX_EOK;

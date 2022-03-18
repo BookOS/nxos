@@ -28,7 +28,24 @@ NX_Error NX_SpinInit(NX_Spin *lock)
     return NX_EOK;
 }
 
-NX_Error NX_SpinLock(NX_Spin *lock, NX_Bool forever)
+NX_Error NX_SpinTryLock(NX_Spin *lock)
+{
+    if (lock == NX_NULL || lock->magic != NX_SPIN_MAGIC)
+    {
+        return NX_EFAULT;
+    }
+
+    if (NX_AtomicCAS(&lock->value, 0, NX_SPIN_LOCK_VALUE) == 0)
+    {
+        return NX_EOK;
+    }
+    else
+    {
+        return NX_ERROR;
+    }
+}
+
+NX_Error NX_SpinLock(NX_Spin *lock)
 {
     if (lock == NX_NULL || lock->magic != NX_SPIN_MAGIC)
     {
@@ -37,13 +54,9 @@ NX_Error NX_SpinLock(NX_Spin *lock, NX_Bool forever)
 
     do
     {
-        if (NX_AtomicCAS(&lock->value, 0, NX_SPIN_LOCK_VALUE) == 0)
+        if (NX_SpinTryLock(lock) == NX_EOK)
         {
             break;
-        }
-        if (forever == NX_False)
-        {
-            return NX_ETIMEOUT;
         }
     } while (1);
 
@@ -67,7 +80,7 @@ NX_Error NX_SpinLockIRQ(NX_Spin *lock, NX_UArch *level)
         return NX_EINVAL;
     }
     *level = NX_IRQ_SaveLevel();
-    return NX_SpinLock(lock, NX_True);
+    return NX_SpinLock(lock);
 }
 
 NX_Error NX_SpinUnlockIRQ(NX_Spin *lock, NX_UArch level)

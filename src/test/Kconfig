@@ -1,0 +1,15 @@
+config NX_ENABLE_TEST_UTEST
+    bool "Enable utest test"
+    default n
+    
+    if NX_ENABLE_TEST_UTEST
+        source "$NXOS_SRC_DIR/test/utests/Kconfig"
+    endif
+
+config NX_ENABLE_TEST_INTEGRATION
+    bool "Enable integration test"
+    default n
+
+    if NX_ENABLE_TEST_INTEGRATION
+        source "$NXOS_SRC_DIR/test/integrations/Kconfig"
+    endif

@@ -1,0 +1,3 @@
+config NX_UTEST_MODS_UTEST
+    bool "Enable utest for utest self"
+    default n

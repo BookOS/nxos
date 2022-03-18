@@ -24,6 +24,7 @@ CONFIG_NX_THREAD_NAME_LEN=32
 CONFIG_NX_THREAD_STACK_SIZE=8192
 CONFIG_NX_ENABLE_SCHED=y
 CONFIG_NX_THREAD_MAX_PRIORITY_NR=16
+CONFIG_NX_TICKS_PER_SECOND=100
 # end of OS Kernel
 
 #
@@ -33,62 +34,23 @@ CONFIG_NX_PLATFROM_I386_PC32=y
 # end of Platform
 
 #
-# Modules
-#
-
-#
-# Console
+# Device
 #
 CONFIG_NX_PRINT_BUF_LEN=256
-# end of Console
-
-#
-# Time
-#
-CONFIG_NX_TICKS_PER_SECOND=100
-# end of Time
-
-#
-# Drivers
-#
-
-#
-# Test
-#
-# CONFIG_NX_ENABLE_TEST_UTEST is not set
-# CONFIG_NX_ENABLE_TEST_INTEGRATION is not set
-# end of Test
-
-#
-# Demo
-#
-# CONFIG_NX_DEMO_HAL_CONTEXT is not set
-# end of Demo
-
-#
-# Thirdpart
-#
+# CONFIG_NX_DRIVER_DUMMY is not set
+CONFIG_NX_DRIVER_NULL=y
+CONFIG_NX_DRIVER_ZERO=y
+# end of Device
 
 #
 # File System
 #
 # CONFIG_NX_FILE_SYSTEM_ROMFS is not set
 # end of File System
-# end of Modules
-
-#
-# Drivers
-#
-# CONFIG_NX_DRIVER_DUMMY is not set
-CONFIG_NX_DRIVER_NULL=y
-CONFIG_NX_DRIVER_ZERO=y
-# end of Drivers
-
-#
-# Utils
-#
 
 #
 # Tests
 #
+# CONFIG_NX_ENABLE_TEST_UTEST is not set
+# CONFIG_NX_ENABLE_TEST_INTEGRATION is not set
 # end of Tests

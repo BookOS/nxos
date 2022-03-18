@@ -20,7 +20,7 @@
 
 NX_IMPORT NX_Error NX_HalInitClock(void);
 
-NX_STATIC_ATOMIC_INIT(NX_ActivedCoreCount, 0);
+NX_ATOMIC_DEFINE(NX_ActivedCoreCount, 0);
 
 /* init as zero, avoid cleared by clear bss action */
 NX_PRIVATE NX_VOLATILE NX_UArch BootCoreId = 0;
@@ -106,7 +106,7 @@ void NX_SMP_EnqueueThreadIrqDisabled(NX_UArch coreId, NX_Thread *thread, int fla
 
     NX_Cpu *cpu = NX_CpuGetIndex(coreId);
 
-    NX_SpinLock(&cpu->lock, NX_True);
+    NX_SpinLock(&cpu->lock);
 
     if (flags & NX_SCHED_HEAD)
     {
@@ -144,7 +144,7 @@ NX_Thread *NX_SMP_DeququeThreadIrqDisabled(NX_UArch coreId)
     int prio;
     NX_Cpu *cpu = NX_CpuGetIndex(coreId);
     
-    NX_SpinLock(&cpu->lock, NX_True);
+    NX_SpinLock(&cpu->lock);
     
     for (prio = NX_THREAD_MAX_PRIORITY_NR - 1; prio >= 0; prio--)
     {
@@ -178,7 +178,7 @@ NX_Thread *NX_SMP_DeququeNoAffinityThread(NX_UArch coreId)
     NX_Cpu *cpu = NX_CpuGetIndex(coreId);
     int prio;
 
-    NX_SpinLock(&cpu->lock, NX_True);
+    NX_SpinLock(&cpu->lock);
     
     for (prio = NX_THREAD_MAX_PRIORITY_NR - 1; prio >= 0; prio--)
     {

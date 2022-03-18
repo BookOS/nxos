@@ -18,14 +18,14 @@
 #include <mm/mmu.h>
 #include <mm/page.h>
 #include <arch/mmu.h>
-#include <mods/fs/romfs.h>
+#include <fs/romfs.h>
 
 #define NX_LOG_NAME "process"
 #define NX_LOG_LEVEL NX_LOG_INFO
 #include <utils/log.h>
 
 #include <xbook/debug.h>
-#include <mods/thirdpart/elf.h>
+#include <thirdpart/elf.h>
 
 NX_PRIVATE void ProcessAppendThread(NX_Process *process, NX_Thread *thread)
 {
