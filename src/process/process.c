@@ -47,7 +47,7 @@ NX_PRIVATE void ProcessDeleteThread(NX_Process *process, NX_Thread *thread)
     NX_SpinUnlockIRQ(&process->lock, level);
 }
 
-NX_Process *NX_ProcessCreate(NX_U32 flags)
+NX_PRIVATE NX_Process *NX_ProcessCreateObject(NX_U32 flags)
 {
     NX_Process *process = NX_MemAlloc(sizeof(NX_Process));
     if (process == NX_NULL)
@@ -502,7 +502,7 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
 /**
  * execute a process with image
  */
-NX_Error NX_ProcessExecute(char *name, char *path, NX_U32 flags)
+NX_Error NX_ProcessCreate(char *name, char *path, NX_U32 flags)
 {
     NX_Vmspace *space;
 
@@ -514,7 +514,7 @@ NX_Error NX_ProcessExecute(char *name, char *path, NX_U32 flags)
     /* TODO: check path exist */
 
 
-    NX_Process *process = NX_ProcessCreate(flags);
+    NX_Process *process = NX_ProcessCreateObject(flags);
     if (process == NX_NULL)
     {
         return NX_ENOMEM;
