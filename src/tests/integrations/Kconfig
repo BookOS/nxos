@@ -1,5 +1,0 @@
-source "$NXOS_SRC_DIR/tests/integrations/mm/Kconfig"
-source "$NXOS_SRC_DIR/tests/integrations/mods/Kconfig"
-source "$NXOS_SRC_DIR/tests/integrations/sched/Kconfig"
-source "$NXOS_SRC_DIR/tests/integrations/utils/Kconfig"
-source "$NXOS_SRC_DIR/tests/integrations/xbook/Kconfig"

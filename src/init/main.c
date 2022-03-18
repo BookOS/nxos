@@ -13,14 +13,14 @@
 #include <utils/log.h>
 #include <xbook/debug.h>
 
-#include <mods/test/utest.h>
+#include <test/utest.h>
 #include <sched/thread.h>
 #include <sched/sched.h>
 #include <sched/smp.h>
 #include <mm/heap_cache.h>
 #include <mm/page_cache.h>
 #include <io/irq.h>
-#include <mods/time/timer.h>
+#include <time/timer.h>
 
 /**
  * see http://asciiarts.net

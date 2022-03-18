@@ -1,3 +1,0 @@
-config NX_TICKS_PER_SECOND
-    int "Ticks increase per second"
-    default 100

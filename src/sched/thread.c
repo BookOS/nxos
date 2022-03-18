@@ -23,7 +23,7 @@
 #include <mm/alloc.h>
 #include <mm/page.h>
 #include <utils/string.h>
-#include <mods/time/timer.h>
+#include <time/timer.h>
 
 NX_ThreadManager NX_ThreadManagerObject;
 

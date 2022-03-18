@@ -1,3 +1,0 @@
-config NX_UTEST_UTILS_STRING
-    bool "Enable utest for string"
-    default n

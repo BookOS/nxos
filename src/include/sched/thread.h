@@ -13,7 +13,7 @@
 #define __SCHED_THREAD__
 
 #include <utils/list.h>
-#include <mods/time/timer.h>
+#include <time/timer.h>
 #include <sched/spin.h>
 #include <process/process.h>
 

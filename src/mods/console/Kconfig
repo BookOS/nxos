@@ -1,3 +1,0 @@
-config NX_PRINT_BUF_LEN
-    int "printf buffer length"
-    default 256

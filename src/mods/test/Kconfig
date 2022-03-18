@@ -1,7 +1,0 @@
-config NX_ENABLE_TEST_UTEST
-    bool "Enable utest test"
-    default n
-
-config NX_ENABLE_TEST_INTEGRATION
-    bool "Enable integration test"
-    default n

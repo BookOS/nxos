@@ -84,15 +84,17 @@ INCDIRS		+=	platform/$(PLATFORM)/include
 SRCDIRS		+=	arch/$(ARCH)/
 SRCDIRS		+=	platform/$(PLATFORM)/
 SRCDIRS		+=	init/
-SRCDIRS		+=	mods/
 SRCDIRS		+=	utils/
 SRCDIRS		+=	mm/
-SRCDIRS		+=	tests/
 SRCDIRS		+=	sched/
 SRCDIRS		+=	io/
 SRCDIRS		+=	process/
 SRCDIRS		+=	kernel/
 SRCDIRS		+=	drivers/
+SRCDIRS		+=	fs/
+SRCDIRS		+=	test/
+SRCDIRS		+=	thirdpart/
+SRCDIRS		+=	time/
 
 #
 # XBuild variables
