@@ -411,7 +411,7 @@ void NX_ThreadEnqueuePendingList(NX_Thread *thread)
 NX_Thread *NX_ThreadDequeuePendingList(void)
 {
     NX_Thread *thread;
-    NX_SpinLock(&NX_ThreadManagerObject.lock, NX_True);
+    NX_SpinLock(&NX_ThreadManagerObject.lock);
     thread = NX_ListFirstEntryOrNULL(&NX_ThreadManagerObject.pendingList, NX_Thread, list);
     if (thread != NX_NULL)
     {

@@ -311,7 +311,7 @@ NX_PRIVATE NX_Error FreeSmallObject(void *span, void *object)
     /* locate small object system */
     system = (NX_HeapSmallCacheSystem *)span;
 
-    NX_MutexLock(&cache->lock, NX_True);
+    NX_MutexLock(&cache->lock);
     err = PutFreeSmallCacheObject(cache, system, object);
     NX_MutexUnlock(&cache->lock);
     return err;
@@ -362,7 +362,7 @@ void *NX_HeapAlloc(NX_Size size)
     
     objectCount = NX_DIV_ROUND_DOWN(pageCount * NX_PAGE_SIZE, size); 
 
-    NX_MutexLock(&cache->lock, NX_True);
+    NX_MutexLock(&cache->lock);
     if (NX_ListEmpty(&cache->objectFreeList)) /* no object, need alloc from page cache */
     {
         if (AllocSpan(cache, pageCount, objectCount, size) != NX_EOK)
@@ -429,7 +429,7 @@ NX_Error NX_HeapFree(void *object)
         {
             cache = &MiddleSizeCache;
 
-            NX_MutexLock(&cache->lock, NX_True);
+            NX_MutexLock(&cache->lock);
             /* if length is too long, free to page cache */
             if (cache->objectFreeCount + 1 >= MAX_MIDDLE_OBJECT_THRESOLD) 
             {

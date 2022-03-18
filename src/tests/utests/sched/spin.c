@@ -29,11 +29,11 @@ NX_TEST(NX_SpinLock)
 
     NX_EXPECT_EQ(NX_SpinInit(&lock), NX_EOK);
 
-    NX_EXPECT_NE(NX_SpinLock(NX_NULL, NX_True), NX_EOK);
-    NX_EXPECT_NE(NX_SpinLock(&lockNoInit, NX_True), NX_EOK);
+    NX_EXPECT_NE(NX_SpinLock(NX_NULL), NX_EOK);
+    NX_EXPECT_NE(NX_SpinLock(&lockNoInit), NX_EOK);
 
-    NX_EXPECT_EQ(NX_SpinLock(&lock, NX_True), NX_EOK);
-    NX_EXPECT_NE(NX_SpinLock(&lock, NX_False), NX_EOK);
+    NX_EXPECT_EQ(NX_SpinLock(&lock), NX_EOK);
+    NX_EXPECT_NE(NX_SpinTryLock(&lock), NX_EOK);
 }
 
 NX_TEST(NX_SpinUnlock)
@@ -46,7 +46,7 @@ NX_TEST(NX_SpinUnlock)
     NX_EXPECT_NE(NX_SpinUnlock(NX_NULL), NX_EOK);
     NX_EXPECT_NE(NX_SpinUnlock(&lockNoInit), NX_EOK);
 
-    NX_EXPECT_EQ(NX_SpinLock(&lock, NX_True), NX_EOK);
+    NX_EXPECT_EQ(NX_SpinLock(&lock), NX_EOK);
     NX_EXPECT_EQ(NX_SpinUnlock(&lock), NX_EOK);
 }
 
@@ -59,7 +59,7 @@ NX_TEST(NX_SpinLockAndUnlock)
     int i;
     for (i = 0; i < 12; i++)
     {
-        NX_EXPECT_EQ(NX_SpinLock(&lock, NX_True), NX_EOK);
+        NX_EXPECT_EQ(NX_SpinLock(&lock), NX_EOK);
         NX_EXPECT_EQ(NX_SpinUnlock(&lock), NX_EOK);
     }
 }

@@ -29,11 +29,11 @@ NX_TEST(NX_MutexLock)
 
     NX_EXPECT_EQ(NX_MutexInit(&lock), NX_EOK);
 
-    NX_EXPECT_NE(NX_MutexLock(NX_NULL, NX_True), NX_EOK);
-    NX_EXPECT_NE(NX_MutexLock(&lockNoInit, NX_True), NX_EOK);
+    NX_EXPECT_NE(NX_MutexLock(NX_NULL), NX_EOK);
+    NX_EXPECT_NE(NX_MutexLock(&lockNoInit), NX_EOK);
 
-    NX_EXPECT_EQ(NX_MutexLock(&lock, NX_True), NX_EOK);
-    NX_EXPECT_NE(NX_MutexLock(&lock, NX_False), NX_EOK);
+    NX_EXPECT_EQ(NX_MutexLock(&lock), NX_EOK);
+    NX_EXPECT_NE(NX_MutexTryLock(&lock), NX_EOK);
 }
 
 NX_TEST(NX_MutexUnlock)
@@ -46,7 +46,7 @@ NX_TEST(NX_MutexUnlock)
     NX_EXPECT_NE(NX_MutexUnlock(NX_NULL), NX_EOK);
     NX_EXPECT_NE(NX_MutexUnlock(&lockNoInit), NX_EOK);
 
-    NX_EXPECT_EQ(NX_MutexLock(&lock, NX_True), NX_EOK);
+    NX_EXPECT_EQ(NX_MutexLock(&lock), NX_EOK);
     NX_EXPECT_EQ(NX_MutexUnlock(&lock), NX_EOK);
 }
 
@@ -59,7 +59,7 @@ NX_TEST(NX_MutexLockAndUnlock)
     int i;
     for (i = 0; i < 12; i++)
     {
-        NX_EXPECT_EQ(NX_MutexLock(&lock, NX_True), NX_EOK);
+        NX_EXPECT_EQ(NX_MutexLock(&lock), NX_EOK);
         NX_EXPECT_EQ(NX_MutexUnlock(&lock), NX_EOK);
     }
 }
