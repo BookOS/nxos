@@ -56,9 +56,8 @@ NX_INTERFACE NX_IMPORT struct NX_ProcessOps NX_ProcessOpsInterface;
 #define NX_ProcessExecuteUser           NX_ProcessOpsInterface.executeUser
 #define NX_ProcessFreePageTable         NX_ProcessOpsInterface.freePageTable
 
-NX_Process *NX_ProcessCreate(NX_U32 flags);
 NX_Error NX_ProcessDestroy(NX_Process *process);
-NX_Error NX_ProcessExecute(char *name, char *path, NX_U32 flags);
+NX_Error NX_ProcessCreate(char *name, char *path, NX_U32 flags);
 void NX_ProcessExit(int exitCode);
 
 #endif /* __PROCESS_PROCESS___ */

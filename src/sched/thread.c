@@ -47,6 +47,7 @@ NX_PRIVATE NX_Error ThreadInit(NX_Thread *thread,
     thread->tid = NX_ThreadIdAlloc();
     if (thread->tid < 0)
     {
+        NX_LOG_E("No enough thread id.");
         return NX_ENORES;
     }
     thread->state = NX_THREAD_INIT;
@@ -107,7 +108,7 @@ NX_Thread *NX_ThreadCreate(const char *name, NX_ThreadHandler handler, void *arg
     }
     if (ThreadInit(thread, name, handler, arg, stack, NX_THREAD_STACK_SIZE_DEFAULT, priority) != NX_EOK)
     {
-        NX_PageFree(stack);
+        NX_MemFree(stack);
         NX_MemFree(thread);
         return NX_NULL;
     }
