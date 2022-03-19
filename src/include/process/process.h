@@ -16,6 +16,7 @@
 #include <utils/list.h>
 #include <sched/spin.h>
 #include <mm/vmspace.h>
+#include <fs/vfs.h>
 
 #define NX_PROCESS_USER_SATCK_SIZE (NX_PAGE_SIZE * 4)
 
@@ -31,10 +32,8 @@ struct NX_Process
 
     int exitCode;   /* exit code for process */
 
-    /* User space memory manager */
-
-    /* Hub Handle */
-
+    NX_VfsFileTable *fileTable; /* file table */
+    
     /* thread group */
 };
 typedef struct NX_Process NX_Process;

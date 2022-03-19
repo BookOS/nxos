@@ -31,7 +31,10 @@ typedef void (*NX_ExitCallHandler)(void);
 #define NX_MODS_CALL(fn)            __DEFINE_INITCALL("1", fn, 1)
 
 #define NX_DRV_INIT(fn)            __DEFINE_INITCALL("2", fn, 2)
-#define NX_DRV_EXIT(fn)            __DEFINE_INITCALL("2", fn, 2)
+#define NX_DRV_EXIT(fn)            __DEFINE_EXITCALL("2", fn, 2)
+
+#define NX_FS_INIT(fn)            __DEFINE_INITCALL("3", fn, 3)
+#define NX_FS_EXIT(fn)            __DEFINE_EXITCALL("3", fn, 3)
 
 #define NX_INIT_TEST(fn)            __DEFINE_INITCALL("9", fn, 9)
 

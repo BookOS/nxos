@@ -16,6 +16,7 @@
 #include <time/timer.h>
 #include <sched/spin.h>
 #include <process/process.h>
+#include <fs/vfs.h>
 
 #ifdef CONFIG_NX_THREAD_NAME_LEN
 #define NX_THREAD_NAME_LEN CONFIG_NX_THREAD_NAME_LEN
@@ -62,6 +63,7 @@ struct NX_ThreadResource
 {
     NX_Timer *sleepTimer;
     NX_Process *process;
+    NX_VfsFileTable *fileTable;
 };
 typedef struct NX_ThreadResource NX_ThreadResource;
 
@@ -117,6 +119,9 @@ struct NX_ThreadManager
 typedef struct NX_ThreadManager NX_ThreadManager;
 
 #define NX_CurrentThread NX_ThreadSelf()
+
+#define NX_ThreadSetFileTable(thread, fileTable) ((thread)->resource.fileTable = fileTable)
+#define NX_ThreadGetFileTable(thread) ((thread)->resource.fileTable)
 
 NX_Thread *NX_ThreadCreate(const char *name, NX_ThreadHandler handler, void *arg, NX_U32 priority);
 NX_Error NX_ThreadDestroy(NX_Thread *thread);

@@ -1,1 +1,2 @@
 SRC	+= *.c
+SRC	+= cpio/

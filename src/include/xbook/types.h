@@ -29,8 +29,9 @@ typedef unsigned long       NX_Addr;
 typedef unsigned long       NX_Size;
 typedef signed long         NX_SSize;
 
-typedef long NX_PtrDiff;
-typedef long NX_Offset;
+typedef signed long NX_PtrDiff;
+typedef signed long NX_Offset;
+typedef signed long long NX_Offset64;
 
 enum NX_Bool
 {

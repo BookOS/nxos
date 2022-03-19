@@ -26,6 +26,7 @@
 
 #include <xbook/debug.h>
 #include <thirdpart/elf.h>
+#include <fs/vfs.h>
 
 NX_PRIVATE void ProcessAppendThread(NX_Process *process, NX_Thread *thread)
 {
@@ -55,6 +56,13 @@ NX_PRIVATE NX_Process *NX_ProcessCreateObject(NX_U32 flags)
         return NX_NULL;
     }
 
+    NX_VfsFileTable *ft = NX_MemAlloc(sizeof(NX_VfsFileTable));
+    if (ft == NX_NULL)
+    {
+        NX_MemFree(process);
+        return NX_NULL;
+    }
+
     if(NX_VmspaceInit(&process->vmspace,
         NX_USER_SPACE_VADDR,
         NX_USER_SPACE_TOP,
@@ -67,16 +75,20 @@ NX_PRIVATE NX_Process *NX_ProcessCreateObject(NX_U32 flags)
         NX_USER_STACK_VADDR,
         NX_USER_STACK_TOP) != NX_EOK)
     {
+        NX_MemFree(ft);
         NX_MemFree(process);
         return NX_NULL;
     }
 
     if (NX_ProcessInitUserSpace(process, NX_USER_SPACE_VADDR, NX_USER_SPACE_SIZE) != NX_EOK)
     {
+        NX_MemFree(ft);
         NX_MemFree(process);
         return NX_NULL;
     }
     
+    NX_VfsFileTableInit(ft);
+    process->fileTable = ft;
     process->flags = flags;
 
     NX_AtomicSet(&process->threadCount, 0);
@@ -97,6 +109,8 @@ NX_Error NX_ProcessDestroy(NX_Process *process)
     /* exit vmspace */
     NX_ASSERT(NX_VmspaceExit(&process->vmspace) == NX_EOK);
     
+    /* TODO: free file table entry */
+    NX_MemFree(process->fileTable);
     NX_MemFree(process);
     return NX_EOK;
 }
@@ -139,10 +153,9 @@ NX_PRIVATE NX_Error NX_LoadCheckMachine(NX_U16 machineType)
     return NX_EOK;
 }
 
-NX_PRIVATE NX_Error NX_LoadCheck(char *path, NX_RomfsFile *file, NX_Size len, NX_Vmspace *space, Elf_Ehdr *elfHeader)
+NX_PRIVATE NX_Error NX_LoadCheck(char *path, int fd, NX_Size len, NX_Vmspace *space, Elf_Ehdr *elfHeader)
 {
     NX_U8 elfMagic[SELFMAG];
-    NX_Size loadLen = 0;
     
     if (len < sizeof(Elf_Ehdr))
     {
@@ -151,15 +164,12 @@ NX_PRIVATE NX_Error NX_LoadCheck(char *path, NX_RomfsFile *file, NX_Size len, NX
     }
 
     /* check elf magic */
-    if (NX_RomfsSeek(file, 0, NX_ROMFS_SEEK_SET, NX_NULL) != NX_EOK)
+    if (NX_VfsFileSeek(fd, 0, NX_VFS_SEEK_SET) != 0)
     {
         return NX_EFAULT;
     }
-    if (NX_RomfsRead(file, elfMagic, sizeof(elfMagic), &loadLen) != NX_EOK)
-    {
-        return NX_EIO;
-    }
-    if (loadLen != sizeof(elfMagic))
+
+    if (NX_VfsRead(fd, elfMagic, sizeof(elfMagic)) != sizeof(elfMagic))
     {
         return NX_EIO;
     }
@@ -172,15 +182,11 @@ NX_PRIVATE NX_Error NX_LoadCheck(char *path, NX_RomfsFile *file, NX_Size len, NX
     }
 
     /* load header */
-    if (NX_RomfsSeek(file, 0, NX_ROMFS_SEEK_SET, NX_NULL) != NX_EOK)
+    if (NX_VfsFileSeek(fd, 0, NX_ROMFS_SEEK_SET) != 0)
     {
         return NX_EFAULT;
     }
-    if (NX_RomfsRead(file, elfHeader, sizeof(Elf_Ehdr), &loadLen) != NX_EOK)
-    {
-        return NX_EIO;
-    }
-    if (loadLen != sizeof(Elf_Ehdr))
+    if (NX_VfsRead(fd, elfHeader, sizeof(Elf_Ehdr)) != sizeof(Elf_Ehdr))
     {
         return NX_EIO;
     }
@@ -224,11 +230,10 @@ NX_PRIVATE NX_Error NX_LoadCheck(char *path, NX_RomfsFile *file, NX_Size len, NX
 }
 
 
-NX_PRIVATE NX_Error NX_LoadMapUserSpace(NX_RomfsFile *file, NX_Size len, NX_Vmspace *space, Elf_Ehdr *elfHeader)
+NX_PRIVATE NX_Error NX_LoadMapUserSpace(int fd, NX_Size len, NX_Vmspace *space, Elf_Ehdr *elfHeader)
 {
     Elf_Phdr progHeader;
     NX_Offset off = 0;
-    NX_Size loadLen = 0;
     int i;
 
     NX_LOG_D("elf program header info: numbers %d, off %p", elfHeader->e_phnum, elfHeader->e_phoff);
@@ -242,15 +247,11 @@ NX_PRIVATE NX_Error NX_LoadMapUserSpace(NX_RomfsFile *file, NX_Size len, NX_Vmsp
             return NX_EFAULT;
         }
 
-        if (NX_RomfsSeek(file, off, NX_ROMFS_SEEK_SET, NX_NULL) != NX_EOK)
+        if (NX_VfsFileSeek(fd, off, NX_ROMFS_SEEK_SET) != off)
         {
             return NX_EFAULT;
         }
-        if (NX_RomfsRead(file, &progHeader, sizeof(progHeader), &loadLen) != NX_EOK)
-        {
-            return NX_EIO;
-        }
-        if (loadLen != sizeof(progHeader))
+        if (NX_VfsRead(fd, &progHeader, sizeof(progHeader)) != sizeof(progHeader))
         {
             return NX_EIO;
         }
@@ -278,17 +279,15 @@ NX_PRIVATE NX_Error NX_LoadMapUserSpace(NX_RomfsFile *file, NX_Size len, NX_Vmsp
     return NX_EOK;
 }
 
-NX_PRIVATE NX_Error NX_LoadFileData(NX_RomfsFile *file, NX_Size len, NX_Vmspace *space, Elf_Ehdr *elfHeader)
+NX_PRIVATE NX_Error NX_LoadFileData(int fd, NX_Size len, NX_Vmspace *space, Elf_Ehdr *elfHeader)
 {
     Elf_Phdr progHeader;
     NX_Offset progOff;
-    NX_Size loadLen = 0;
     NX_Size size;
     NX_Addr vaddr;
     NX_Addr paddr;
     NX_Addr vaddrSelf;
     NX_Size chunk;
-    NX_Size chunkRead;
     NX_Size readLen;
     NX_Size memSize = 0;
     int i;
@@ -303,15 +302,11 @@ NX_PRIVATE NX_Error NX_LoadFileData(NX_RomfsFile *file, NX_Size len, NX_Vmspace 
         }
 
         /* read program header */
-        if (NX_RomfsSeek(file, progOff, NX_ROMFS_SEEK_SET, NX_NULL) != NX_EOK)
+        if (NX_VfsFileSeek(fd, progOff, NX_ROMFS_SEEK_SET) != progOff)
         {
             return NX_EFAULT;
         }
-        if (NX_RomfsRead(file, &progHeader, sizeof(progHeader), &loadLen) != NX_EOK)
-        {
-            return NX_EIO;
-        }
-        if (loadLen != sizeof(progHeader))
+        if (NX_VfsRead(fd, &progHeader, sizeof(progHeader)) != sizeof(progHeader))
         {
             return NX_EIO;
         }
@@ -330,7 +325,7 @@ NX_PRIVATE NX_Error NX_LoadFileData(NX_RomfsFile *file, NX_Size len, NX_Vmspace 
                 return NX_ERROR;
             }
 
-            if (NX_RomfsSeek(file, progHeader.p_offset, NX_ROMFS_SEEK_SET, NX_NULL) != NX_EOK)
+            if (NX_VfsFileSeek(fd, progHeader.p_offset, NX_ROMFS_SEEK_SET) != progHeader.p_offset)
             {
                 return NX_EIO;
             }
@@ -347,11 +342,7 @@ NX_PRIVATE NX_Error NX_LoadFileData(NX_RomfsFile *file, NX_Size len, NX_Vmspace 
 
                 chunk = (size < NX_PAGE_SIZE) ? size : NX_PAGE_SIZE;
 
-                if (NX_RomfsRead(file, (void *)vaddrSelf, chunk, &chunkRead) != NX_EOK)
-                {
-                    return NX_EIO;
-                }
-                if (chunkRead != chunk)
+                if (NX_VfsRead(fd, (void *)vaddrSelf, chunk) != chunk)
                 {
                     return NX_EIO;
                 }
@@ -406,9 +397,9 @@ NX_PRIVATE NX_Error NX_LoadFileData(NX_RomfsFile *file, NX_Size len, NX_Vmspace 
     return NX_EOK;
 }
 
-NX_PRIVATE NX_Error NX_LoadElf(char *path, NX_RomfsFile *file, NX_Size len, NX_Vmspace *space)
+NX_PRIVATE NX_Error NX_LoadElf(char *path, int fd, NX_Size len, NX_Vmspace *space)
 {
-    if (!file || !len || !space)
+    if (fd < 0 || !len || !space)
     {
         return NX_EINVAL;
     }
@@ -416,20 +407,20 @@ NX_PRIVATE NX_Error NX_LoadElf(char *path, NX_RomfsFile *file, NX_Size len, NX_V
     Elf_Ehdr elfHeader;
     NX_Error err = NX_EOK;
 
-    err = NX_LoadCheck(path, file, len, space, &elfHeader);
+    err = NX_LoadCheck(path, fd, len, space, &elfHeader);
     if (err != NX_EOK)
     {
         return err;
     }
 
-    err = NX_LoadMapUserSpace(file, len, space, &elfHeader);
+    err = NX_LoadMapUserSpace(fd, len, space, &elfHeader);
     if (err != NX_EOK)
     {
         NX_LOG_E("file %s do space map failed!", path);
         return err;
     }
 
-    err = NX_LoadFileData(file, len, space, &elfHeader);
+    err = NX_LoadFileData(fd, len, space, &elfHeader);
     if (err != NX_EOK)
     {
         NX_LOG_E("file %s load image failed!", path);
@@ -445,32 +436,31 @@ NX_PRIVATE NX_Error NX_LoadElf(char *path, NX_RomfsFile *file, NX_Size len, NX_V
 NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
 {
     NX_ASSERT(process->vmspace.mmu.table);
-    NX_RomfsFile *file = NX_NULL;
+    int fd;
     NX_Error err;
     NX_Offset len;
     NX_Size imageMaxSize;
     NX_Vmspace *space;
 
-    err = NX_RomfsOpen(path, 0, &file);
-    if (err != NX_EOK)
+    fd = NX_VfsOpen(path, NX_VFS_O_RDONLY, 0);
+    if (fd < NX_EOK)
     {
-        NX_LOG_E("process load file %s failed with err %d!", path, err);
+        NX_LOG_E("process open file %s failed !", path);
         return NX_ENOSRCH;
     }
 
-    err = NX_RomfsSeek(file, 0, NX_ROMFS_SEEK_END, &len);
-    if (err != NX_EOK)
+    len = NX_VfsFileSeek(fd, 0, NX_VFS_SEEK_END);
+    if (!len)
     {
-        NX_LOG_E("seek file %s failed with err %d!", path, err);
-        NX_RomfsClose(file);
+        NX_LOG_E("file %s too small !", path);
+        NX_VfsClose(fd);
         return NX_ENOSRCH;
     }
 
-    err = NX_RomfsSeek(file, 0, NX_ROMFS_SEEK_SET, NX_NULL);
-    if (err != NX_EOK)
+    if (NX_VfsFileSeek(fd, 0, NX_VFS_SEEK_SET) != 0)
     {
-        NX_LOG_E("seek file %s failed with err %d!", path, err);
-        NX_RomfsClose(file);
+        NX_LOG_E("seek file %s failed !", path);
+        NX_VfsClose(fd);
         return NX_ENOSRCH;
     }
 
@@ -481,20 +471,20 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
     if (len > imageMaxSize)
     {
         NX_LOG_E("image too large %p than %p !", len, imageMaxSize);
-        NX_RomfsClose(file);
+        NX_VfsClose(fd);
         return NX_EFAULT;
     }
 
-    err = NX_LoadElf(path, file, len, space);
+    err = NX_LoadElf(path, fd, len, space);
     if (err != NX_EOK)
     {
         NX_LOG_E("load elf %s failed with err %d!", path, err);
-        NX_RomfsClose(file);
+        NX_VfsClose(fd);
         return err;
     }
 
     /* close file */
-    NX_RomfsClose(file);
+    NX_ASSERT(NX_VfsClose(fd) == 0);
 
     return NX_EOK;
 }
@@ -546,6 +536,9 @@ NX_Error NX_ProcessCreate(char *name, char *path, NX_U32 flags)
     }
 
     ProcessAppendThread(process, thread);
+
+    /* override default file table */
+    NX_ThreadSetFileTable(thread, process->fileTable);
 
     if (NX_ThreadRun(thread) != NX_EOK)
     {
