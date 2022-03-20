@@ -48,6 +48,8 @@ struct NX_DriverOps
     NX_Error (*close)(struct NX_Device *device);
     NX_Error (*read)(struct NX_Device *device, void *buf, NX_Size len, NX_Size *outLen);
     NX_Error (*write)(struct NX_Device *device, void *buf, NX_Size len, NX_Size *outLen);
+    NX_Error (*readEx)(struct NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen);
+    NX_Error (*writeEx)(struct NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen);
     NX_Error (*control)(struct NX_Device *device, NX_U32 cmd, void *arg);
 };
 typedef struct NX_DriverOps NX_DriverOps;
@@ -78,21 +80,23 @@ typedef struct NX_Device NX_Device;
 
 void NX_DriverDumpTree(void);
 
-NX_Driver *NX_DriverCreate(char *name, NX_DeviceType type, NX_U32 flags, NX_DriverOps *ops);
+NX_Driver *NX_DriverCreate(const char *name, NX_DeviceType type, NX_U32 flags, NX_DriverOps *ops);
 NX_Error NX_DriverDestroy(NX_Driver *driver);
 NX_Error NX_DriverRegister(NX_Driver *driver);
 NX_Error NX_DriverUnregister(NX_Driver *driver);
-NX_Driver *NX_DriverSearch(char *name);
-NX_Error NX_DriverCleanup(char *name);
+NX_Driver *NX_DriverSearch(const char *name);
+NX_Error NX_DriverCleanup(const char *name);
 
-NX_Error NX_DriverAttachDevice(NX_Driver *driver, char *name, NX_Device **outDevice);
-NX_Error NX_DriverDetachDevice(NX_Driver *driver, char *name);
+NX_Error NX_DriverAttachDevice(NX_Driver *driver, const char *name, NX_Device **outDevice);
+NX_Error NX_DriverDetachDevice(NX_Driver *driver, const char *name);
 
-NX_Error NX_DeviceOpen(char *name, NX_U32 flags, NX_Device **outDevice);
+NX_Error NX_DeviceOpen(const char *name, NX_U32 flags, NX_Device **outDevice);
 NX_Error NX_DeviceClose(NX_Device *device);
 NX_Error NX_DeviceRead(NX_Device *device, void *buf, NX_Size len, NX_Size *outLen);
 NX_Error NX_DeviceWrite(NX_Device *device, void *buf, NX_Size len, NX_Size *outLen);
+NX_Error NX_DeviceReadEx(NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen);
+NX_Error NX_DeviceWriteEx(NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen);
 NX_Error NX_DeviceControl(NX_Device *device, NX_U32 cmd, void *arg);
-NX_Device *NX_DeviceSearch(char *name);
+NX_Device *NX_DeviceSearch(const char *name);
 
 #endif  /* __XBOOK_IO_DRIVER__ */
