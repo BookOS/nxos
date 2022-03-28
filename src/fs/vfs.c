@@ -124,14 +124,14 @@ NX_PRIVATE int CountMatch(const char * path, char * mount_root)
 	return 0;
 }
 
-NX_PRIVATE int VfsFindRoot(const char * path, NX_VfsMount ** mp, char ** root)
+NX_PRIVATE NX_Error VfsFindRoot(const char * path, NX_VfsMount ** mp, char ** root)
 {
 	NX_VfsMount * pos, * m = NX_NULL;
 	int len, max_len = 0;
 
 	if(!path || !mp || !root)
     {
-		return -1;
+		return NX_EINVAL;
     }
 
 	NX_MutexLock(&NX_FileSystemMountLock);
@@ -148,7 +148,7 @@ NX_PRIVATE int VfsFindRoot(const char * path, NX_VfsMount ** mp, char ** root)
 
 	if(!m)
     {
-		return -1;
+		return NX_ENOSRCH;
     }
 
 	*root = (char *)(path + max_len);
@@ -158,7 +158,7 @@ NX_PRIVATE int VfsFindRoot(const char * path, NX_VfsMount ** mp, char ** root)
 	}
 	*mp = m;
 
-	return 0;
+	return NX_EOK;
 }
 
 void NX_VfsFileTableInit(NX_VfsFileTable *ft)
@@ -209,6 +209,7 @@ NX_PRIVATE void VfsFileFree(NX_VfsFileTable *ft, int fd)
 	}
 }
 
+
 NX_PRIVATE NX_VfsFile * VfsFileDescriptorToFile(NX_VfsFileTable *ft, int fd)
 {
     if (!ft)
@@ -256,7 +257,7 @@ NX_PRIVATE NX_VfsNode * VfsNodeGet(NX_VfsMount * m, const char * path)
 	NX_MutexLock(&m->lock);
 	err = m->fs->vget(m, n);
 	NX_MutexUnlock(&m->lock);
-	if(err)
+	if(err != NX_EOK)
 	{
 		NX_MemFree(n);
 		return NX_NULL;
@@ -325,7 +326,7 @@ NX_PRIVATE void VfsNodePut(NX_VfsNode * n)
 	NX_MemFree(n);
 }
 
-NX_PRIVATE int VfsNodeStat(NX_VfsNode * n, NX_VfsStatInfo * st)
+NX_PRIVATE NX_Error VfsNodeStat(NX_VfsNode * n, NX_VfsStatInfo * st)
 {
 	NX_U32 mode;
 
@@ -364,7 +365,7 @@ NX_PRIVATE int VfsNodeStat(NX_VfsNode * n, NX_VfsStatInfo * st)
 		mode |= NX_VFS_S_IFIFO;
 		break;
 	default:
-		return -1;
+		return NX_ENORES;
 	};
 	st->mode = mode;
 
@@ -373,7 +374,7 @@ NX_PRIVATE int VfsNodeStat(NX_VfsNode * n, NX_VfsStatInfo * st)
 	st->uid = 0;
 	st->gid = 0;
 
-	return 0;
+	return NX_EOK;
 }
 
 NX_PRIVATE int VfsNodeAccess(NX_VfsNode * n, NX_U32 mode)
@@ -468,9 +469,10 @@ NX_PRIVATE int VfsNodeAcquire(const char * path, NX_VfsNode ** np)
 	NX_VfsNode * dn, * n;
 	char node[NX_VFS_MAX_PATH];
 	char * p;
-	int err, i, j;
+	NX_Error err;
+    int i, j;
 
-	if(VfsFindRoot(path, &m, &p))
+	if(VfsFindRoot(path, &m, &p) != NX_EOK)
     {
 		return -1;
     }
@@ -522,10 +524,10 @@ NX_PRIVATE int VfsNodeAcquire(const char * path, NX_VfsNode ** np)
 			err = dn->mount->fs->lookup(dn, &node[j], n);
 			NX_MutexUnlock(&dn->lock);
 			NX_MutexUnlock(&n->lock);
-			if(err || (*p == '/' && n->type != NX_VFS_NODE_TYPE_DIR))
+			if(err != NX_EOK || (*p == '/' && n->type != NX_VFS_NODE_TYPE_DIR))
 			{
 				VfsNodeRelease(n);
-				return err;
+				return -1;
 			}
 		}
 		dn = n;
@@ -535,7 +537,7 @@ NX_PRIVATE int VfsNodeAcquire(const char * path, NX_VfsNode ** np)
 	return 0;
 }
 
-int NX_VfsMountFileSystem(const char * dev, const char * dir, const char * fsname, NX_U32 flags)
+NX_Error NX_VfsMountFileSystem(const char * dev, const char * dir, const char * fsname, NX_U32 flags)
 {
 	NX_Device * bdev;
 	NX_VfsFileSystem * fs;
@@ -545,19 +547,19 @@ int NX_VfsMountFileSystem(const char * dev, const char * dir, const char * fsnam
 
 	if(!dir || *dir == '\0')
     {
-		return -1;
+		return NX_EINVAL;
     }
 
 	if(!(fs = NX_VfsSearchFileSystem(fsname)))
     {
-		return -1;
+		return NX_ENOSRCH;
     }
 
 	if(dev != NX_NULL)
 	{
         if(!(bdev = NX_IoBlockOpen(dev)))
         {
-			return -1;
+			return NX_ENOSRCH;
         }
 	}
 	else
@@ -567,7 +569,7 @@ int NX_VfsMountFileSystem(const char * dev, const char * dir, const char * fsnam
 
 	if(!(m = NX_MemAlloc(sizeof(NX_VfsMount))))
     {
-		return -1;
+		return NX_ENOMEM;
     }
 
 	NX_ListInit(&m->link);
@@ -578,7 +580,7 @@ int NX_VfsMountFileSystem(const char * dev, const char * dir, const char * fsnam
 	if(NX_StrCopySafe(m->path, dir, sizeof(m->path)) >= sizeof(m->path))
 	{
 		NX_MemFree(m);
-		return -1;
+		return NX_EFAULT;
 	}
 	m->dev = bdev;
 
@@ -591,13 +593,13 @@ int NX_VfsMountFileSystem(const char * dev, const char * dir, const char * fsnam
 		if(VfsNodeAcquire(dir, &n_covered) != 0)
 		{
 			NX_MemFree(m);
-			return -1;
+			return NX_ENORES;
 		}
 		if(n_covered->type != NX_VFS_NODE_TYPE_DIR)
 		{
 			VfsNodeRelease(n_covered);
 			NX_MemFree(m);
-			return -1;
+			return NX_EFAULT;
 		}
 	}
 	m->covered = n_covered;
@@ -609,7 +611,7 @@ int NX_VfsMountFileSystem(const char * dev, const char * dir, const char * fsnam
 			VfsNodeRelease(m->covered);
         }
 		NX_MemFree(m);
-		return -1;
+		return NX_EFAULT;
 	}
 	n->type = NX_VFS_NODE_TYPE_DIR;
 	n->flags = NX_VFS_NODE_FLAG_ROOT;
@@ -619,7 +621,7 @@ int NX_VfsMountFileSystem(const char * dev, const char * dir, const char * fsnam
 	NX_MutexLock(&m->lock);
 	err = m->fs->mount(m, dev);
 	NX_MutexUnlock(&m->lock);
-	if(err != 0)
+	if(err != NX_EOK)
 	{
 		VfsNodeRelease(m->root);
 		if(m->covered)
@@ -631,7 +633,9 @@ int NX_VfsMountFileSystem(const char * dev, const char * dir, const char * fsnam
 	}
 
 	if(m->flags & NX_VFS_MOUNT_RO)
+    {
 		m->root->mode &= ~(NX_VFS_S_IWUSR | NX_VFS_S_IWGRP | NX_VFS_S_IWOTH);
+    }
 
 	NX_MutexLock(&NX_FileSystemMountLock);
 	NX_ListForEachEntry(tm, &NX_FileSystemMountList, link)
@@ -648,20 +652,20 @@ int NX_VfsMountFileSystem(const char * dev, const char * dir, const char * fsnam
 				VfsNodeRelease(m->covered);
             }
 			NX_MemFree(m);
-			return -1;
+			return NX_EAGAIN;
 		}
 	}
 	NX_ListAdd(&m->link, &NX_FileSystemMountList);
 	NX_MutexUnlock(&NX_FileSystemMountLock);
 
-	return 0;
+	return NX_EOK;
 }
 
-int NX_VfsUnmountFileSystem(const char * path)
+NX_Error NX_VfsUnmountFileSystem(const char * path)
 {
 	NX_VfsMount * m;
 	int found;
-	int err;
+	NX_Error err;
 
 	NX_MutexLock(&NX_FileSystemMountLock);
 	found = 0;
@@ -676,12 +680,12 @@ int NX_VfsUnmountFileSystem(const char * path)
 	if(!found)
 	{
 		NX_MutexUnlock(&NX_FileSystemMountLock);
-		return -1;
+		return NX_ENOSRCH;
 	}
 	if(NX_AtomicGet(&m->refcnt) > 1)
 	{
 		NX_MutexUnlock(&NX_FileSystemMountLock);
-		return -1;
+		return NX_EBUSY;
 	}
 	NX_ListDel(&m->link);
 	NX_MutexUnlock(&NX_FileSystemMountLock);
@@ -708,20 +712,24 @@ int NX_VfsUnmountFileSystem(const char * path)
 	return err;
 }
 
-int NX_VfsSync(void)
+NX_Error NX_VfsSync(void)
 {
 	NX_VfsMount * m;
-
+    NX_Error err;
 	NX_MutexLock(&NX_FileSystemMountLock);
 	NX_ListForEachEntry(m, &NX_FileSystemMountList, link)
 	{
 		NX_MutexLock(&m->lock);
-		m->fs->msync(m);
-		NX_MutexUnlock(&m->lock);
+		err = m->fs->msync(m);
+		if (err != NX_EOK)
+        {
+            NX_LOG_W("mount point path %s sync error! with %d", m->path, err);
+        }
+        NX_MutexUnlock(&m->lock);
 	}
 	NX_MutexUnlock(&NX_FileSystemMountLock);
 
-	return 0;
+	return NX_EOK;
 }
 
 NX_VfsMount * NX_VfsGetMount(int index)
@@ -820,7 +828,7 @@ NX_PRIVATE int VfsLookupDir(const char * path, NX_VfsNode ** np, char ** name)
 	return 0;
 }
 
-int NX_VfsOpen(const char * path, NX_U32 flags, NX_U32 mode)
+int NX_VfsOpen(const char * path, NX_U32 flags, NX_U32 mode, NX_Error *outErr)
 {
 	NX_VfsNode * n, * dn;
 	NX_VfsFile * f;
@@ -830,6 +838,7 @@ int NX_VfsOpen(const char * path, NX_U32 flags, NX_U32 mode)
 
 	if(!path || !(flags & NX_VFS_O_ACCMODE))
     {
+        NX_ErrorSet(outErr, NX_EINVAL);
 		return -1;
     }
 
@@ -837,6 +846,7 @@ int NX_VfsOpen(const char * path, NX_U32 flags, NX_U32 mode)
     ft = VFS_GET_FILE_TABLE();
     if (!ft)
     {
+        NX_ErrorSet(outErr, NX_ENORES);
         return -1;
     }
 
@@ -847,10 +857,12 @@ int NX_VfsOpen(const char * path, NX_U32 flags, NX_U32 mode)
 		{
 			if((err = VfsLookupDir(path, &dn, &filename)))
             {
+                NX_ErrorSet(outErr, NX_ENOSRCH);
 				return err;
             }
 			if((err = VfsNodeAccess(dn, NX_VFS_W_OK)))
 			{
+                NX_ErrorSet(outErr, NX_EPERM);
 				VfsNodeRelease(dn);
 				return err;
 			}
@@ -858,18 +870,20 @@ int NX_VfsOpen(const char * path, NX_U32 flags, NX_U32 mode)
 			mode |= NX_VFS_S_IFREG;
 			NX_MutexLock(&dn->lock);
 			err = dn->mount->fs->create(dn, filename, mode);
-			if(!err)
+			if(err == NX_EOK)
             {
 				err = dn->mount->fs->sync(dn);
             }
 			NX_MutexUnlock(&dn->lock);
 			VfsNodeRelease(dn);
-			if(err)
+			if(err != NX_EOK)
             {
-				return err;
+                NX_ErrorSet(outErr, err);
+				return -1;
             }
 			if((err = VfsNodeAcquire(path, &n)))
             {
+                NX_ErrorSet(outErr, NX_ENORES);
 				return err;
             }
 			flags &= ~NX_VFS_O_TRUNC;
@@ -878,6 +892,7 @@ int NX_VfsOpen(const char * path, NX_U32 flags, NX_U32 mode)
 		{
 			if(flags & NX_VFS_O_EXCL)
 			{
+                NX_ErrorSet(outErr, NX_EAGAIN);
 				VfsNodeRelease(n);
 				return -1;
 			}
@@ -888,17 +903,20 @@ int NX_VfsOpen(const char * path, NX_U32 flags, NX_U32 mode)
 	{
 		if((err = VfsNodeAcquire(path, &n)))
 		{
+            NX_ErrorSet(outErr, NX_ENORES);
 			return err;
 		}
 		if((flags & NX_VFS_O_WRONLY) || (flags & NX_VFS_O_TRUNC))
 		{
 			if((err = VfsNodeAccess(n, NX_VFS_W_OK)))
 			{
+                NX_ErrorSet(outErr, NX_EPERM);
 				VfsNodeRelease(n);
 				return err;
 			}
 			if(n->type == NX_VFS_NODE_TYPE_DIR)
 			{
+                NX_ErrorSet(outErr, NX_EPERM);
 				VfsNodeRelease(n);
 				return -1;
 			}
@@ -909,6 +927,7 @@ int NX_VfsOpen(const char * path, NX_U32 flags, NX_U32 mode)
 	{
 		if(!(flags & NX_VFS_O_WRONLY) || (n->type == NX_VFS_NODE_TYPE_DIR))
 		{
+            NX_ErrorSet(outErr, NX_EPERM);
 			VfsNodeRelease(n);
 			return -1;
 		}
@@ -917,14 +936,16 @@ int NX_VfsOpen(const char * path, NX_U32 flags, NX_U32 mode)
 		NX_MutexUnlock(&n->lock);
 		if(err)
 		{
+            NX_ErrorSet(outErr, err);
 			VfsNodeRelease(n);
-			return err;
+			return -1;
 		}
 	}
 
     fd = VfsFileAlloc(ft);
 	if(fd < 0)
 	{
+        NX_ErrorSet(outErr, NX_ENORES);
 		VfsNodeRelease(n);
 		return -1;
 	}
@@ -936,27 +957,28 @@ int NX_VfsOpen(const char * path, NX_U32 flags, NX_U32 mode)
 	f->flags = flags;
 	NX_MutexUnlock(&f->lock);
 
+    NX_ErrorSet(outErr, NX_EOK);
 	return fd;
 }
 
-int NX_VfsClose(int fd)
+NX_Error NX_VfsClose(int fd)
 {
 	NX_VfsNode * n;
 	NX_VfsFile * f;
-	int err;
+	NX_Error err;
     NX_VfsFileTable *ft;
 
     /* check has file table */
     ft = VFS_GET_FILE_TABLE();
     if (!ft)
     {
-        return -1;
+        return NX_ENORES;
     }
 
 	f = VfsFileDescriptorToFile(ft, fd);
 	if(!f)
     {
-		return -1;
+		return NX_EFAULT;
     }
 
 	NX_MutexLock(&f->lock);
@@ -964,7 +986,7 @@ int NX_VfsClose(int fd)
 	if(!n)
 	{
 		NX_MutexUnlock(&f->lock);
-		return -1;
+		return NX_EFAULT;
 	}
 
 	NX_MutexLock(&n->lock);
@@ -979,18 +1001,20 @@ int NX_VfsClose(int fd)
 	NX_MutexUnlock(&f->lock);
 
 	VfsFileFree(ft, fd);
-	return 0;
+	return NX_EOK;
 }
 
-NX_U64 NX_VfsRead(int fd, void * buf, NX_U64 len)
+NX_U64 NX_VfsRead(int fd, void * buf, NX_U64 len, NX_Error *outErr)
 {
 	NX_VfsNode * n;
 	NX_VfsFile * f;
 	NX_U64 ret;
     NX_VfsFileTable *ft;
+    NX_Error err = NX_EOK;
 
 	if(!buf || !len)
     {
+        NX_ErrorSet(outErr, NX_EINVAL);
 		return 0;
     }
 
@@ -998,6 +1022,7 @@ NX_U64 NX_VfsRead(int fd, void * buf, NX_U64 len)
 	f = VfsFileDescriptorToFile(ft, fd);
 	if(!f)
     {
+        NX_ErrorSet(outErr, NX_ENORES);
 		return 0;
     }
 
@@ -1006,39 +1031,44 @@ NX_U64 NX_VfsRead(int fd, void * buf, NX_U64 len)
 	if(!n)
 	{
 		NX_MutexUnlock(&f->lock);
+        NX_ErrorSet(outErr, NX_EFAULT);
 		return 0;
 	}
 	if(n->type != NX_VFS_NODE_TYPE_REG)
 	{
 		NX_MutexUnlock(&f->lock);
+        NX_ErrorSet(outErr, NX_ENORES);
 		return 0;
 	}
 
 	if(!(f->flags & NX_VFS_O_RDONLY))
 	{
 		NX_MutexUnlock(&f->lock);
+        NX_ErrorSet(outErr, NX_EPERM);
 		return 0;
 	}
 
 	NX_MutexLock(&n->lock);
-	ret = n->mount->fs->read(n, f->offset, buf, len);
+	ret = n->mount->fs->read(n, f->offset, buf, len, &err);
 	NX_MutexUnlock(&n->lock);
-
 	f->offset += ret;
 	NX_MutexUnlock(&f->lock);
 
+    NX_ErrorSet(outErr, err);
 	return ret;
 }
 
-NX_U64 NX_VfsWrite(int fd, void * buf, NX_U64 len)
+NX_U64 NX_VfsWrite(int fd, void * buf, NX_U64 len, NX_Error *outErr)
 {
 	NX_VfsNode * n;
 	NX_VfsFile * f;
 	NX_U64 ret;
     NX_VfsFileTable *ft;
+    NX_Error err = NX_EOK;
 
 	if(!buf || !len)
     {
+        NX_ErrorSet(outErr, NX_EINVAL);
 		return 0;
     }
 
@@ -1046,6 +1076,7 @@ NX_U64 NX_VfsWrite(int fd, void * buf, NX_U64 len)
 	f = VfsFileDescriptorToFile(ft, fd);
 	if(!f)
     {
+        NX_ErrorSet(outErr, NX_ENORES);
 		return 0;
     }
 
@@ -1054,31 +1085,35 @@ NX_U64 NX_VfsWrite(int fd, void * buf, NX_U64 len)
 	if(!n)
 	{
 		NX_MutexUnlock(&f->lock);
+        NX_ErrorSet(outErr, NX_EFAULT);
 		return 0;
 	}
 	if(n->type != NX_VFS_NODE_TYPE_REG)
 	{
 		NX_MutexUnlock(&f->lock);
+        NX_ErrorSet(outErr, NX_ENORES);
 		return 0;
 	}
 
 	if(!(f->flags & NX_VFS_O_WRONLY))
 	{
 		NX_MutexUnlock(&f->lock);
+        NX_ErrorSet(outErr, NX_EPERM);
 		return 0;
 	}
 
 	NX_MutexLock(&n->lock);
-	ret = n->mount->fs->write(n, f->offset, buf, len);
+	ret = n->mount->fs->write(n, f->offset, buf, len, &err);
 	NX_MutexUnlock(&n->lock);
 
 	f->offset += ret;
 	NX_MutexUnlock(&f->lock);
 
+    NX_ErrorSet(outErr, err);
 	return ret;
 }
 
-NX_I64 NX_VfsFileSeek(int fd, NX_I64 off, int whence)
+NX_I64 NX_VfsFileSeek(int fd, NX_I64 off, int whence, NX_Error *outErr)
 {
 	NX_VfsNode * n;
 	NX_VfsFile * f;
@@ -1089,6 +1124,7 @@ NX_I64 NX_VfsFileSeek(int fd, NX_I64 off, int whence)
 	f = VfsFileDescriptorToFile(ft, fd);
 	if(!f)
     {
+        NX_ErrorSet(outErr, NX_ENORES);
 		return 0;
     }
 
@@ -1097,6 +1133,7 @@ NX_I64 NX_VfsFileSeek(int fd, NX_I64 off, int whence)
 	if(!n)
 	{
 		NX_MutexUnlock(&f->lock);
+        NX_ErrorSet(outErr, NX_EPERM);
 		return 0;
 	}
 
@@ -1132,6 +1169,7 @@ NX_I64 NX_VfsFileSeek(int fd, NX_I64 off, int whence)
 		NX_MutexUnlock(&n->lock);
 		ret = f->offset;
 		NX_MutexUnlock(&f->lock);
+        NX_ErrorSet(outErr, NX_EINVAL);
 		return ret;
 	}
 
@@ -1144,21 +1182,22 @@ NX_I64 NX_VfsFileSeek(int fd, NX_I64 off, int whence)
 	ret = f->offset;
 	NX_MutexUnlock(&f->lock);
 
+    NX_ErrorSet(outErr, NX_EOK);
 	return ret;
 }
 
-int NX_VfsFileSync(int fd)
+NX_Error NX_VfsFileSync(int fd)
 {
 	NX_VfsNode * n;
 	NX_VfsFile * f;
-	int err;
+	NX_Error err;
     NX_VfsFileTable *ft;
     
     ft = VFS_GET_FILE_TABLE();
 	f = VfsFileDescriptorToFile(ft, fd);
 	if(!f)
     {
-		return -1;
+		return NX_ENORES;
     }
 
 	NX_MutexLock(&f->lock);
@@ -1166,12 +1205,12 @@ int NX_VfsFileSync(int fd)
 	if(!n)
 	{
 		NX_MutexUnlock(&f->lock);
-		return -1;
+		return NX_EFAULT;
 	}
 	if(!(f->flags & NX_VFS_O_WRONLY))
 	{
 		NX_MutexUnlock(&f->lock);
-		return -1;
+		return NX_EPERM;
 	}
 	NX_MutexLock(&n->lock);
 	err = n->mount->fs->sync(n);
@@ -1181,7 +1220,7 @@ int NX_VfsFileSync(int fd)
 	return err;
 }
 
-int NX_VfsFileChmod(int fd, NX_U32 mode)
+NX_Error NX_VfsFileChmod(int fd, NX_U32 mode)
 {
 	NX_VfsNode * n;
 	NX_VfsFile * f;
@@ -1192,7 +1231,7 @@ int NX_VfsFileChmod(int fd, NX_U32 mode)
 	f = VfsFileDescriptorToFile(ft, fd);
 	if(!f)
     {
-		return -1;
+		return NX_ENORES;
     }
 
 	NX_MutexLock(&f->lock);
@@ -1200,7 +1239,7 @@ int NX_VfsFileChmod(int fd, NX_U32 mode)
 	if(!n)
 	{
 		NX_MutexUnlock(&f->lock);
-		return -1;
+		return NX_EFAULT;
 	}
 	mode &= (NX_VFS_S_IRWXU | NX_VFS_S_IRWXG | NX_VFS_S_IRWXO);
 	NX_MutexLock(&n->lock);
@@ -1211,23 +1250,23 @@ int NX_VfsFileChmod(int fd, NX_U32 mode)
 	return err;
 }
 
-int NX_VfsFileStat(int fd, NX_VfsStatInfo * st)
+NX_Error NX_VfsFileStat(int fd, NX_VfsStatInfo * st)
 {
 	NX_VfsNode * n;
 	NX_VfsFile * f;
-	int err;
+	NX_Error err;
     NX_VfsFileTable *ft;
     
 	if(!st)
     {
-		return -1;
+		return NX_EINVAL;
     }
 
     ft = VFS_GET_FILE_TABLE();
 	f = VfsFileDescriptorToFile(ft, fd);
 	if(!f)
     {
-		return -1;
+		return NX_ENORES;
     }
 
 	NX_MutexLock(&f->lock);
@@ -1235,7 +1274,7 @@ int NX_VfsFileStat(int fd, NX_VfsStatInfo * st)
 	if(!n)
 	{
 		NX_MutexUnlock(&f->lock);
-		return -1;
+		return NX_EFAULT;
 	}
 	err = VfsNodeStat(n, st);
 	NX_MutexUnlock(&f->lock);
@@ -1243,20 +1282,23 @@ int NX_VfsFileStat(int fd, NX_VfsStatInfo * st)
 	return err;
 }
 
-int NX_VfsOpenDir(const char * name)
+int NX_VfsOpenDir(const char * name, NX_Error *outErr)
 {
 	NX_VfsNode * n;
 	NX_VfsFile * f;
 	int fd;
     NX_VfsFileTable *ft;
+    NX_Error err = NX_EOK;
     
 	if(!name)
     {
+        NX_ErrorSet(outErr, NX_EINVAL);
 		return -1;
     }
 
-	if((fd = NX_VfsOpen(name, NX_VFS_O_RDONLY, 0)) < 0)
+	if((fd = NX_VfsOpen(name, NX_VFS_O_RDONLY, 0, &err)) < 0)
     {
+        NX_ErrorSet(outErr, err);
 		return fd;
     }
 
@@ -1264,6 +1306,7 @@ int NX_VfsOpenDir(const char * name)
 	f = VfsFileDescriptorToFile(ft, fd);
 	if(!f)
     {
+        NX_ErrorSet(outErr, NX_ENORES);
 		return -1;
     }
 
@@ -1272,6 +1315,7 @@ int NX_VfsOpenDir(const char * name)
 	if(!n)
 	{
 		NX_MutexUnlock(&f->lock);
+        NX_ErrorSet(outErr, NX_EFAULT);
 		return -1;
 	}
 
@@ -1279,14 +1323,16 @@ int NX_VfsOpenDir(const char * name)
 	{
 		NX_MutexUnlock(&f->lock);
 		NX_VfsClose(fd);
+        NX_ErrorSet(outErr, NX_ENORES);
 		return -1;
 	}
 	NX_MutexUnlock(&f->lock);
 
+    NX_ErrorSet(outErr, NX_EOK);
 	return fd;
 }
 
-int NX_VfsCloseDir(int fd)
+NX_Error NX_VfsCloseDir(int fd)
 {
 	NX_VfsNode * n;
 	NX_VfsFile * f;
@@ -1296,7 +1342,7 @@ int NX_VfsCloseDir(int fd)
 	f = VfsFileDescriptorToFile(ft, fd);
 	if(!f)
     {
-		return -1;
+		return NX_ENORES;
     }
 
 	NX_MutexLock(&f->lock);
@@ -1304,36 +1350,36 @@ int NX_VfsCloseDir(int fd)
 	if(!n)
 	{
 		NX_MutexUnlock(&f->lock);
-		return -1;
+		return NX_EFAULT;
 	}
 
 	if(n->type != NX_VFS_NODE_TYPE_DIR)
 	{
 		NX_MutexUnlock(&f->lock);
-		return -1;
+		return NX_ENORES;
 	}
 	NX_MutexUnlock(&f->lock);
 
 	return NX_VfsClose(fd);
 }
 
-int NX_VfsReadDir(int fd, NX_VfsDirent * dir)
+NX_Error NX_VfsReadDir(int fd, NX_VfsDirent * dir)
 {
 	NX_VfsNode * n;
 	NX_VfsFile * f;
-	int err;
+	NX_Error err;
     NX_VfsFileTable *ft;
     
 	if(!dir)
     {
-		return -1;
+		return NX_EINVAL;
     }
 
     ft = VFS_GET_FILE_TABLE();
 	f = VfsFileDescriptorToFile(ft, fd);
 	if(!f)
     {
-		return -1;
+		return NX_ENORES;
     }
 
 	NX_MutexLock(&f->lock);
@@ -1341,12 +1387,12 @@ int NX_VfsReadDir(int fd, NX_VfsDirent * dir)
 	if(!n)
 	{
 		NX_MutexUnlock(&f->lock);
-		return -1;
+		return NX_EFAULT;
 	}
 	if(n->type != NX_VFS_NODE_TYPE_DIR)
 	{
 		NX_MutexUnlock(&f->lock);
-		return -1;
+		return NX_ENORES;
 	}
 	NX_MutexLock(&n->lock);
 	err = n->mount->fs->readdir(n, f->offset, dir);
@@ -1360,7 +1406,7 @@ int NX_VfsReadDir(int fd, NX_VfsDirent * dir)
 	return err;
 }
 
-int NX_VfsRewindDir(int fd)
+NX_Error NX_VfsRewindDir(int fd)
 {
 	NX_VfsNode * n;
 	NX_VfsFile * f;
@@ -1370,7 +1416,7 @@ int NX_VfsRewindDir(int fd)
 	f = VfsFileDescriptorToFile(ft, fd);
 	if(!f)
     {
-		return -1;
+		return NX_ENORES;
     }
 
 	NX_MutexLock(&f->lock);
@@ -1378,12 +1424,12 @@ int NX_VfsRewindDir(int fd)
 	if(!n)
 	{
 		NX_MutexUnlock(&f->lock);
-		return -1;
+		return NX_EFAULT;
 	}
 	if(n->type != NX_VFS_NODE_TYPE_DIR)
 	{
 		NX_MutexUnlock(&f->lock);
-		return -1;
+		return NX_ENORES;
 	}
 	f->offset = 0;
 	NX_MutexUnlock(&f->lock);
@@ -1391,32 +1437,32 @@ int NX_VfsRewindDir(int fd)
 	return 0;
 }
 
-int NX_VfsMakeDir(const char * path, NX_U32 mode)
+NX_Error NX_VfsMakeDir(const char * path, NX_U32 mode)
 {
 	NX_VfsNode * n, * dn;
 	char * name;
-	int err;
+	NX_Error err;
 
 	if(!path)
     {
-		return -1;
+		return NX_EINVAL;
     }
 
-	if(!(err = VfsNodeAcquire(path, &n)))
+	if(!VfsNodeAcquire(path, &n))
 	{
 		VfsNodeRelease(n);
-		return -1;
+		return NX_EAGAIN;
 	}
 
 	if((err = VfsLookupDir(path, &dn, &name)))
     {
-		return err;
+		return NX_ENOSRCH;
     }
 
 	if((err = VfsNodeAccess(dn, NX_VFS_W_OK)))
 	{
 		VfsNodeRelease(dn);
-		return err;
+		return NX_EPERM;
 	}
 
 	mode &= ~NX_VFS_S_IFMT;
@@ -1438,21 +1484,22 @@ fail:
 	return err;
 }
 
-NX_PRIVATE int vfs_check_dir_empty(const char * path)
+NX_PRIVATE NX_Error VfsCheckDirEmpty(const char * path)
 {
 	NX_VfsDirent dir;
-	int err, fd, count;
+	NX_Error err;
+    int fd, count;
 
-	if((fd = NX_VfsOpenDir(path)) < 0)
+	if((fd = NX_VfsOpenDir(path, &err)) < 0)
     {
-		return fd;
+		return err;
     }
 
 	count = 0;
 	do
 	{
 		err = NX_VfsReadDir(fd, &dir);
-		if(err)
+		if(err != NX_EOK)
         {
 			break;
         }
@@ -1469,62 +1516,62 @@ NX_PRIVATE int vfs_check_dir_empty(const char * path)
 	NX_VfsCloseDir(fd);
 	if(count)
     {
-		return -1;
+		return NX_EAGAIN;
     }
 
-	return 0;
+	return NX_EOK;
 }
 
-int NX_VfsRemoveDir(const char * path)
+NX_Error NX_VfsRemoveDir(const char * path)
 {
 	NX_VfsNode * n, * dn;
 	char * name;
-	int err;
+	NX_Error err;
 
 	if(!path)
     {
-		return -1;
+		return NX_EINVAL;
     }
 
-	if((err = vfs_check_dir_empty(path)))
+	if((err = VfsCheckDirEmpty(path)) != NX_EOK)
     {
 		return err;
     }
 
-	if((err = VfsNodeAcquire(path, &n)))
+	if(VfsNodeAcquire(path, &n))
     {
-		return err;
+		return NX_ENORES;
     }
 
 	if((n->flags == NX_VFS_NODE_FLAG_ROOT) || (NX_AtomicGet(&n->refcnt) >= 2))
 	{
 		VfsNodeRelease(n);
-		return -1;
+		return NX_EBUSY;
 	}
 
-	if((err = VfsNodeAccess(n, NX_VFS_W_OK)))
+	if(VfsNodeAccess(n, NX_VFS_W_OK))
 	{
 		VfsNodeRelease(n);
-		return err;
+		return NX_EPERM;
 	}
 
-	if((err = VfsLookupDir(path, &dn, &name)))
+	if(VfsLookupDir(path, &dn, &name))
 	{
 		VfsNodeRelease(n);
-		return err;
+		return NX_ENOSRCH;
 	}
 
 	NX_MutexLock(&dn->lock);
 	NX_MutexLock(&n->lock);
 
 	err = dn->mount->fs->rmdir(dn, n, name);
-	if(err)
+	if(err != NX_EOK)
     {
 		goto fail;
     }
 
 	err = n->mount->fs->sync(n);
-	if(err)
+	if(err != NX_EOK)
     {
 		goto fail;
     }
@@ -1539,65 +1586,68 @@ fail:
 	return err;
 }
 
-int NX_VfsRename(const char * src, const char * dst)
+NX_Error NX_VfsRename(const char * src, const char * dst)
 {
 	NX_VfsNode * n1, * n2, * sn, * dn;
 	char * sname, * dname;
-	int err, len;
+	int len;
+    NX_Error err;
 
 	if(!NX_StrCmpN(src, dst, NX_VFS_MAX_PATH))
     {
-		return -1;
+		return NX_EINVAL;
     }
 
 	if(!NX_StrCmp(src, "/"))
     {
-		return -1;
+		return NX_EINVAL;
     }
 
 	len = NX_StrLen(src);
 	if((len < NX_StrLen(dst)) && !NX_StrCmpN(src, dst, len) && (dst[len] == '/'))
     {
-		return -1;
+		return NX_EINVAL;
     }
 
-	if((err = VfsNodeAcquire(src, &n1)))
+	if(VfsNodeAcquire(src, &n1))
     {
-		return err;
+		return NX_ENORES;
     }
 
-	if((err = VfsNodeAccess(n1, NX_VFS_W_OK)))
+	if(VfsNodeAccess(n1, NX_VFS_W_OK))
     {
+		err = NX_EPERM;
 		goto fail1;
     }
 
 	if(NX_AtomicGet(&n1->refcnt) >= 2)
 	{
-		err = -1;
+		err = NX_EBUSY;
 		goto fail1;
 	}
 
-	if((err = VfsLookupDir(src, &sn, &sname)))
+	if(VfsLookupDir(src, &sn, &sname))
     {
+        err = NX_ENOSRCH;
 		goto fail1;
     }
 
-	err = VfsNodeAcquire(dst, &n2);
-	if(!err)
+	if(!VfsNodeAcquire(dst, &n2))
 	{
 		VfsNodeRelease(n2);
-		err = -1;
+		err = NX_EBUSY;
 		goto fail2;
 	}
 
-	if((err = VfsLookupDir(dst, &dn, &dname)))
+	if(VfsLookupDir(dst, &dn, &dname))
     {
+        err = NX_ENOSRCH;
 		goto fail2;
     }
 
 	if(sn->mount != dn->mount)
 	{
-		err = -1;
+        err = NX_EFAULT;
 		goto fail3;
 	}
 
@@ -1643,44 +1693,44 @@ fail1:
 	return err;
 }
 
-int NX_VfsUnlink(const char * path)
+NX_Error NX_VfsUnlink(const char * path)
 {
 	NX_VfsNode * n, * dn;
 	char * name;
-	int err;
+	NX_Error err;
 
 	if(!path)
     {
-		return -1;
+		return NX_EINVAL;
     }
 
-	if((err = VfsNodeAcquire(path, &n)))
+	if(VfsNodeAcquire(path, &n))
     {
-		return err;
+		return NX_ENOSRCH;
     }
 
 	if(n->type == NX_VFS_NODE_TYPE_DIR)
 	{
 		VfsNodeRelease(n);
-		return -1;
+		return NX_ENORES;
 	}
 
 	if((n->flags == NX_VFS_NODE_FLAG_ROOT) || (NX_AtomicGet(&n->refcnt) >= 2))
 	{
 		VfsNodeRelease(n);
-		return -1;
+		return NX_EBUSY;
 	}
 
-	if((err = VfsNodeAccess(n, NX_VFS_W_OK)))
+	if(VfsNodeAccess(n, NX_VFS_W_OK))
 	{
 		VfsNodeRelease(n);
-		return err;
+		return NX_EPERM;
 	}
 
-	if((err = VfsLookupDir(path, &dn, &name)))
+	if(VfsLookupDir(path, &dn, &name))
 	{
 		VfsNodeRelease(n);
-		return err;
+		return NX_ENOSRCH;
 	}
 
 	NX_MutexLock(&n->lock);
@@ -1714,40 +1764,44 @@ fail1:
 	return err;
 }
 
-int NX_VfsAccess(const char * path, NX_U32 mode)
+NX_Error NX_VfsAccess(const char * path, NX_U32 mode)
 {
 	NX_VfsNode * n;
-	int err;
+	NX_Error err = NX_EOK;
 
 	if(!path)
     {
-		return -1;
+		return NX_EINVAL;
     }
 
-	if((err = VfsNodeAcquire(path, &n)))
+	if(VfsNodeAcquire(path, &n))
     {
-		return err;
+		return NX_ENOSRCH;
     }
 
-	err = VfsNodeAccess(n, mode);
-	VfsNodeRelease(n);
+	if (VfsNodeAccess(n, mode))
+    {
+        err = NX_EPERM;
+    }
+	
+    VfsNodeRelease(n);
 
 	return err;
 }
 
-int NX_VfsChmod(const char * path, NX_U32 mode)
+NX_Error NX_VfsChmod(const char * path, NX_U32 mode)
 {
 	NX_VfsNode * n;
-	int err;
+	NX_Error err;
 
 	if(!path)
     {
-		return -1;
+		return NX_EINVAL;
     }
 
-	if((err = VfsNodeAcquire(path, &n)))
+	if(VfsNodeAcquire(path, &n))
     {
-		return err;
+		return NX_ENOSRCH;
     }
 
 	mode &= (NX_VFS_S_IRWXU | NX_VFS_S_IRWXG | NX_VFS_S_IRWXO);
@@ -1767,19 +1821,19 @@ fail:
 	return err;
 }
 
-int NX_VfsStat(const char * path, NX_VfsStatInfo * st)
+NX_Error NX_VfsStat(const char * path, NX_VfsStatInfo * st)
 {
 	NX_VfsNode * n;
-	int err;
+	NX_Error err = NX_EOK;
 
 	if(!path || !st)
     {
-		return -1;
+		return NX_EINVAL;
     }
 
-	if((err = VfsNodeAcquire(path, &n)))
+	if(VfsNodeAcquire(path, &n))
     {
-		return err;
+		return NX_ENOSRCH;
     }
 	err = VfsNodeStat(n, st);
 	VfsNodeRelease(n);

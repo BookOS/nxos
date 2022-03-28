@@ -156,7 +156,6 @@ NX_PRIVATE NX_Error NX_LoadCheckMachine(NX_U16 machineType)
 NX_PRIVATE NX_Error NX_LoadCheck(char *path, int fd, NX_Size len, NX_Vmspace *space, Elf_Ehdr *elfHeader)
 {
     NX_U8 elfMagic[SELFMAG];
-    
     if (len < sizeof(Elf_Ehdr))
     {
         NX_LOG_E("file %s too small.", path);
@@ -164,12 +163,12 @@ NX_PRIVATE NX_Error NX_LoadCheck(char *path, int fd, NX_Size len, NX_Vmspace *sp
     }
 
     /* check elf magic */
-    if (NX_VfsFileSeek(fd, 0, NX_VFS_SEEK_SET) != 0)
+    if (NX_VfsFileSeek(fd, 0, NX_VFS_SEEK_SET, NX_NULL) != 0)
     {
         return NX_EFAULT;
     }
 
-    if (NX_VfsRead(fd, elfMagic, sizeof(elfMagic)) != sizeof(elfMagic))
+    if (NX_VfsRead(fd, elfMagic, sizeof(elfMagic), NX_NULL) != sizeof(elfMagic))
     {
         return NX_EIO;
     }
@@ -182,11 +181,11 @@ NX_PRIVATE NX_Error NX_LoadCheck(char *path, int fd, NX_Size len, NX_Vmspace *sp
     }
 
     /* load header */
-    if (NX_VfsFileSeek(fd, 0, NX_ROMFS_SEEK_SET) != 0)
+    if (NX_VfsFileSeek(fd, 0, NX_ROMFS_SEEK_SET, NX_NULL) != 0)
     {
         return NX_EFAULT;
     }
-    if (NX_VfsRead(fd, elfHeader, sizeof(Elf_Ehdr)) != sizeof(Elf_Ehdr))
+    if (NX_VfsRead(fd, elfHeader, sizeof(Elf_Ehdr), NX_NULL) != sizeof(Elf_Ehdr))
     {
         return NX_EIO;
     }
@@ -247,11 +246,11 @@ NX_PRIVATE NX_Error NX_LoadMapUserSpace(int fd, NX_Size len, NX_Vmspace *space, 
             return NX_EFAULT;
         }
 
-        if (NX_VfsFileSeek(fd, off, NX_ROMFS_SEEK_SET) != off)
+        if (NX_VfsFileSeek(fd, off, NX_ROMFS_SEEK_SET, NX_NULL) != off)
         {
             return NX_EFAULT;
         }
-        if (NX_VfsRead(fd, &progHeader, sizeof(progHeader)) != sizeof(progHeader))
+        if (NX_VfsRead(fd, &progHeader, sizeof(progHeader), NX_NULL) != sizeof(progHeader))
         {
             return NX_EIO;
         }
@@ -302,11 +301,11 @@ NX_PRIVATE NX_Error NX_LoadFileData(int fd, NX_Size len, NX_Vmspace *space, Elf_
         }
 
         /* read program header */
-        if (NX_VfsFileSeek(fd, progOff, NX_ROMFS_SEEK_SET) != progOff)
+        if (NX_VfsFileSeek(fd, progOff, NX_ROMFS_SEEK_SET, NX_NULL) != progOff)
         {
             return NX_EFAULT;
         }
-        if (NX_VfsRead(fd, &progHeader, sizeof(progHeader)) != sizeof(progHeader))
+        if (NX_VfsRead(fd, &progHeader, sizeof(progHeader), NX_NULL) != sizeof(progHeader))
         {
             return NX_EIO;
         }
@@ -325,7 +324,7 @@ NX_PRIVATE NX_Error NX_LoadFileData(int fd, NX_Size len, NX_Vmspace *space, Elf_
                 return NX_ERROR;
             }
 
-            if (NX_VfsFileSeek(fd, progHeader.p_offset, NX_ROMFS_SEEK_SET) != progHeader.p_offset)
+            if (NX_VfsFileSeek(fd, progHeader.p_offset, NX_ROMFS_SEEK_SET, NX_NULL) != progHeader.p_offset)
             {
                 return NX_EIO;
             }
@@ -342,7 +341,7 @@ NX_PRIVATE NX_Error NX_LoadFileData(int fd, NX_Size len, NX_Vmspace *space, Elf_
 
                 chunk = (size < NX_PAGE_SIZE) ? size : NX_PAGE_SIZE;
 
-                if (NX_VfsRead(fd, (void *)vaddrSelf, chunk) != chunk)
+                if (NX_VfsRead(fd, (void *)vaddrSelf, chunk, NX_NULL) != chunk)
                 {
                     return NX_EIO;
                 }
@@ -437,27 +436,27 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
 {
     NX_ASSERT(process->vmspace.mmu.table);
     int fd;
-    NX_Error err;
+    NX_Error err = NX_EOK;
     NX_Offset len;
     NX_Size imageMaxSize;
     NX_Vmspace *space;
 
-    fd = NX_VfsOpen(path, NX_VFS_O_RDONLY, 0);
+    fd = NX_VfsOpen(path, NX_VFS_O_RDONLY, 0, &err);
     if (fd < NX_EOK)
     {
-        NX_LOG_E("process open file %s failed !", path);
+        NX_LOG_E("process open file %s failed ! with error %s", path, NX_ErrorToString(err));
         return NX_ENOSRCH;
     }
 
-    len = NX_VfsFileSeek(fd, 0, NX_VFS_SEEK_END);
-    if (!len)
+    len = NX_VfsFileSeek(fd, 0, NX_VFS_SEEK_END, &err);
+    if (!len || err != NX_EOK)
     {
         NX_LOG_E("file %s too small !", path);
         NX_VfsClose(fd);
         return NX_ENOSRCH;
     }
 
-    if (NX_VfsFileSeek(fd, 0, NX_VFS_SEEK_SET) != 0)
+    if (NX_VfsFileSeek(fd, 0, NX_VFS_SEEK_SET, NX_NULL) != 0)
     {
         NX_LOG_E("seek file %s failed !", path);
         NX_VfsClose(fd);

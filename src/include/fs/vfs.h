@@ -197,24 +197,24 @@ typedef struct NX_VfsFileSystem
 	NX_List list;
 	const char * name;
 
-	int (*mount)(NX_VfsMount *, const char *);
-	int (*unmount)(NX_VfsMount *);
-	int (*msync)(NX_VfsMount *);
-	int (*vget)(NX_VfsMount *, NX_VfsNode *);
-	int (*vput)(NX_VfsMount *, NX_VfsNode *);
+	NX_Error (*mount)(NX_VfsMount *, const char *);
+	NX_Error (*unmount)(NX_VfsMount *);
+	NX_Error (*msync)(NX_VfsMount *);
+	NX_Error (*vget)(NX_VfsMount *, NX_VfsNode *);
+	NX_Error (*vput)(NX_VfsMount *, NX_VfsNode *);
 
-	NX_U64 (*read)(NX_VfsNode *, NX_I64, void *, NX_U64);
-	NX_U64 (*write)(NX_VfsNode *, NX_I64, void *, NX_U64);
-	int (*truncate)(NX_VfsNode *, NX_I64);
-	int (*sync)(NX_VfsNode *);
-	int (*readdir)(NX_VfsNode *, NX_I64, NX_VfsDirent *);
-	int (*lookup)(NX_VfsNode *, const char *, NX_VfsNode *);
-	int (*create)(NX_VfsNode *, const char *, NX_U32);
-	int (*remove)(NX_VfsNode *, NX_VfsNode *, const char *);
-	int (*rename)(NX_VfsNode *, const char *, NX_VfsNode *, NX_VfsNode *, const char *);
-	int (*mkdir)(NX_VfsNode *, const char *, NX_U32);
-	int (*rmdir)(NX_VfsNode *, NX_VfsNode *, const char *);
-	int (*chmod)(NX_VfsNode *, NX_U32);
+	NX_U64 (*read)(NX_VfsNode *, NX_I64, void *, NX_U64, NX_Error *outErr);
+	NX_U64 (*write)(NX_VfsNode *, NX_I64, void *, NX_U64, NX_Error *outErr);
+	NX_Error (*truncate)(NX_VfsNode *, NX_I64);
+	NX_Error (*sync)(NX_VfsNode *);
+	NX_Error (*readdir)(NX_VfsNode *, NX_I64, NX_VfsDirent *);
+	NX_Error (*lookup)(NX_VfsNode *, const char *, NX_VfsNode *);
+	NX_Error (*create)(NX_VfsNode *, const char *, NX_U32);
+	NX_Error (*remove)(NX_VfsNode *, NX_VfsNode *, const char *);
+	NX_Error (*rename)(NX_VfsNode *, const char *, NX_VfsNode *, NX_VfsNode *, const char *);
+	NX_Error (*mkdir)(NX_VfsNode *, const char *, NX_U32);
+	NX_Error (*rmdir)(NX_VfsNode *, NX_VfsNode *, const char *);
+	NX_Error (*chmod)(NX_VfsNode *, NX_U32);
 } NX_VfsFileSystem;
 
 NX_VfsFileSystem * NX_VfsSearchFileSystem(const char * name);
