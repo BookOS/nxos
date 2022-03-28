@@ -1,3 +1,0 @@
-config NX_FILE_SYSTEM_ROMFS
-    bool "Enable rom file system"
-    default n
