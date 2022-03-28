@@ -77,6 +77,15 @@ SECTIONS
     /* data segment */
     . = ALIGN(8);
     __NX_DataStart = .;
+
+	.romdisk ALIGN(8) :
+	{
+		PROVIDE(__NX_RomdiskStart = .);
+		KEEP(*(.romdisk))
+		PROVIDE(__NX_RomdiskEnd = .);
+	}
+    . = ALIGN(8);
+    
     .data :
     {
         *(.data)
