@@ -7,6 +7,7 @@
  * Change Logs:
  * Date           Author            Notes
  * 2021-10-25     JasonHu           Update code style
+ * 2022-3-29      JasonHu           fix bug on heap alloc
  */
 
 #include <mm/heap_cache.h>
@@ -365,7 +366,7 @@ void *NX_HeapAlloc(NX_Size size)
     NX_MutexLock(&cache->lock);
     if (NX_ListEmpty(&cache->objectFreeList)) /* no object, need alloc from page cache */
     {
-        if (AllocSpan(cache, pageCount, objectCount, size) != NX_EOK)
+        if (AllocSpan(cache, pageCount, objectCount, cache->classSize) != NX_EOK)
         {
             NX_MutexUnlock(&cache->lock);
             return NX_NULL;
@@ -385,7 +386,7 @@ void *NX_HeapAlloc(NX_Size size)
     else
     {
         /* alloc from small cache */
-        memObject = AllocSmallObject(cache, pageCount, objectCount, size);
+        memObject = AllocSmallObject(cache, pageCount, objectCount, cache->classSize);
     }
     NX_MutexUnlock(&cache->lock);
     return (void *)memObject;
