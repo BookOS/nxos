@@ -1,0 +1,17 @@
+source "$NXOS_SRC_DIR/fs/cpio/Kconfig"
+
+config NX_VFS_MAX_PATH
+    int "vfs max path length" 
+    default 512
+
+config NX_VFS_MAX_NAME
+    int "vfs max name length" 
+    default 256
+
+config NX_VFS_MAX_FD
+    int "vfs max file descriptor number" 
+    default 256
+
+config NX_VFS_NODE_HASH_SIZE
+    int "vfs max node hash list size" 
+    default 256

@@ -22,10 +22,29 @@
 #include <xbook/atomic.h>
 #include <utils/list.h>
 
+#ifdef CONFIG_NX_VFS_MAX_PATH 
+#define NX_VFS_MAX_PATH CONFIG_NX_VFS_MAX_PATH
+#else
 #define NX_VFS_MAX_PATH		    (1024)
-#define	NX_VFS_MAX_NAME		    (256)
-#define NX_VFS_MAX_FD			(256)
-#define NX_VFS_NODE_HASH_SIZE	(256)
+#endif
+
+#ifdef CONFIG_NX_VFS_MAX_NAME
+#define NX_VFS_MAX_NAME CONFIG_NX_VFS_MAX_NAME
+#else
+#define NX_VFS_MAX_NAME		    (256)
+#endif
+
+#ifdef CONFIG_NX_VFS_MAX_FD
+#define NX_VFS_MAX_FD CONFIG_NX_VFS_MAX_FD
+#else
+#define NX_VFS_MAX_FD		    (256)
+#endif
+
+#ifdef CONFIG_NX_VFS_NODE_HASH_SIZE
+#define NX_VFS_NODE_HASH_SIZE CONFIG_NX_VFS_NODE_HASH_SIZE
+#else
+#define NX_VFS_NODE_HASH_SIZE   (256)
+#endif
 
 #define NX_VFS_O_RDONLY			(1 << 0)
 #define NX_VFS_O_WRONLY			(1 << 1)

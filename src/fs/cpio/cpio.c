@@ -15,6 +15,9 @@
  */
 
 #include <xbook.h>
+
+#ifdef CONFIG_NX_FS_CPIO
+
 #include <fs/vfs.h>
 #include <utils/string.h>
 #include <utils/memory.h>
@@ -528,3 +531,5 @@ NX_PRIVATE void NX_FileSystemCpioExit(void)
 
 NX_FS_INIT(NX_FileSystemCpioInit);
 NX_FS_EXIT(NX_FileSystemCpioExit);
+
+#endif
