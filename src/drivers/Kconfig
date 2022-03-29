@@ -1,4 +1,5 @@
 source "$NXOS_SRC_DIR/drivers/console/Kconfig"
+source "$NXOS_SRC_DIR/drivers/block/Kconfig"
 
 config NX_DRIVER_DUMMY
     bool "Enable dummy device"

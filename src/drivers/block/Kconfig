@@ -1,0 +1,8 @@
+config NX_DRIVER_ROMDISK
+    bool "Enable romdisk device"
+    default n
+if NX_DRIVER_ROMDISK
+    config NX_DRIVER_ROMDISK_HOSTOS_PATH
+        string "Romdisk file on hostos"
+        default "../../romdisk.cpio"
+endif

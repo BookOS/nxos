@@ -13,6 +13,8 @@
 #include <io/block.h>
 #include <utils/memory.h>
 
+#ifdef CONFIG_NX_DRIVER_ROMDISK
+
 #define NX_LOG_NAME "romdisk driver"
 #include <utils/log.h>
 
@@ -97,3 +99,5 @@ NX_PRIVATE void RomdiskDriverExit(void)
 
 NX_DRV_INIT(RomdiskDriverInit);
 NX_DRV_EXIT(RomdiskDriverExit);
+
+#endif

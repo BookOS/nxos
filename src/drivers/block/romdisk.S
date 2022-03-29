@@ -9,5 +9,12 @@
  * 2022-3-21      JasonHu           Init
  */
 
+#define __ASSEMBLY__
+#include <xbook.h>
+
+#ifdef CONFIG_NX_DRIVER_ROMDISK
+
 .section .romdisk, "a"
-.incbin "../../romdisk.cpio" /* from root dir */
+.incbin CONFIG_NX_DRIVER_ROMDISK_HOSTOS_PATH /* path from current dir */
+
+#endif
