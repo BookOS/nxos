@@ -86,7 +86,7 @@ SECTIONS
 
     . = ALIGN(8);
     
-    .data:
+    .data :
     {
         *(.data)
         *(.data.*)
