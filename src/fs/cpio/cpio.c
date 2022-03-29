@@ -2,11 +2,12 @@
  * Copyright (c) 2018-2022, NXOS Development Team
  * SPDX-License-Identifier: Apache-2.0
  * 
- * Contains: virtual file system form xboot.
- *          Copyright(c) 2007-2022 Jianjun Jiang <8192542@qq.com>
+ * Copyright(c) 2007-2022 Jianjun Jiang <8192542@qq.com>
  *          Official site: http://xboot.org
  *          Mobile phone: +86-18665388956
  *          QQ: 8192542
+ * 
+ * Contains: virtual file system form xboot.
  * 
  * Change Logs:
  * Date           Author            Notes
