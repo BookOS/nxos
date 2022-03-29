@@ -353,11 +353,13 @@ void *NX_HeapAlloc(NX_Size size)
         else    /* alloc from middle cache */
         {
             cache = &MiddleSizeCache;
+            size = MAX_MIDDLE_OBJECT_SIZE; /* modify size to middle object size */
         }
     }
     else
     {
         cache = SizeToCache(size);
+        size = cache->classSize; /* modify size to class size */
     }
     NX_ASSERT(cache != NX_NULL);
     
@@ -366,7 +368,7 @@ void *NX_HeapAlloc(NX_Size size)
     NX_MutexLock(&cache->lock);
     if (NX_ListEmpty(&cache->objectFreeList)) /* no object, need alloc from page cache */
     {
-        if (AllocSpan(cache, pageCount, objectCount, cache->classSize) != NX_EOK)
+        if (AllocSpan(cache, pageCount, objectCount, size) != NX_EOK)
         {
             NX_MutexUnlock(&cache->lock);
             return NX_NULL;
@@ -386,7 +388,7 @@ void *NX_HeapAlloc(NX_Size size)
     else
     {
         /* alloc from small cache */
-        memObject = AllocSmallObject(cache, pageCount, objectCount, cache->classSize);
+        memObject = AllocSmallObject(cache, pageCount, objectCount, size);
     }
     NX_MutexUnlock(&cache->lock);
     return (void *)memObject;
