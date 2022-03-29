@@ -29,6 +29,7 @@ enum NX_Error
     NX_ENOFUNC, /* no function */
     NX_ENOSRCH, /* no search/found */
     NX_EIO,     /* mmio/portio */
+    NX_EBUSY,   /* device or resource busy */
     NX_ERROR_NR
 };
 typedef enum NX_Error NX_Error;
@@ -47,7 +48,8 @@ NX_PRIVATE const char *__NX_ErrorString[] =
     "no enough memory",
     "no function",
     "no search/found",
-    "mmio/portio failed"
+    "mmio/portio failed",
+    "device or resource busy"
 };
 
 NX_INLINE const char *NX_ErrorToString(NX_Error err)
@@ -58,5 +60,13 @@ NX_INLINE const char *NX_ErrorToString(NX_Error err)
     }
     return __NX_ErrorString[err];
 }
+
+#define NX_ErrorSet(errPtr, errVal) \
+    do { \
+        if (errPtr) \
+        { \
+            *(errPtr) = errVal; \
+        } \
+    } while(0)
 
 #endif  /* __XBOOK_ERROR__ */

@@ -69,6 +69,7 @@ NX_PRIVATE NX_Error ThreadInit(NX_Thread *thread,
 
     thread->resource.sleepTimer = NX_NULL;
     thread->resource.process = NX_NULL;
+    thread->resource.fileTable = NX_VfsGetDefaultFileTable();
 
     NX_SpinInit(&thread->lock);
     return NX_EOK;

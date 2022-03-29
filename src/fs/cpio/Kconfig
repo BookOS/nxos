@@ -1,0 +1,4 @@
+config NX_FS_CPIO
+    bool "Enable cpio file system"
+    select NX_DRIVER_ROMDISK
+    default n

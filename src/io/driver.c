@@ -21,7 +21,7 @@
 NX_PRIVATE NX_LIST_HEAD(DriverListHead);
 NX_PRIVATE NX_SPIN_DEFINE_UNLOCKED(DriverLock);
 
-NX_Driver *NX_DriverCreate(char *name, NX_DeviceType type, NX_U32 flags, NX_DriverOps *ops)
+NX_Driver *NX_DriverCreate(const char *name, NX_DeviceType type, NX_U32 flags, NX_DriverOps *ops)
 {
     if (name == NX_NULL || !ops)
     {
@@ -97,7 +97,7 @@ NX_Error NX_DriverUnregister(NX_Driver *driver)
     return NX_EOK;
 }
 
-NX_Driver *NX_DriverSearch(char *name)
+NX_Driver *NX_DriverSearch(const char *name)
 {
     if (!name)
     {
@@ -118,7 +118,7 @@ NX_Driver *NX_DriverSearch(char *name)
     return NX_NULL;
 }
 
-NX_Error NX_DriverCleanup(char *name)
+NX_Error NX_DriverCleanup(const char *name)
 {
     if (!name)
     {
@@ -139,7 +139,7 @@ NX_Error NX_DriverCleanup(char *name)
     return NX_EOK;
 }
 
-NX_Device *NX_DeviceCreate(char *name)
+NX_Device *NX_DeviceCreate(const char *name)
 {
     if (name == NX_NULL)
     {
@@ -197,7 +197,7 @@ NX_PRIVATE NX_Error NX_DriverAttachDeviceObject(NX_Driver *driver, NX_Device *de
     return NX_EOK;
 }
 
-NX_PRIVATE NX_Error NX_DriverDetachDeviceObject(NX_Driver *driver, char *name, NX_Device **device)
+NX_PRIVATE NX_Error NX_DriverDetachDeviceObject(NX_Driver *driver, const char *name, NX_Device **device)
 {
     if (!driver || !name || !device)
     {
@@ -221,7 +221,7 @@ NX_PRIVATE NX_Error NX_DriverDetachDeviceObject(NX_Driver *driver, char *name, N
     return NX_ENOSRCH;
 }
 
-NX_Error NX_DriverAttachDevice(NX_Driver *driver, char *name, NX_Device **outDevice)
+NX_Error NX_DriverAttachDevice(NX_Driver *driver, const char *name, NX_Device **outDevice)
 {
     if (!driver || !name)
     {
@@ -239,7 +239,7 @@ NX_Error NX_DriverAttachDevice(NX_Driver *driver, char *name, NX_Device **outDev
     return NX_DriverAttachDeviceObject(driver, device);
 }
 
-NX_Error NX_DriverDetachDevice(NX_Driver *driver, char *name)
+NX_Error NX_DriverDetachDevice(NX_Driver *driver, const char *name)
 {
     if (!driver || !name)
     {
@@ -257,7 +257,7 @@ NX_Error NX_DriverDetachDevice(NX_Driver *driver, char *name)
     return NX_EOK;
 }
 
-NX_PRIVATE NX_Device *NX_DeviceSearchLocked(char *name)
+NX_PRIVATE NX_Device *NX_DeviceSearchLocked(const char *name)
 {
     NX_Device *device;
     NX_Driver *driver;
@@ -275,7 +275,7 @@ NX_PRIVATE NX_Device *NX_DeviceSearchLocked(char *name)
     return NX_NULL;
 }
 
-NX_Error NX_DeviceOpen(char *name, NX_U32 flags, NX_Device **outDevice)
+NX_Error NX_DeviceOpen(const char *name, NX_U32 flags, NX_Device **outDevice)
 {
     if (!name)
     {
@@ -441,6 +441,86 @@ NX_Error NX_DeviceWrite(NX_Device *device, void *buf, NX_Size len, NX_Size *outL
     return err;
 }
 
+NX_Error NX_DeviceReadEx(NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen)
+{
+    if (!device || !buf || !len)
+    {
+        return NX_EINVAL;
+    }
+
+    NX_Driver *driver = device->driver;
+    NX_ASSERT(driver);
+
+    NX_MutexLock(&device->lock);
+
+    NX_DriverOps *ops = driver->ops;
+    NX_Error err = NX_EOK;
+    if (ops)
+    {
+        if (ops->readEx)
+        {
+            NX_Size readLen;
+            err = ops->readEx(device, buf, off, len, &readLen);
+            if (err != NX_EOK)
+            {
+                NX_MutexUnlock(&device->lock);
+                return err;
+            }
+            if (outLen)
+            {
+                *outLen = readLen;
+            }
+        }
+        else
+        {
+            err = NX_ENOFUNC;
+        }
+
+    }
+
+    NX_MutexUnlock(&device->lock);
+    return err;
+}
+
+NX_Error NX_DeviceWriteEx(NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen)
+{
+    if (!device || !buf || !len)
+    {
+        return NX_EINVAL;
+    }
+
+    NX_Driver *driver = device->driver;
+    NX_ASSERT(driver);
+
+    NX_MutexLock(&device->lock);
+
+    NX_DriverOps *ops = driver->ops;
+    NX_Error err = NX_EOK;
+    if (ops)
+    {
+        if (ops->writeEx)
+        {
+            NX_Size writeLen;
+            err = ops->writeEx(device, buf, off, len, &writeLen);
+            if (err != NX_EOK)
+            {            
+                NX_MutexUnlock(&device->lock);
+                return err;
+            }
+            if (outLen)
+            {
+                *outLen = writeLen;
+            }
+        }
+        else
+        {
+            err = NX_ENOFUNC;
+        }
+    }
+    NX_MutexUnlock(&device->lock);
+    return err;
+}
+
 NX_Error NX_DeviceControl(NX_Device *device, NX_U32 cmd, void *arg)
 {
     if (!device)
@@ -475,7 +555,7 @@ NX_Error NX_DeviceControl(NX_Device *device, NX_U32 cmd, void *arg)
     return err;
 }
 
-NX_Device *NX_DeviceSearch(char *name)
+NX_Device *NX_DeviceSearch(const char *name)
 {
     NX_Device *device;
     NX_UArch level;
