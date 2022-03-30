@@ -63,3 +63,4 @@ dkms.conf
 fixdep
 init/rootfs.c
 build
+drivers/block/romdisk.S
