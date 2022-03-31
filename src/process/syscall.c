@@ -68,17 +68,20 @@ NX_PRIVATE NX_Error SysVfsClose(int fd)
     return NX_VfsClose(fd);
 }
 
-NX_PRIVATE NX_U64 SysVfsRead(int fd, void * buf, NX_U64 len, NX_Error *outErr)
+/* NOTICE: To compate 32 bit cpu, syscall need use NX_Size not NX_U64 */
+NX_PRIVATE NX_Size SysVfsRead(int fd, void * buf, NX_Size len, NX_Error *outErr)
 {
     return NX_VfsRead(fd, buf, len, outErr);
 }
 
-NX_PRIVATE NX_U64 SysVfsWrite(int fd, void * buf, NX_U64 len, NX_Error *outErr)
+/* NOTICE: To compate 32 bit cpu, syscall need use NX_Size not NX_U64 */
+NX_PRIVATE NX_Size SysVfsWrite(int fd, void * buf, NX_Size len, NX_Error *outErr)
 {
     return NX_VfsWrite(fd, buf, len, outErr);
 }
 
-NX_PRIVATE NX_I64 SysVfsFileSeek(int fd, NX_I64 off, int whence, NX_Error *outErr)
+/* NOTICE: To compate 32 bit cpu, syscall need use NX_Offset not NX_I64 */
+NX_PRIVATE NX_Offset SysVfsFileSeek(int fd, NX_Offset off, int whence, NX_Error *outErr)
 {
     return NX_VfsFileSeek(fd, off, whence, outErr);
 }
