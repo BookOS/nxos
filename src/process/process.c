@@ -25,7 +25,7 @@
 #include <utils/log.h>
 
 #include <xbook/debug.h>
-#include <thirdpart/elf.h>
+#include <process/elf.h>
 #include <fs/vfs.h>
 
 NX_PRIVATE void ProcessAppendThread(NX_Process *process, NX_Thread *thread)
