@@ -16,55 +16,191 @@
 #include <process/process.h>
 #include <xbook/debug.h>
 #include <sched/thread.h>
+#include <fs/vfs.h>
 
-NX_PRIVATE int NX_SysInvalidCall(void)
+NX_PRIVATE int SysInvalidCall(void)
 {
     NX_Thread *cur = NX_ThreadSelf();
     NX_LOG_E("thread %s/%d call invalid syscall!", cur->name, cur->tid);    
     return 0;
 }
 
-NX_PRIVATE int NX_SysDebugLog(const char *buf, int size)
+NX_PRIVATE int SysDebugLog(const char *buf, int size)
 {
     /* FIXME: check buf -> buf + size accessable */
     NX_Printf(buf);
     return 0;
 }
 
-NX_PRIVATE void NX_SysProcessExit(NX_Error errCode)
+NX_PRIVATE void SysProcessExit(NX_Error errCode)
 {
     NX_ProcessExit(errCode);
     NX_PANIC("process exit syscall failed !");
 }
 
-NX_PRIVATE NX_Error NX_SysProcessCreate(char *name, char *path, NX_U32 flags)
+NX_PRIVATE NX_Error SysProcessCreate(char *name, char *path, NX_U32 flags)
 {
     return NX_ProcessCreate(name, path, flags);
+}
+
+NX_PRIVATE NX_Error SysVfsMount(const char * dev, const char * dir, const char * fsname, NX_U32 flags)
+{
+    return NX_VfsMountFileSystem(dev, dir, fsname, flags);
+}
+
+NX_PRIVATE NX_Error SysVfsUnmount(const char * path)
+{
+    return NX_VfsUnmountFileSystem(path);
+}
+
+NX_PRIVATE NX_Error SysVfsSync(void)
+{
+    return NX_VfsSync();
+}
+
+NX_PRIVATE int SysVfsOpen(const char * path, NX_U32 flags, NX_U32 mode, NX_Error *outErr)
+{
+    return NX_VfsOpen(path, flags, mode, outErr);
+}
+
+NX_PRIVATE NX_Error SysVfsClose(int fd)
+{
+    return NX_VfsClose(fd);
+}
+
+/* NOTICE: To compate 32 bit cpu, syscall need use NX_Size not NX_U64 */
+NX_PRIVATE NX_Size SysVfsRead(int fd, void * buf, NX_Size len, NX_Error *outErr)
+{
+    return NX_VfsRead(fd, buf, len, outErr);
+}
+
+/* NOTICE: To compate 32 bit cpu, syscall need use NX_Size not NX_U64 */
+NX_PRIVATE NX_Size SysVfsWrite(int fd, void * buf, NX_Size len, NX_Error *outErr)
+{
+    return NX_VfsWrite(fd, buf, len, outErr);
+}
+
+/* NOTICE: To compate 32 bit cpu, syscall need use NX_Offset not NX_I64 */
+NX_PRIVATE NX_Offset SysVfsFileSeek(int fd, NX_Offset off, int whence, NX_Error *outErr)
+{
+    return NX_VfsFileSeek(fd, off, whence, outErr);
+}
+
+NX_PRIVATE NX_Error SysVfsFileSync(int fd)
+{
+    return NX_VfsFileSync(fd);
+}
+
+NX_PRIVATE NX_Error SysVfsFileChmod(int fd, NX_U32 mode)
+{
+    return NX_VfsFileChmod(fd, mode);
+}
+
+NX_PRIVATE NX_Error SysVfsFileStat(int fd, NX_VfsStatInfo * st)
+{
+    return NX_VfsFileStat(fd, st);
+}
+
+NX_PRIVATE int SysVfsOpenDir(const char * name, NX_Error *outErr)
+{
+    return NX_VfsOpenDir(name, outErr);
+}
+
+NX_PRIVATE NX_Error SysVfsCloseDir(int fd)
+{
+    return NX_VfsCloseDir(fd);
+}
+    
+NX_PRIVATE NX_Error SysVfsReadDir(int fd, NX_VfsDirent * dir)
+{
+    return NX_VfsReadDir(fd, dir);
+}
+
+NX_PRIVATE NX_Error SysVfsRewindDir(int fd)
+{
+    return NX_VfsRewindDir(fd);
+}
+
+NX_PRIVATE NX_Error SysVfsMakeDir(const char * path, NX_U32 mode)
+{
+    return NX_VfsMakeDir(path, mode);
+}
+
+NX_PRIVATE NX_Error SysVfsRemoveDir(const char * path)
+{
+    return NX_VfsRemoveDir(path);
+}
+
+NX_PRIVATE NX_Error SysVfsRename(const char * src, const char * dst)
+{
+    return NX_VfsRename(src, dst);
+}
+
+NX_PRIVATE NX_Error SysVfsUnlink(const char * path)
+{
+    return NX_VfsUnlink(path);
+}
+
+NX_PRIVATE NX_Error SysVfsAccess(const char * path, NX_U32 mode)
+{
+    return NX_VfsAccess(path, mode);
+}
+
+NX_PRIVATE NX_Error SysVfsChmod(const char * path, NX_U32 mode)
+{
+    return NX_VfsChmod(path, mode);
+}
+
+NX_PRIVATE NX_Error SysVfsStat(const char * path, NX_VfsStatInfo * st)
+{
+    return NX_VfsStat(path, st);
 }
 
 /* xbook env syscall table  */
 NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] = 
 {
-    NX_SysInvalidCall,    /* 0 */
-    NX_SysDebugLog,       /* 1 */
-    NX_SysProcessExit,
-    NX_SysProcessCreate,
+    SysInvalidCall,      /* 0 */
+    SysDebugLog,         /* 1 */
+    SysProcessExit,
+    SysProcessCreate,
+    SysVfsMount,
+    SysVfsUnmount,          /* 5 */
+    SysVfsSync,
+    SysVfsOpen,
+    SysVfsClose,
+    SysVfsRead,
+    SysVfsWrite,            /* 10 */
+    SysVfsFileSeek,
+    SysVfsFileSync,
+    SysVfsFileChmod,
+    SysVfsFileStat,
+    SysVfsOpenDir,          /* 15 */
+    SysVfsCloseDir,
+    SysVfsReadDir,
+    SysVfsRewindDir,
+    SysVfsMakeDir,
+    SysVfsRemoveDir,        /* 20 */
+    SysVfsRename,
+    SysVfsUnlink,
+    SysVfsAccess,
+    SysVfsChmod,
+    SysVfsStat,             /* 25 */
 };
 
 /* posix env syscall table */
 NX_PRIVATE const NX_SyscallHandler NX_SyscallTablePosix[] = 
 {
-    NX_SysInvalidCall,    /* 0 */
+    SysInvalidCall,    /* 0 */
 };
 
 NX_PRIVATE const NX_SyscallHandler NX_SyscallTableWin32[] = 
 {
-    NX_SysInvalidCall,    /* 0 */
+    SysInvalidCall,    /* 0 */
 };
 
 NX_SyscallHandler NX_SyscallGetHandler(NX_SyscallApi api)
 {
-    NX_SyscallHandler handler = NX_SysInvalidCall;
+    NX_SyscallHandler handler = SysInvalidCall;
 
     NX_U32 callNumber = NX_SYSCALL_NUMBER(api);
     NX_U32 callEnv = NX_SYSCALL_ENV(api);

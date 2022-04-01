@@ -18,7 +18,6 @@
 #include <mm/mmu.h>
 #include <mm/page.h>
 #include <arch/mmu.h>
-#include <fs/romfs.h>
 
 #define NX_LOG_NAME "process"
 #define NX_LOG_LEVEL NX_LOG_INFO
@@ -181,7 +180,7 @@ NX_PRIVATE NX_Error NX_LoadCheck(char *path, int fd, NX_Size len, NX_Vmspace *sp
     }
 
     /* load header */
-    if (NX_VfsFileSeek(fd, 0, NX_ROMFS_SEEK_SET, NX_NULL) != 0)
+    if (NX_VfsFileSeek(fd, 0, NX_VFS_SEEK_SET, NX_NULL) != 0)
     {
         return NX_EFAULT;
     }
@@ -246,7 +245,7 @@ NX_PRIVATE NX_Error NX_LoadMapUserSpace(int fd, NX_Size len, NX_Vmspace *space, 
             return NX_EFAULT;
         }
 
-        if (NX_VfsFileSeek(fd, off, NX_ROMFS_SEEK_SET, NX_NULL) != off)
+        if (NX_VfsFileSeek(fd, off, NX_VFS_SEEK_SET, NX_NULL) != off)
         {
             return NX_EFAULT;
         }
@@ -301,7 +300,7 @@ NX_PRIVATE NX_Error NX_LoadFileData(int fd, NX_Size len, NX_Vmspace *space, Elf_
         }
 
         /* read program header */
-        if (NX_VfsFileSeek(fd, progOff, NX_ROMFS_SEEK_SET, NX_NULL) != progOff)
+        if (NX_VfsFileSeek(fd, progOff, NX_VFS_SEEK_SET, NX_NULL) != progOff)
         {
             return NX_EFAULT;
         }
@@ -324,7 +323,7 @@ NX_PRIVATE NX_Error NX_LoadFileData(int fd, NX_Size len, NX_Vmspace *space, Elf_
                 return NX_ERROR;
             }
 
-            if (NX_VfsFileSeek(fd, progHeader.p_offset, NX_ROMFS_SEEK_SET, NX_NULL) != progHeader.p_offset)
+            if (NX_VfsFileSeek(fd, progHeader.p_offset, NX_VFS_SEEK_SET, NX_NULL) != progHeader.p_offset)
             {
                 return NX_EIO;
             }
