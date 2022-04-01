@@ -93,7 +93,6 @@ SRCDIRS		+=	kernel/
 SRCDIRS		+=	drivers/
 SRCDIRS		+=	fs/
 SRCDIRS		+=	test/
-SRCDIRS		+=	thirdpart/
 SRCDIRS		+=	time/
 
 #
