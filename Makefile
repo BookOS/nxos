@@ -48,6 +48,11 @@ KCONFIGLIB_DIR	:= scripts/kconfiglib
 G	?=n
 
 #
+# Enable test case
+#
+TC	?=n
+
+#
 # Get platform information about ARCH and PLATFORM from ARCH_PLATFORM variable.
 #
 ifeq ($(words $(subst -, , $(ARCH_PLATFORM))), 2)
@@ -84,6 +89,7 @@ export ARCH
 export HOSTOS
 export USE_BUILD_DIR
 export G
+export TC
 
 #
 # Kconfig path
