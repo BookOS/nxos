@@ -3,7 +3,7 @@ source "$NXOS_SRC_DIR/fs/cpio/Kconfig"
 config NX_ENABLE_EXECUTE_USER
     bool "Enable execute first user process"
     select NX_ENABLE_MOUNT_TABLE
-    default false
+    default n
 
     if NX_ENABLE_EXECUTE_USER
         config NX_FIRST_USER_NAME
@@ -18,7 +18,7 @@ config NX_ENABLE_EXECUTE_USER
 
 config NX_ENABLE_MOUNT_TABLE
     bool "Enable default mount table"
-    default false
+    default n
 
     if NX_ENABLE_MOUNT_TABLE
         config NX_MOUNT_DEVICE_DEFAULT
