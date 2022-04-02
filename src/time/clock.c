@@ -27,7 +27,7 @@
 NX_IMPORT NX_Error NX_HalInitClock(void);
 
 /* NOTE: must add NX_VOLATILE here, avoid compiler optimization  */
-NX_PRIVATE NX_VOLATILE NX_ClockTick SystemClockTicks;
+NX_PRIVATE NX_VOLATILE NX_ClockTick SystemClockTicks = 0;
 
 NX_PRIVATE NX_IRQ_DelayWork TimerWork;
 NX_PRIVATE NX_IRQ_DelayWork SchedWork;
