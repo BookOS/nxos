@@ -185,7 +185,7 @@ void TrapDispatch(NX_HalTrapFrame *frame)
     NX_UArch id = cause & ((1UL << (RISCV_XLEN - 2)) - 1);
 
     /* supervisor external interrupt */
-#ifdef CONFIG_NX_PLATFROM_K210
+#ifdef CONFIG_NX_PLATFORM_K210
     /* 
      * on k210, supervisor software interrupt is used 
 	 * in alternative to supervisor external interrupt, 

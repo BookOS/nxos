@@ -94,7 +94,7 @@ NX_Error PLIC_Complete(NX_U32 hart, int irqno)
     
     *(NX_U32 *)PLIC_CLAIM(hart) = irqno;
 
-#if CONFIG_NX_PLATFROM_K210
+#if CONFIG_NX_PLATFORM_K210
     WriteCSR(sip, ReadCSR(sip) & ~SIP_SSIE); /* clear software pending bit */
     sbi_set_mie();  /* enable machine interrupt after complete */
 #endif

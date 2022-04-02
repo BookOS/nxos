@@ -14,7 +14,7 @@
 
 #include <xbook.h>
 
-#ifdef CONFIG_NX_PLATFROM_K210
+#ifdef CONFIG_NX_PLATFORM_K210
 #include <rustsbi.h>
 #else
 #include <opensbi.h>

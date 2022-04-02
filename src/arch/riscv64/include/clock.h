@@ -9,11 +9,11 @@
  * 2021-12-3      JasonHu           Init
  */
 
-#ifndef __PLATFROM_CLOCK__
-#define __PLATFROM_CLOCK__
+#ifndef __PLATFORM_CLOCK__
+#define __PLATFORM_CLOCK__
 
 #include <xbook.h>
 
 void NX_HalClockHandler(void);
 
-#endif /* __PLATFROM_CLOCK__ */
+#endif /* __PLATFORM_CLOCK__ */

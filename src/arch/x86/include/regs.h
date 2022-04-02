@@ -9,8 +9,8 @@
  * 2021-10-22      JasonHu           Init
  */
 
-#ifndef __PLATFROM_REGS__
-#define __PLATFROM_REGS__
+#ifndef __PLATFORM_REGS__
+#define __PLATFORM_REGS__
 
 #include <xbook/types.h>
 #include <xbook/defines.h>
@@ -73,4 +73,4 @@ NX_INLINE NX_U32 CPU_ReadESP(void)
     return sp;
 }
 
-#endif  /* __PLATFROM_REGS__ */
+#endif  /* __PLATFORM_REGS__ */

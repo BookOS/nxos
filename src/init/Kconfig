@@ -1,4 +1,4 @@
-config NX_PLATFROM_NAME
+config NX_PLATFORM_NAME
     string "Platform name"
     default "Unknown"
 

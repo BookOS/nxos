@@ -23,7 +23,7 @@
 /* interrupt pending */
 #define PLIC_PENDING            (PLIC_ADDR + 0x1000)
 
-#if CONFIG_NX_PLATFROM_K210
+#if CONFIG_NX_PLATFORM_K210
 
 /* interrupt enable for each hart */
 #define __PLIC_ENABLE(hart)      (PLIC_ADDR + 0x2000 + (hart) * 0x80)

@@ -1,4 +1,4 @@
-config NX_PLATFROM_RISCV64_QEMU
+config NX_PLATFORM_RISCV64_QEMU
     bool
     default y
     select NX_CPU_64BITS
