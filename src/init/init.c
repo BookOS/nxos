@@ -39,15 +39,34 @@ void NX_ExitCallInvoke(void)
     NX_CallInvoke(__NX_ExitCallStart, __NX_ExitCallEnd);
 }
 
+#ifdef CONFIG_NX_ENABLE_PLATFORM_MAIN
 NX_INTERFACE NX_WEAK_SYM void NX_HalPlatformMain(void)
 {
     NX_LOG_I("Deafult platform main running...\n");
 }
+#endif
 
 NX_PRIVATE void CallsEntry(void *arg)
 {
     NX_InitCallInvoke();
+
+#ifdef CONFIG_NX_ENABLE_MOUNT_TABLE
+    {
+        NX_Error err = NX_VfsMountFileSystem(CONFIG_NX_MOUNT_DEVICE_DEFAULT, CONFIG_NX_MOUNT_PATH_DEFAULT, CONFIG_NX_MOUNT_FSNAME_DEFAULT, 0);
+        NX_LOG_I("mount dev:%s on path:%s as fs:%s with state %d", CONFIG_NX_MOUNT_DEVICE_DEFAULT, CONFIG_NX_MOUNT_PATH_DEFAULT, CONFIG_NX_MOUNT_FSNAME_DEFAULT, err);
+    }
+#endif /* CONFIG_NX_ENABLE_MOUNT_TABLE */
+
+#ifdef CONFIG_NX_ENABLE_EXECUTE_USER
+    {
+        NX_Error err = NX_ProcessCreate(CONFIG_NX_FIRST_USER_NAME, CONFIG_NX_FIRST_USER_PATH, 0);
+        NX_LOG_I("execute first user:%s on path:%s with state %d", CONFIG_NX_FIRST_USER_NAME, CONFIG_NX_FIRST_USER_PATH, err);        
+    }
+#endif /* CONFIG_NX_ENABLE_EXECUTE_USER */
+
+#ifdef CONFIG_NX_ENABLE_PLATFORM_MAIN
     NX_HalPlatformMain();
+#endif
 }
 
 void NX_CallsInit(void)

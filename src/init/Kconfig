@@ -8,3 +8,7 @@ config NX_PLATFROM_NAME
 config NX_MULTI_CORES_NR
     int "platform CPU core numbers"
     default 1
+
+config NX_ENABLE_PLATFORM_MAIN
+    bool "Enable call platform main"
+    default y

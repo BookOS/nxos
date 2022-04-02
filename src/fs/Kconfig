@@ -1,5 +1,40 @@
 source "$NXOS_SRC_DIR/fs/cpio/Kconfig"
 
+config NX_ENABLE_EXECUTE_USER
+    bool "Enable execute first user process"
+    select NX_ENABLE_MOUNT_TABLE
+    default n
+
+    if NX_ENABLE_EXECUTE_USER
+        config NX_FIRST_USER_NAME
+            string "first user process name"
+            default "uinit"
+
+        config NX_FIRST_USER_PATH
+            string "first user process file path"
+            default "/uinit"
+
+    endif
+
+config NX_ENABLE_MOUNT_TABLE
+    bool "Enable default mount table"
+    default n
+
+    if NX_ENABLE_MOUNT_TABLE
+        config NX_MOUNT_DEVICE_DEFAULT
+            string "default mount device"
+            default "romdisk0"
+
+        config NX_MOUNT_PATH_DEFAULT
+            string "default mount root path"
+            default "/"
+
+        config NX_MOUNT_FSNAME_DEFAULT
+            string "default mount fsname"
+            default "cpio"
+
+    endif
+
 config NX_VFS_MAX_PATH
     int "vfs max path length" 
     default 512
