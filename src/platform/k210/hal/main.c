@@ -15,10 +15,12 @@
 #define NX_LOG_NAME "Hal Main"
 #include <utils/log.h>
 
+#ifdef CONFIG_NX_ENABLE_PLATFORM_MAIN
 NX_INTERFACE void NX_HalPlatformMain(void)
 {
-    NX_LOG_I("QEMU platform main running...\n");
+    NX_LOG_I("k210 platform main running...\n");
 }
+#endif /* CONFIG_NX_ENABLE_PLATFORM_MAIN */
 
 void NX_HalDirectUartGetcHandler(char data)
 {

@@ -39,10 +39,12 @@ void NX_ExitCallInvoke(void)
     NX_CallInvoke(__NX_ExitCallStart, __NX_ExitCallEnd);
 }
 
+#ifdef CONFIG_NX_ENABLE_PLATFORM_MAIN
 NX_INTERFACE NX_WEAK_SYM void NX_HalPlatformMain(void)
 {
     NX_LOG_I("Deafult platform main running...\n");
 }
+#endif
 
 NX_PRIVATE void CallsEntry(void *arg)
 {
@@ -62,7 +64,9 @@ NX_PRIVATE void CallsEntry(void *arg)
     }
 #endif /* CONFIG_NX_ENABLE_EXECUTE_USER */
 
+#ifdef CONFIG_NX_ENABLE_PLATFORM_MAIN
     NX_HalPlatformMain();
+#endif
 }
 
 void NX_CallsInit(void)
