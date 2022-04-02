@@ -9,8 +9,8 @@
  * 2021-10-31     JasonHu           Init
  */
 
-#ifndef __PLATFROM_REGS__
-#define __PLATFROM_REGS__
+#ifndef __PLATFORM_REGS__
+#define __PLATFORM_REGS__
 
 #include <xbook.h>
 
@@ -115,4 +115,4 @@
 
 #endif /* !__ASSEMBLY__ */
 
-#endif  /* __PLATFROM_REGS__ */
+#endif  /* __PLATFORM_REGS__ */

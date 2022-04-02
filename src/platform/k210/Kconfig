@@ -1,4 +1,4 @@
-config NX_PLATFROM_K210
+config NX_PLATFORM_K210
     bool
     default y
     select NX_CPU_64BITS

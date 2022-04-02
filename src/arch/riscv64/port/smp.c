@@ -56,7 +56,7 @@ NX_PRIVATE NX_UArch NX_HalCoreGetIndex(void)
 
 NX_PRIVATE NX_Error NX_HalCoreBootApp(NX_UArch bootCoreId)
 {
-#ifdef CONFIG_NX_PLATFROM_K210
+#ifdef CONFIG_NX_PLATFORM_K210
     return NX_ENORES;   /* not support smp on k210 */
 #else
     NX_LOG_I("boot core is:%d", bootCoreId);

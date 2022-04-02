@@ -9,8 +9,8 @@
  * 2021-10-19     JasonHu           Init
  */
 
-#ifndef __PLATFROM_BOOT__
-#define __PLATFROM_BOOT__
+#ifndef __PLATFORM_BOOT__
+#define __PLATFORM_BOOT__
 
 #include <xbook.h>
 
@@ -64,4 +64,4 @@ NX_INLINE void *BootModInfoFind(unsigned long addr, enum BootModType type)
 	return (void*)0;
 }
 
-#endif /* __PLATFROM_BOOT__ */
+#endif /* __PLATFORM_BOOT__ */

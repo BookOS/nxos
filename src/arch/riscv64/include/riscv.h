@@ -9,8 +9,8 @@
  * 2021-12-3      JasonHu           Init
  */
 
-#ifndef __PLATFROM_RISCV__
-#define __PLATFROM_RISCV__
+#ifndef __PLATFORM_RISCV__
+#define __PLATFORM_RISCV__
 
 #include <nx_configure.h>
 
@@ -27,4 +27,4 @@
 /* Platform level interrupt controller */
 #define RISCV_PLIC_PADDR        0x0c000000UL
 
-#endif  /* __PLATFROM_RISCV__ */
+#endif  /* __PLATFORM_RISCV__ */

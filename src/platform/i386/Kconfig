@@ -1,4 +1,4 @@
-config NX_PLATFROM_I386_PC32
+config NX_PLATFORM_I386_PC32
     bool
     default y
     
