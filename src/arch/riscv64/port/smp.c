@@ -56,26 +56,32 @@ NX_PRIVATE NX_UArch NX_HalCoreGetIndex(void)
 
 NX_PRIVATE NX_Error NX_HalCoreBootApp(NX_UArch bootCoreId)
 {
-#ifdef CONFIG_NX_PLATFORM_K210
-    return NX_ENORES;   /* not support smp on k210 */
-#else
+
     NX_LOG_I("boot core is:%d", bootCoreId);
     NX_UArch coreId;
     for (coreId = 0; coreId < NX_MULTI_CORES_NR; coreId++)
     {
+#ifndef CONFIG_NX_PLATFORM_K210
         NX_LOG_I("core#%d state:%d", coreId, sbi_hsm_hart_status(coreId));
+#endif
         if (bootCoreId == coreId) /* skip boot core */
         {
             NX_LOG_I("core#%d is boot core, skip it", coreId);
             continue;
         }
         NX_LOG_I("wakeup app core:%d", coreId);
+#ifdef CONFIG_NX_PLATFORM_K210
+        NX_UArch mask = 1 << coreId;
+        sbi_send_ipi(&mask);
+#else
         sbi_hsm_hart_start(coreId, MEM_KERNEL_BASE, 0);    
+#endif
         NX_MemoryBarrier();
+#ifndef CONFIG_NX_PLATFORM_K210
         NX_LOG_I("core#%d state:%d after wakeup", coreId, sbi_hsm_hart_status(coreId));
+#endif
     }
     return NX_EOK;
-#endif
 }
 
 NX_PRIVATE NX_Error NX_HalCoreEnterApp(NX_UArch appCoreId)
