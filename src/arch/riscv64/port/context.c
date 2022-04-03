@@ -42,8 +42,12 @@ NX_PRIVATE void *NX_HalContextInit(void *startEntry, void *exitEntry, void *arg,
      * return to supervisor mode,
      * enable interrupt
      */
+#ifdef CONFIG_NX_PLATFORM_K210
+    /* NOTICE: in k210, SSTATUS_SUM mean disable Supervisor Access User memroy */
+    context->sstatus = SSTATUS_SPP | SSTATUS_SPIE;
+#else
     context->sstatus = SSTATUS_SUM | SSTATUS_SPP | SSTATUS_SPIE;
-
+#endif
     return (void *)stack;
 }
 

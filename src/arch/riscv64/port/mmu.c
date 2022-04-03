@@ -78,6 +78,7 @@ NX_PRIVATE MMU_PTE *PageWalk(MMU_PDE *pageTable, NX_Addr virAddr, NX_Bool allocP
             pageTable = (MMU_PDE *)NX_PageAlloc(1);
             if (pageTable == NX_NULL)
             {
+                NX_LOG_E("riscv64 mmu-sv39: page walk with no enough memory!");
                 return NX_NULL;
             }
             NX_MemZero(NX_Phy2Virt(pageTable), NX_PAGE_SIZE);

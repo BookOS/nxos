@@ -26,8 +26,7 @@ DUMP		:= $(CROSS_COMPILE)objdump
 OC			:= $(CROSS_COMPILE)objcopy
 
 K210_BIN	:= k210.bin
-K210_ASM	:= k210.S
-K210_DEV 	?= /dev/ttyUSB0
+UART 		?= /dev/ttyUSB0
 KFLASH 		:= ./tools/kflash.py
 
 #
@@ -44,9 +43,9 @@ run:
 	$(DD) if=$(NXOS_NAME).bin of=$(K210_BIN) bs=128k seek=1
 	echo "K210 run..."
 ifeq ($(HOSTOS),linux)
-	$(SU) chmod 777 $(K210_DEV)
+	$(SU) chmod 777 $(UART)
 endif
-	$(PYTHON) $(KFLASH) -p $(K210_DEV) -b 1500000 -t $(K210_BIN)
+	$(PYTHON) $(KFLASH) -p $(UART) -b 1500000 -t $(K210_BIN)
 
 # 
 # Clear target file
@@ -54,7 +53,8 @@ endif
 clean:
 	-$(RM) $(NXOS_NAME).elf
 	-$(RM) $(K210_BIN)
-	-$(RM) $(K210_ASM)
+	-$(RM) $(NXOS_NAME).dump.S
+	-$(RM) $(NXOS_NAME).bin
 
 # 
 # prepare tools

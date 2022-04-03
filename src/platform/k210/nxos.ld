@@ -78,6 +78,14 @@ SECTIONS
     . = ALIGN(8);
     __NX_DataStart = .;
 
+    .data :
+    {
+        *(.data)
+        *(.data.*)
+        *(.rodata)
+        *(.rodata.*)
+    }
+
 	.romdisk ALIGN(8) :
 	{
 		PROVIDE(__NX_RomdiskStart = .);
@@ -86,13 +94,6 @@ SECTIONS
 	}
     . = ALIGN(8);
     
-    .data :
-    {
-        *(.data)
-        *(.data.*)
-        *(.rodata)
-        *(.rodata.*)
-    }
     __NX_DataEnd = .;
     
     /* bss segement */

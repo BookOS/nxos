@@ -94,7 +94,7 @@ NX_Error PLIC_Complete(NX_U32 hart, int irqno)
     
     *(NX_U32 *)PLIC_CLAIM(hart) = irqno;
 
-#if CONFIG_NX_PLATFORM_K210
+#ifdef CONFIG_NX_PLATFORM_K210
     WriteCSR(sip, ReadCSR(sip) & ~SIP_SSIE); /* clear software pending bit */
     sbi_set_mie();  /* enable machine interrupt after complete */
 #endif
@@ -111,13 +111,12 @@ void PLIC_Init(NX_Bool bootCore)
         {
             /* priority must be > threshold to trigger an interrupt */
             Write32(PLIC_THRESHOLD(hart), 0);
-            
-            /* set all interrupt priority */
-            int irqno;
-            for (irqno = 1; irqno < NX_NR_IRQS; irqno++)
-            {
-                PLIC_SetPriority(irqno, 0);
-            }
+        }
+        /* set all interrupt priority */
+        int irqno;
+        for (irqno = 1; irqno < NX_NR_IRQS; irqno++)
+        {
+            PLIC_SetPriority(irqno, 0);
         }
     }
     /* Enable supervisor external interrupts. */
