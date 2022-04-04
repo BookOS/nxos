@@ -538,7 +538,7 @@ NX_Error NX_ProcessCreate(char *name, char *path, NX_U32 flags)
     /* override default file table */
     NX_ThreadSetFileTable(thread, process->fileTable);
 
-    if (NX_ThreadRun(thread) != NX_EOK)
+    if (NX_ThreadStart(thread) != NX_EOK)
     {
         NX_ASSERT(NX_VmspaceUnmap(space, space->stackEnd - NX_PROCESS_USER_SATCK_SIZE, NX_PROCESS_USER_SATCK_SIZE) == NX_EOK);
         NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);

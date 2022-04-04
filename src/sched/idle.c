@@ -44,6 +44,6 @@ void NX_ThreadInitIdle(void)
         NX_ASSERT(idleThread != NX_NULL);
         /* bind idle on each core */
         NX_ASSERT(NX_ThreadSetAffinity(idleThread, coreId) == NX_EOK);
-        NX_ASSERT(NX_ThreadRun(idleThread) == NX_EOK);
+        NX_ASSERT(NX_ThreadStart(idleThread) == NX_EOK);
     }
 }

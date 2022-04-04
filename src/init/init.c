@@ -73,5 +73,5 @@ void NX_CallsInit(void)
 {
     NX_Thread *thread = NX_ThreadCreate("Calls", CallsEntry, NX_NULL, NX_THREAD_PRIORITY_HIGH);
     NX_ASSERT(thread != NX_NULL);
-    NX_ASSERT(NX_ThreadRun(thread) == NX_EOK);
+    NX_ASSERT(NX_ThreadStart(thread) == NX_EOK);
 }
