@@ -15,6 +15,8 @@
 #define NX_LOG_NAME "deamon"
 #include <utils/log.h>
 
+NX_IMPORT NX_Error NX_ProcessDestroyObject(NX_Process *process);
+
 /**
  * release resouce must for a thread run
  */
@@ -23,7 +25,7 @@ NX_PRIVATE void ThreadRelease(NX_Thread *thread)
     /* release thread with process */
     if (thread->resource.process != NX_NULL)
     {
-        NX_ASSERT(NX_ProcessDestroy(thread->resource.process) == NX_EOK);
+        NX_ASSERT(NX_ProcessDestroyObject(thread->resource.process) == NX_EOK);
     }
 
     NX_ThreadDestroy(thread);

@@ -16,7 +16,7 @@
 
 NX_TEST(ProcessExecute)
 {
-    NX_EXPECT_EQ(NX_ProcessCreate("test", "/test", 0), NX_EOK);
+    NX_EXPECT_EQ(NX_ProcessLaunch("test", "/test", 0), NX_EOK);
 }
 
 NX_TEST_TABLE(Process)

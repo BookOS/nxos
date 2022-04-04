@@ -98,7 +98,7 @@ NX_PRIVATE NX_Process *NX_ProcessCreateObject(NX_U32 flags)
     return process;
 }
 
-NX_Error NX_ProcessDestroy(NX_Process *process)
+NX_Error NX_ProcessDestroyObject(NX_Process *process)
 {
     if (process == NX_NULL)
     {
@@ -488,9 +488,9 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
 }
 
 /**
- * execute a process with image
+ * launch a process with image
  */
-NX_Error NX_ProcessCreate(char *name, char *path, NX_U32 flags)
+NX_Error NX_ProcessLaunch(char *name, char *path, NX_U32 flags)
 {
     NX_Vmspace *space;
 
@@ -512,13 +512,13 @@ NX_Error NX_ProcessCreate(char *name, char *path, NX_U32 flags)
 
     if (thread == NX_NULL)
     {
-        NX_ProcessDestroy(process);
+        NX_ProcessDestroyObject(process);
         return NX_ENOMEM;
     }
 
     if (NX_ProcessLoadImage(process, path) != NX_EOK)
     {
-        NX_ProcessDestroy(process);
+        NX_ProcessDestroyObject(process);
         NX_ThreadDestroy(thread);
         return NX_EIO;
     }
@@ -528,7 +528,7 @@ NX_Error NX_ProcessCreate(char *name, char *path, NX_U32 flags)
     if (NX_VmspaceMap(space, space->stackEnd - NX_PROCESS_USER_SATCK_SIZE, NX_PROCESS_USER_SATCK_SIZE, NX_PAGE_ATTR_USER, 0, NX_NULL) != NX_EOK)
     {
         NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
-        NX_ProcessDestroy(process);
+        NX_ProcessDestroyObject(process);
         NX_ThreadDestroy(thread);
         return NX_ENOMEM;
     }
@@ -542,7 +542,7 @@ NX_Error NX_ProcessCreate(char *name, char *path, NX_U32 flags)
     {
         NX_ASSERT(NX_VmspaceUnmap(space, space->stackEnd - NX_PROCESS_USER_SATCK_SIZE, NX_PROCESS_USER_SATCK_SIZE) == NX_EOK);
         NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
-        NX_ProcessDestroy(process);
+        NX_ProcessDestroyObject(process);
         NX_ThreadDestroy(thread);
         return NX_EFAULT;
     }
