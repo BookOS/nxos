@@ -66,7 +66,7 @@ NX_PRIVATE void IntegrationInit(void)
 {
     NX_Thread *thread = NX_ThreadCreate("Integration", IntegrationEntry, NX_NULL, NX_THREAD_PRIORITY_HIGH);
     NX_ASSERT(thread != NX_NULL);
-    NX_ASSERT(NX_ThreadRun(thread) == NX_EOK);
+    NX_ASSERT(NX_ThreadStart(thread) == NX_EOK);
 }
 
 NX_INIT_TEST(IntegrationInit);

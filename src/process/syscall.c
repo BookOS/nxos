@@ -38,9 +38,9 @@ NX_PRIVATE void SysProcessExit(NX_Error errCode)
     NX_PANIC("process exit syscall failed !");
 }
 
-NX_PRIVATE NX_Error SysProcessCreate(char *name, char *path, NX_U32 flags)
+NX_PRIVATE NX_Error SysProcessLaunch(char *name, char *path, NX_U32 flags)
 {
-    return NX_ProcessCreate(name, path, flags);
+    return NX_ProcessLaunch(name, path, flags);
 }
 
 NX_PRIVATE NX_Error SysVfsMount(const char * dev, const char * dir, const char * fsname, NX_U32 flags)
@@ -162,7 +162,7 @@ NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] =
     SysInvalidCall,      /* 0 */
     SysDebugLog,         /* 1 */
     SysProcessExit,
-    SysProcessCreate,
+    SysProcessLaunch,
     SysVfsMount,
     SysVfsUnmount,          /* 5 */
     SysVfsSync,

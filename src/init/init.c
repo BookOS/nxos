@@ -59,7 +59,7 @@ NX_PRIVATE void CallsEntry(void *arg)
 
 #ifdef CONFIG_NX_ENABLE_EXECUTE_USER
     {
-        NX_Error err = NX_ProcessCreate(CONFIG_NX_FIRST_USER_NAME, CONFIG_NX_FIRST_USER_PATH, 0);
+        NX_Error err = NX_ProcessLaunch(CONFIG_NX_FIRST_USER_NAME, CONFIG_NX_FIRST_USER_PATH, 0);
         NX_LOG_I("execute first user:%s on path:%s with state %d", CONFIG_NX_FIRST_USER_NAME, CONFIG_NX_FIRST_USER_PATH, err);        
     }
 #endif /* CONFIG_NX_ENABLE_EXECUTE_USER */
@@ -73,5 +73,5 @@ void NX_CallsInit(void)
 {
     NX_Thread *thread = NX_ThreadCreate("Calls", CallsEntry, NX_NULL, NX_THREAD_PRIORITY_HIGH);
     NX_ASSERT(thread != NX_NULL);
-    NX_ASSERT(NX_ThreadRun(thread) == NX_EOK);
+    NX_ASSERT(NX_ThreadStart(thread) == NX_EOK);
 }

@@ -188,7 +188,7 @@ NX_INLINE void NX_ThreadDeququeGlobalListUnlocked(NX_Thread *thread)
     NX_AtomicDec(&NX_ThreadManagerObject.activeThreadCount);
 }
 
-NX_Error NX_ThreadRun(NX_Thread *thread)
+NX_Error NX_ThreadStart(NX_Thread *thread)
 {
     if (thread == NX_NULL)
     {
