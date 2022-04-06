@@ -56,7 +56,7 @@ NX_INLINE void SchedFromPrevToNext(NX_Thread *prev, NX_Thread *next)
 void NX_SchedToFirstThread(void)
 {
     NX_UArch coreId = NX_SMP_GetIdx();
-    NX_Thread *thread = NX_SMP_DeququeThreadIrqDisabled(coreId);
+    NX_Thread *thread = NX_SMP_PickThreadIrqDisabled(coreId);
     NX_ASSERT(thread != NX_NULL);
     NX_ASSERT(NX_SMP_SetRunning(coreId, thread) == NX_EOK);
     NX_LOG_D("Sched to first thread:%s/%d", thread->name, thread->tid);
@@ -85,7 +85,7 @@ NX_PRIVATE void PullOrPushThread(NX_UArch coreId)
     if (coreThreadCount < threadsPerCore)
     {
         /* pull from pending */
-        thread = NX_ThreadDequeuePendingList();
+        thread = NX_ThreadPickPendingList();
         if (thread != NX_NULL)
         {
             NX_LOG_D("---> core#%d: pull thread:%s/%d", coreId, thread->name, thread->tid);
@@ -127,7 +127,7 @@ void NX_SchedWithInterruptDisabled(NX_UArch irqLevel)
     PullOrPushThread(coreId);
 
     /* get next from local list */
-    next = NX_SMP_DeququeThreadIrqDisabled(coreId);
+    next = NX_SMP_PickThreadIrqDisabled(coreId);
     NX_ASSERT(next != NX_NULL);
     NX_SMP_SetRunning(coreId, next);
 

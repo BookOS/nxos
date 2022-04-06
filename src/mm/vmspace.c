@@ -456,7 +456,6 @@ NX_Error __VmspaceMap(NX_Vmspace *space,
         {
             return NX_ENOMEM;
         }
-        NX_LOG_W("get map addr: %p", vaddr);
     }
 
     /* addr and size page align */

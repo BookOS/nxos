@@ -13,6 +13,7 @@
 #define __MM_MMU__
 
 #include <xbook.h>
+#include <arch/mmu.h>
 
 struct NX_Mmu
 {

@@ -17,6 +17,7 @@
 #include <xbook/debug.h>
 #include <sched/thread.h>
 #include <fs/vfs.h>
+#include <ipc/hub.h>
 
 NX_PRIVATE int SysInvalidCall(void)
 {
@@ -156,6 +157,36 @@ NX_PRIVATE NX_Error SysVfsStat(const char * path, NX_VfsStatInfo * st)
     return NX_VfsStat(path, st);
 }
 
+NX_Error SysHubRegister(const char *name, NX_Addr callAddr, NX_Size maxClient)
+{
+    return NX_HubRegister(name, callAddr, maxClient, NX_NULL);
+}
+
+NX_Error SysHubUnregister(const char *name)
+{
+    return NX_HubUnregister(name);
+}
+
+NX_Error SysHubCallParam(NX_Hub *hub, NX_HubParam *param, NX_Size *retVal)
+{
+    return NX_HubCallParam(hub, param, retVal);
+}
+
+NX_Error SysHubCallParamName(const char *name, NX_HubParam *param, NX_Size *retVal)
+{
+    return NX_HubCallParamName(name, param, retVal);
+}
+
+NX_Error SysHubReturn(NX_Size retVal)
+{
+    return NX_HubReturn(retVal);
+}
+
+NX_Error SysHubPoll(NX_HubParam *param)
+{
+    return NX_HubPoll(param);
+}
+
 /* xbook env syscall table  */
 NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] = 
 {
@@ -185,6 +216,12 @@ NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] =
     SysVfsAccess,
     SysVfsChmod,
     SysVfsStat,             /* 25 */
+    SysHubRegister,
+    SysHubUnregister,
+    SysHubCallParam,
+    SysHubCallParamName,
+    SysHubReturn,           /* 30 */
+    SysHubPoll, 
 };
 
 /* posix env syscall table */
