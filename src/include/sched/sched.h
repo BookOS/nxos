@@ -14,11 +14,14 @@
 
 #include <xbook.h>
 
+#include <sched/spin.h>
+
 #define NX_SCHED_HEAD          0x01
 #define NX_SCHED_TAIL          0x02
 
 void NX_SchedToFirstThread(void);
-void NX_SchedWithInterruptDisabled(NX_UArch irqLevel);
+void NX_SchedInterruptDisabled(NX_UArch irqLevel);
+void NX_SchedLockedIRQ(NX_UArch irqLevel, NX_Spin *lock);
 void NX_SchedYield(void);
 void NX_ReSchedCheck(void);
 void NX_SchedExit(void);

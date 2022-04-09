@@ -50,7 +50,7 @@ typedef void (*NX_ThreadHandler)(void *arg);
 
 enum NX_ThreadState
 {
-    NX_THREAD_INIT,
+    NX_THREAD_INIT = 0,
     NX_THREAD_READY,
     NX_THREAD_RUNNING,
     NX_THREAD_BLOCKED,
@@ -73,10 +73,11 @@ typedef struct NX_ThreadResource NX_ThreadResource;
 struct NX_Thread
 {
     /* thread list */
-    NX_List list;
+    NX_List list;   /* ready list */
     NX_List globalList;
     NX_List exitList;
     NX_List processList;    /* list for process */
+    NX_List blockList;    /* list for block on somewhere */
 
     NX_Spin lock;  /* lock for thread */
 
@@ -139,6 +140,9 @@ void NX_ThreadYield(void);
 NX_Error NX_ThreadSetAffinity(NX_Thread *thread, NX_UArch coreId);
 
 NX_Error NX_ThreadBlock(NX_Thread *thread);
+NX_Error NX_ThreadBlockInterruptDisabled(NX_Thread *thread, NX_UArch irqLevel);
+NX_Error NX_ThreadBlockLockedIRQ(NX_Thread *thread, NX_Spin *lock, NX_UArch irqLevel);
+
 NX_Error NX_ThreadUnblock(NX_Thread *thread);
 
 NX_Error NX_ThreadSleep(NX_UArch microseconds);

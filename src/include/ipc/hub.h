@@ -17,6 +17,7 @@
 #include <sched/spin.h>
 #include <sched/mutex.h>
 #include <sched/thread.h>
+#include <sched/semaphore.h>
 #include <process/process.h>
 #include <utils/list.h>
 
@@ -62,6 +63,7 @@ typedef struct NX_HubChannel
     NX_Addr serverStackTop;
     NX_Size serverStackSize;
     NX_Hub *hub;
+    NX_Semaphore syncSem;
     NX_HubParam param;
 } NX_HubChannel;
 

@@ -42,7 +42,8 @@ NX_PRIVATE NX_Error ThreadInit(NX_Thread *thread,
     NX_ListInit(&thread->globalList);
     NX_ListInit(&thread->exitList);
     NX_ListInit(&thread->processList);
-    
+    NX_ListInit(&thread->blockList);
+
     NX_StrCopy(thread->name, name);
     thread->tid = NX_ThreadIdAlloc();
     if (thread->tid < 0)
@@ -311,25 +312,9 @@ NX_Thread *NX_ThreadSelf(void)
 }
 
 /**
- * must called when interrupt disabled
+ * must called with interrupt disabled.
  */
-NX_PRIVATE void ThreadBlockInterruptDisabled(NX_ThreadState state, NX_UArch irqLevel)
-{
-    NX_ASSERT(state == NX_THREAD_BLOCKED);
-    NX_CurrentThread->state = state;
-    NX_SchedWithInterruptDisabled(irqLevel);
-}
-
-/**
- * must called when interrupt disabled
- * quickly: thread can be run quickly
- */
-NX_PRIVATE void ThreadUnblockInterruptDisabled(NX_Thread *thread)
-{
-    NX_ThreadReadyRunLocked(thread, NX_SCHED_HEAD);
-}
-
-NX_Error NX_ThreadBlock(NX_Thread *thread)
+NX_Error NX_ThreadBlockLockedIRQ(NX_Thread *thread, NX_Spin *lock, NX_UArch irqLevel)
 {
     if (thread == NX_NULL)
     {
@@ -340,14 +325,37 @@ NX_Error NX_ThreadBlock(NX_Thread *thread)
     {   /* remove from ready list */
         thread->state = NX_THREAD_BLOCKED;
         NX_ThreadUnreadyRun(thread);
+
+        if (lock)
+        {
+            NX_SpinUnlockIRQ(lock, irqLevel);
+        }
+        else
+        {
+            NX_IRQ_RestoreLevel(irqLevel);
+        }
     }
     else if (thread->state == NX_THREAD_RUNNING)
     {   /* set as block, then sched */
-        NX_UArch level = NX_IRQ_SaveLevel();
-        ThreadBlockInterruptDisabled(NX_THREAD_BLOCKED, level);
+        thread->state = NX_THREAD_BLOCKED;
+        NX_SchedLockedIRQ(irqLevel, lock);
     }
     
     return NX_EOK;
+}
+
+/**
+ * must called when interrupt disabled
+ */
+NX_Error NX_ThreadBlockInterruptDisabled(NX_Thread *thread, NX_UArch irqLevel)
+{
+    return NX_ThreadBlockLockedIRQ(thread, NX_NULL, irqLevel);
+}
+
+NX_Error NX_ThreadBlock(NX_Thread *thread)
+{
+    NX_UArch level = NX_IRQ_SaveLevel();
+    return NX_ThreadBlockLockedIRQ(thread, NX_NULL, level);
 }
 
 /**
@@ -359,12 +367,15 @@ NX_Error NX_ThreadUnblock(NX_Thread *thread)
     {
         return NX_EINVAL;
     }
+
     /* if thread in sleep, then wakeup it */
     if (thread->state == NX_THREAD_BLOCKED)
     {
-        ThreadUnblockInterruptDisabled(thread);
+        NX_ThreadReadyRunUnlocked(thread, NX_SCHED_HEAD);
+        return NX_EOK;
     }
-    return NX_EOK;
+
+    return NX_EBUSY;
 }
 
 NX_PRIVATE NX_Bool TimerThreadSleepTimeout(NX_Timer *timer, void *arg)
@@ -422,7 +433,7 @@ NX_Error NX_ThreadSleep(NX_UArch microseconds)
     NX_TimerStart(self->resource.sleepTimer);
 
     /* set thread as sleep state */
-    ThreadBlockInterruptDisabled(NX_THREAD_BLOCKED, irqLevel);
+    NX_ThreadBlockInterruptDisabled(self, irqLevel);
 
     /* if sleep timer always here, it means that the thread was interrupted! */
     if (self->resource.sleepTimer != NX_NULL)

@@ -135,6 +135,25 @@ NX_INLINE int NX_ListEmpty(const NX_List *head)
     return (head->next == head);
 }
 
+/**
+ * NX_ListEmptyCareful - tests whether a list is empty and not being modified
+ * @head: the list to test
+ *
+ * Description:
+ * tests whether a list is empty _and_ checks that no other CPU might be
+ * in the process of modifying either member (next or prev)
+ *
+ * NOTE: using NX_ListEmptyCareful() without synchronization
+ * can only be safe if the only activity that can happen
+ * to the list entry is list_del_init(). Eg. it cannot be used
+ * if another CPU could re-list_add() it.
+ */
+NX_INLINE int NX_ListEmptyCareful(const NX_List * head)
+{
+	NX_List * next = head->next;
+	return (next == head) && (next == head->prev);
+}
+
 #define NX_ListEntry(ptr, type, member) NX_PTR_OF_STRUCT(ptr, type, member)
 
 #define NX_ListFirstEntry(head, type, member) NX_ListEntry((head)->next, type, member)

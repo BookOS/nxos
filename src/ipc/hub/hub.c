@@ -99,6 +99,7 @@ NX_PRIVATE void HubChannelInit(NX_HubChannel *channel,
 	channel->serverStackSize = serverStackSize;
 	channel->serverStackTop = serverStackTop;
     channel->hub = hub;
+    NX_SemaphoreInit(&channel->syncSem, 0);
 }
 
 NX_PRIVATE NX_HubChannel *CreateChannel(NX_Hub *hub, NX_Thread *source, NX_Thread *target)
@@ -187,7 +188,7 @@ NX_PRIVATE NX_HubChannel *HubPickChannel(NX_Hub *hub)
 	{
 		if (channel->state == NX_HUB_CHANNEL_IDLE)
 		{
-			channel->state == NX_HUB_CHANNEL_READY;	
+			channel->state = NX_HUB_CHANNEL_READY;	
 			NX_SpinUnlockIRQ(&hub->lock, level);
 			return channel;
 		}
@@ -291,6 +292,7 @@ NX_PRIVATE NX_Error PutFreeChannel(NX_Hub *hub, NX_HubChannel *channel)
 	NX_UArch level;
 	NX_SpinLockIRQ(&hub->lock, &level);
 	channel->state = NX_HUB_CHANNEL_IDLE;
+    // FIXME: reset state
 	NX_SpinUnlockIRQ(&hub->lock, level);
 	
 	return NX_EOK;
@@ -392,12 +394,19 @@ NX_Error HubMigrateToServer(NX_Hub *hub, NX_HubParam *param, NX_HubChannel *chan
 	channel->state = NX_HUB_CHANNEL_ACTIVE;
 	NX_SpinUnlockIRQ(&hub->lock, level);
 
-    NX_HubChannelDump(channel);
+    // NX_HubChannelDump(channel);
+
+    // NX_LOG_D("migrate to server: %d", NX_AtomicGet(&channel->syncSem.value));
 
     /* TODO: sched to server, block self */
-	NX_ThreadSleep(1000);
+	// NX_ThreadSleep(1000);
 
 	// WaitSemaphore();
+    // mutex lock.
+    NX_SemaphoreWait(&channel->syncSem);
+    // NX_SemaphoreWait(&channel->syncSem);
+
+    NX_LOG_D("client wait done: %d", NX_AtomicGet(&channel->syncSem.value));
 
 	return NX_EOK;
 }
@@ -449,6 +458,10 @@ NX_Error HubMigrateToClient(NX_Hub *hub, NX_HubChannel *channel, NX_Size retVal)
 	channel->retVal = retVal;
 	/* TODO: sched to client */
 	// SignalSemaphore();
+    NX_LOG_D("migrate to client: %d", NX_AtomicGet(&channel->syncSem.value));
+
+    NX_SemaphoreSignal(&channel->syncSem);
+
 	return NX_EOK;
 }
 
@@ -496,7 +509,8 @@ NX_Error NX_HubPoll(NX_HubParam *param)
 
 	NX_ListForEachEntry(channel, &hub->channelListHead, list)
 	{
-		if (channel->state == NX_HUB_CHANNEL_ACTIVE)
+        /* channel active and source */
+		if (channel->state == NX_HUB_CHANNEL_ACTIVE && channel->sourceThread->state == NX_THREAD_BLOCKED)
 		{
 			NX_LOG_D("get a active channel %p", channel);
 			channel->state = NX_HUB_CHANNEL_HANDLED;
