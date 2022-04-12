@@ -339,6 +339,11 @@ NX_Error NX_ThreadBlockLockedIRQ(NX_Thread *thread, NX_Spin *lock, NX_UArch irqL
     {   /* set as block, then sched */
         thread->state = NX_THREAD_BLOCKED;
         NX_SchedLockedIRQ(irqLevel, lock);
+        
+        if (thread->isTerminated != 0) /* check exit */
+        {
+            NX_ThreadExit();
+        }
     }
     
     return NX_EOK;
