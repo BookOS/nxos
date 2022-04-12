@@ -93,11 +93,9 @@ NX_Error NX_SemaphoreSignal(NX_Semaphore *sem)
             /* wakeup first thread */
             NX_ListForEachEntrySafe(thread, next, &sem->semWaitList, blockList)
             {
-                NX_ASSERT(thread->state == NX_THREAD_BLOCKED);
-
                 NX_ListDelInit(&thread->blockList);
 
-                NX_ASSERT(NX_ThreadUnblock(thread) == NX_EOK);
+                NX_ThreadUnblock(thread);
                 break;
             }
         }
