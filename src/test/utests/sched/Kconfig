@@ -6,6 +6,10 @@ config NX_UTEST_SCHED_SPIN
     bool "Enable utest for spin"
     default n
 
+config NX_UTEST_SCHED_SEMAPHORE
+    bool "Enable utest for sempahore"
+    default n
+
 config NX_UTEST_SCHED_THREAD
     bool "Enable utest for thread"
     default n
