@@ -20,56 +20,17 @@
 #include <mm/vmspace.h>
 #include <process/uaccess.h>
 
-/*
-ret = HubCall(hub, HubCallNr, args);
-
-HubCall: 
-	hub -> thread
-
-	build hubcall param
-
-	migrate to server(thread, )
-
-
-*/
-
-/*
-hubcall(hubcallParam):
--> get hub call nr
-	-> get call handler(callNr)
-	-> handler(arg0, arg1, ...)
-
--> call ret or auto call ret after call done().
-*/
-
-/*
-call loop
-yield to other thread/
-wait call come
-*/
-
-/*
-signal
-
-setsignal
-
--> sig to user
-	-> return to user
-	-> build signal
-	-> return to user stack
-	-> call handler
-	-> call ret
-*/
+#define NX_HUB_CLIENTS_MAX (-1UL)
 
 NX_PRIVATE NX_LIST_HEAD(HubSystemListHead);
 NX_PRIVATE NX_SPIN_DEFINE_UNLOCKED(HubSystemLock);
- 
+
 void NX_HubDump(NX_Hub *hub)
 {
     NX_LOG_D("------------ Dump Hub ------------");
-    NX_LOG_D("hub %p, name: %s, call addr: %p, max client: %d", hub, hub->name, hub->callAddr, hub->maxClient);
-    NX_LOG_D("hub process: %p, total channels: %d, request clients: %d", 
-        hub->process, NX_AtomicGet(&hub->totalChannels), NX_AtomicGet(&hub->requestClients));    
+    NX_LOG_D("hub %p, name: %s, max client: %d", hub, hub->name, hub->maxClient);
+    NX_LOG_D("hub total channels: %d", 
+        NX_AtomicGet(&hub->totalChannels));
     NX_LOG_D("====================================================");
 }
 
@@ -79,48 +40,31 @@ void NX_HubChannelDump(NX_HubChannel *channel)
     NX_LOG_D("hub cahnnel source: %p/%s, target: %p/%s, retval: %p",
         channel->sourceThread, channel->sourceThread ? channel->sourceThread->name : "null",
         channel->targetThread, channel->targetThread ? channel->targetThread->name : "null");
-    NX_LOG_D("hub cahnnel server stack top: %p, server stack size: %p, state: %d", 
-        channel->serverStackTop, channel->serverStackSize, channel->state);    
+    NX_LOG_D("hub cahnnel state: %d", channel->state);    
     NX_LOG_D("====================================================");
 }
 
 NX_PRIVATE void HubChannelInit(NX_HubChannel *channel,
-    NX_Thread *source,
-    NX_Thread *target,
-    NX_Addr serverStackTop,
-    NX_Size serverStackSize,
     NX_Hub *hub)
 {
-	channel->sourceThread = source;
-	channel->targetThread = target;
 	channel->state = NX_HUB_CHANNEL_IDLE;
 	NX_ListInit(&channel->list);
+	NX_ListInit(&channel->mdlListHead);
 	channel->retVal = 0;
-	channel->serverStackSize = serverStackSize;
-	channel->serverStackTop = serverStackTop;
-    channel->hub = hub;
+    channel->retErr = NX_EOK;
+	channel->hub = hub;
     NX_SemaphoreInit(&channel->syncSem, 0);
 }
 
-NX_PRIVATE NX_HubChannel *CreateChannel(NX_Hub *hub, NX_Thread *source, NX_Thread *target)
+NX_PRIVATE NX_HubChannel *CreateChannel(NX_Hub *hub)
 {
-    NX_Error err;
-    void *addr = NX_NULL;
 	NX_HubChannel *channel = NX_MemAllocEx(NX_HubChannel);
 	if (channel == NX_NULL)
 	{
 		return NX_NULL;
 	}
 	
-    /* TODO: create server stack */
-    err = NX_VmspaceMap(&hub->process->vmspace, 0, NX_HUB_SERVER_STACK_SIZE, NX_PAGE_ATTR_USER, 0, &addr);
-    if (err != NX_EOK)
-    {
-        NX_MemFree(channel);
-        return NX_NULL;
-    }
-
-    HubChannelInit(channel, source, target, (NX_Addr)addr + NX_HUB_SERVER_STACK_SIZE, NX_HUB_SERVER_STACK_SIZE, hub);
+    HubChannelInit(channel, hub);
 
 	return channel;
 }
@@ -134,15 +78,6 @@ NX_PRIVATE NX_Error DestroyChannel(NX_HubChannel *channel)
     hub = channel->hub;
     if (hub == NX_NULL)
     {
-        return NX_EFAULT;
-    }
-    /* destroy stack */
-    err = NX_VmspaceUnmap(&hub->process->vmspace, channel->serverStackTop - channel->serverStackSize,
-        channel->serverStackSize);
-
-    if (err != NX_EOK)
-    {
-        NX_LOG_E("hub channel unmap stack base %p, size %p error!");
         return NX_EFAULT;
     }
 
@@ -164,15 +99,27 @@ NX_PRIVATE NX_Error HubAddChannel(NX_Hub *hub, NX_HubChannel *channel)
 	return NX_EOK;
 }
 
-NX_PRIVATE NX_Error HubDelChannel(NX_Hub *hub, NX_HubChannel *channel)
+NX_PRIVATE NX_Error HubDelChannelLocked(NX_Hub *hub, NX_HubChannel *channel)
+{
+	NX_ASSERT(hub);
+	NX_ASSERT(channel);
+	
+	NX_ListDel(&channel->list);
+	NX_AtomicDec(&hub->totalChannels);
+
+	return NX_EOK;
+}
+
+NX_PRIVATE NX_Error NX_USED HubDelChannel(NX_Hub *hub, NX_HubChannel *channel)
 {
 	NX_UArch level;
 	NX_ASSERT(hub);
 	NX_ASSERT(channel);
 	
 	NX_SpinLockIRQ(&hub->lock, &level);
-	NX_ListDel(&channel->list);
-	NX_AtomicDec(&hub->totalChannels);
+	
+    HubDelChannelLocked(hub, channel);
+
 	NX_SpinUnlockIRQ(&hub->lock, level);
 	return NX_EOK;
 }
@@ -188,7 +135,7 @@ NX_PRIVATE NX_HubChannel *HubPickChannel(NX_Hub *hub)
 	{
 		if (channel->state == NX_HUB_CHANNEL_IDLE)
 		{
-			channel->state = NX_HUB_CHANNEL_READY;	
+			channel->state = NX_HUB_CHANNEL_READY;
 			NX_SpinUnlockIRQ(&hub->lock, level);
 			return channel;
 		}
@@ -198,19 +145,16 @@ NX_PRIVATE NX_HubChannel *HubPickChannel(NX_Hub *hub)
 	return NX_NULL;
 }
 
-NX_PRIVATE void HubInit(NX_Hub *hub, const char *name, NX_Addr callAddr, NX_Size maxClient)
+NX_PRIVATE void HubInit(NX_Hub *hub, const char *name, NX_Size maxClient)
 {
 	NX_StrCopy(hub->name, name);
 	
-	hub->callAddr = callAddr;
 	hub->maxClient = maxClient;
 
-	hub->process = NX_NULL;
 	NX_AtomicSet(&hub->totalChannels, 0);
-	NX_AtomicSet(&hub->requestClients, 0);
 	NX_ListInit(&hub->channelListHead);
 	NX_ListInit(&hub->list);
-	
+	hub->idleTime = 0;
 	NX_SpinInit(&hub->lock);
 }
 
@@ -220,20 +164,9 @@ NX_PRIVATE NX_Error DestroyHub(NX_Hub *hub)
 	return NX_EOK;
 }
 
-NX_PRIVATE NX_Hub *CreateHub(const char *name, NX_Addr callAddr, NX_Size maxClient)
+NX_PRIVATE NX_Hub *CreateHub(const char *name, NX_Size maxClient)
 {
     NX_Hub *hub;
-    NX_Thread *cur;
-    NX_Process *process;
-    NX_HubChannel *channel;
-
-	cur = NX_ThreadSelf();
-
-    process = cur->resource.process;
-    if (process == NX_NULL) /* only process can create hub */
-    {
-        return NX_NULL;
-    }
 
 	hub = NX_MemAllocEx(NX_Hub);
 	if (hub == NX_NULL)
@@ -241,20 +174,7 @@ NX_PRIVATE NX_Hub *CreateHub(const char *name, NX_Addr callAddr, NX_Size maxClie
 		return NX_NULL;
 	}
 	
-    HubInit(hub, name, callAddr, maxClient);
-
-    hub->process = process; /* bind server thread */
-
-    /* create hub channel */
-    channel = CreateChannel(hub, cur, cur);
-    if (channel == NX_NULL)
-    {
-        DestroyHub(hub);
-        return NX_NULL;
-    }
-
-    HubAddChannel(hub, channel);
-
+    HubInit(hub, name, maxClient);
 	return hub;
 }
 
@@ -278,6 +198,26 @@ NX_PRIVATE NX_HubChannel *GetFreeChannel(NX_Hub *hub, NX_Thread *source)
 
 	channel = HubPickChannel(hub);
 	
+    if (channel == NX_NULL) /* try add a channel */
+    {
+        if (NX_AtomicGet(&hub->totalChannels) < hub->maxClient)
+        {
+            channel = CreateChannel(hub);
+            if (channel == NX_NULL)
+            {
+                return NX_NULL;
+            }
+
+            HubAddChannel(hub, channel);
+
+            channel = HubPickChannel(hub);
+        }
+        else /* no client */
+        {
+            return NX_NULL;
+        }
+    }
+
 	/* update channel source */
     channel->sourceThread = source;
 
@@ -292,23 +232,30 @@ NX_PRIVATE NX_Error PutFreeChannel(NX_Hub *hub, NX_HubChannel *channel)
 	NX_UArch level;
 	NX_SpinLockIRQ(&hub->lock, &level);
 	channel->state = NX_HUB_CHANNEL_IDLE;
-    // FIXME: reset state
+    channel->sourceThread = NX_NULL;
+    channel->targetThread = NX_NULL;
 	NX_SpinUnlockIRQ(&hub->lock, level);
 	
 	return NX_EOK;
 }
 
-NX_Error NX_HubRegister(const char *name, NX_Addr callAddr, NX_Size maxClient, NX_Hub **outHub)
+NX_Error NX_HubRegister(const char *name, NX_Size maxClient, NX_Hub **outHub)
 {
 	NX_Hub *hub;
 	NX_UArch level;
+    NX_Thread *self;
 
-	if (!name || !callAddr || !maxClient)
+	if (!name)
 	{
 		return NX_EINVAL;
 	}
 
-	hub = CreateHub(name, callAddr, maxClient);
+    if (!maxClient)
+    {
+        maxClient = NX_HUB_CLIENTS_MAX;
+    }
+
+	hub = CreateHub(name, maxClient);
 	if (hub == NX_NULL)
 	{
 		return NX_ENOMEM;
@@ -318,14 +265,13 @@ NX_Error NX_HubRegister(const char *name, NX_Addr callAddr, NX_Size maxClient, N
 	NX_ListAdd(&hub->list, &HubSystemListHead);
 	NX_SpinUnlockIRQ(&HubSystemLock, level);
 
-	NX_ThreadSelf()->resource.hub = hub;
+    self = NX_ThreadSelf();
+	self->resource.hub = hub;
 
 	if (outHub)
 	{
 		*outHub = hub;
 	}
-
-    NX_HubDump(hub);
 
 	return NX_EOK;
 }
@@ -334,6 +280,7 @@ NX_Error NX_HubUnregister(const char *name)
 {
 	NX_Hub *hub;
 	NX_UArch level;
+    NX_Thread *self;
 
 	if (!name)
 	{
@@ -346,40 +293,25 @@ NX_Error NX_HubUnregister(const char *name)
 		return NX_ENOSRCH;
 	}
 
-	/* FIXME: check hub not active */
-	
+    self = NX_ThreadSelf();
+
+    if (self->resource.hub != hub)
+    {
+        return NX_ENORES;
+    }
+
+    if (NX_AtomicGet(&hub->totalChannels) > 0)
+    {
+        return NX_EBUSY;
+    }
+
+	self->resource.hub = NX_NULL;
+
 	NX_SpinLockIRQ(&HubSystemLock, &level);
 	NX_ListDel(&hub->list);
 	NX_SpinUnlockIRQ(&HubSystemLock, level);
 	
 	DestroyHub(hub);
-
-	return NX_EOK;
-}
-
-NX_Error HubBuildCallEnv(NX_Hub *hub, NX_HubParam *param, NX_HubChannel *channel)
-{
-	NX_U8 *top;
-    NX_U8 *paramAddr;
-    /* pass arg as reg */
-    top = (NX_U8 *)NX_VmspaceVirToPhy(&hub->process->vmspace, channel->serverStackTop - channel->serverStackSize);
-    if (top == NX_NULL)
-    {
-        return NX_EFAULT;
-    }
-    top = NX_Phy2Virt(top);
-
-    top -= sizeof(NX_HubParam);
-    top = (NX_U8 *)NX_ALIGN_DOWN(((NX_Addr)top), 4);; /* 4 byte align */
-    paramAddr = top;
-    /* copy param */
-    NX_CopyFromUser((char *)top, (char *)param, sizeof(param));
-    
-    /* copy param addr */
-    --top;
-    NX_MemCopy(top, &paramAddr, sizeof(NX_U32));
-    
-    /* TODO: build a frame */
 
 	return NX_EOK;
 }
@@ -394,20 +326,7 @@ NX_Error HubMigrateToServer(NX_Hub *hub, NX_HubParam *param, NX_HubChannel *chan
 	channel->state = NX_HUB_CHANNEL_ACTIVE;
 	NX_SpinUnlockIRQ(&hub->lock, level);
 
-    // NX_HubChannelDump(channel);
-
-    // NX_LOG_D("migrate to server: %d", NX_AtomicGet(&channel->syncSem.value));
-
-    /* TODO: sched to server, block self */
-	// NX_ThreadSleep(1000);
-
-	// WaitSemaphore();
-    // mutex lock.
-    NX_SemaphoreWait(&channel->syncSem);
-    // NX_SemaphoreWait(&channel->syncSem);
-
-    NX_LOG_D("client wait done: %d", NX_AtomicGet(&channel->syncSem.value));
-
+    NX_SemaphoreWait(&channel->syncSem); /* wait server poll channel */
 	return NX_EOK;
 }
 
@@ -415,14 +334,13 @@ NX_Error NX_HubCallParam(NX_Hub *hub, NX_HubParam *param, NX_Size *retVal)
 {
 	NX_HubChannel *channel;
 	NX_Thread *cur;
+	NX_Error retErr;
 	
-	if (!hub || !param || !retVal)
+	if (!hub || !param)
 	{
 		return NX_EINVAL;
 	}
 	
-    NX_HubDump(hub);
-
 	cur = NX_ThreadSelf();
 	/* get a free channel */
 	channel = GetFreeChannel(hub, cur);
@@ -431,16 +349,19 @@ NX_Error NX_HubCallParam(NX_Hub *hub, NX_HubParam *param, NX_Size *retVal)
 		return NX_EAGAIN;
 	}
 
-    NX_HubChannelDump(channel);
-
 	HubMigrateToServer(hub, param, channel);
 
-	*retVal = channel->retVal;
+    if (retVal)
+    {
+    	NX_CopyToUser((void *)retVal, (void *)&channel->retVal, sizeof(channel->retVal));
+    }
+
+	retErr = channel->retErr;
 
 	/* put channel after used */
     PutFreeChannel(hub, channel);
 
-	return NX_EOK;
+	return retErr;
 }
 
 NX_Error NX_HubCallParamName(const char *name, NX_HubParam *param, NX_Size *retVal)
@@ -453,19 +374,17 @@ NX_Error NX_HubCallParamName(const char *name, NX_HubParam *param, NX_Size *retV
     return NX_HubCallParam(hub, param, retVal);
 }
 
-NX_Error HubMigrateToClient(NX_Hub *hub, NX_HubChannel *channel, NX_Size retVal)
+NX_PRIVATE NX_Error HubMigrateToClient(NX_Hub *hub, NX_HubChannel *channel, NX_Size retVal, NX_Error retErr)
 {
 	channel->retVal = retVal;
-	/* TODO: sched to client */
-	// SignalSemaphore();
-    NX_LOG_D("migrate to client: %d", NX_AtomicGet(&channel->syncSem.value));
+	channel->retErr = retErr;
 
+    /* channel handled */
     NX_SemaphoreSignal(&channel->syncSem);
-
 	return NX_EOK;
 }
 
-NX_Error NX_HubReturn(NX_Size retVal)
+NX_Error NX_HubReturn(NX_Size retVal, NX_Error retErr)
 {
 	NX_Thread *cur = NX_ThreadSelf();
 	NX_Hub *hub = cur->resource.hub;
@@ -483,18 +402,49 @@ NX_Error NX_HubReturn(NX_Size retVal)
 
 	if (channel->targetThread != cur)
 	{
-		NX_LOG_E("channel targe error!");
+		NX_LOG_E("hub return: channel targe thread error!");
 		return NX_EFAULT;
 	}
 
+    /* clear active channel */
 	cur->resource.activeChannel = NX_NULL;
-	return HubMigrateToClient(hub, channel, retVal);
+
+	return HubMigrateToClient(hub, channel, retVal, retErr);
+}
+
+NX_PRIVATE void HubCheckChannelRelease(NX_Hub *hub)
+{
+    NX_ASSERT(hub);
+
+    if (NX_AtomicGet(&hub->totalChannels) > 0)
+    {    
+        if (!hub->idleTime)
+        {
+            hub->idleTime = NX_ClockTickGetMillisecond();
+        }
+
+        /* check idle time, release all channels */
+        if (NX_ClockTickGetMillisecond() - hub->idleTime > NX_HUB_IDLE_TIME * 1000)
+        {
+            NX_HubChannel *channel, *nextChannel;
+            NX_UArch level;
+
+            NX_SpinLockIRQ(&hub->lock, &level);
+            NX_ListForEachEntrySafe(channel, nextChannel, &hub->channelListHead, list)
+            {
+                HubDelChannelLocked(hub, channel);
+                DestroyChannel(channel);
+            }
+        	NX_SpinUnlockIRQ(&hub->lock, level);
+            hub->idleTime = 0; /* clear idle time */
+        }
+    }
 }
 
 NX_Error NX_HubPoll(NX_HubParam *param)
 {
 	NX_UArch level;
-	NX_HubChannel *channel;
+	NX_HubChannel *channel, *channelActive = NX_NULL;
 	NX_Thread *thread = NX_ThreadSelf();
 	NX_Hub *hub = thread->resource.hub;
 	NX_Error err = NX_EAGAIN;
@@ -509,17 +459,143 @@ NX_Error NX_HubPoll(NX_HubParam *param)
 
 	NX_ListForEachEntry(channel, &hub->channelListHead, list)
 	{
-        /* channel active and source */
-		if (channel->state == NX_HUB_CHANNEL_ACTIVE && channel->sourceThread->state == NX_THREAD_BLOCKED)
+        /* channel active and source thread in  */
+		if (channel->state == NX_HUB_CHANNEL_ACTIVE)
 		{
-			NX_LOG_D("get a active channel %p", channel);
-			channel->state = NX_HUB_CHANNEL_HANDLED;
-			thread->resource.activeChannel = channel;
-			err = NX_EOK;
+            channel->state = NX_HUB_CHANNEL_HANDLED;
+            channelActive = channel;
 			break;
 		}
 	}
-
 	NX_SpinUnlockIRQ(&hub->lock, level);
+
+    if (channelActive) /* handle active channel */
+    {
+        hub->idleTime = 0; /* clear idle time */
+
+        NX_CopyToUserEx(param, &channelActive->param);
+        channelActive->targetThread = thread;
+
+        thread->resource.activeChannel = channelActive;
+        err = NX_EOK;
+    }
+    else
+    {
+        HubCheckChannelRelease(hub);
+    }
+
 	return err;
+}
+
+NX_HubMdl *NX_HubCreateMDL(NX_HubChannel *channel, NX_Addr addr, NX_Size len)
+{
+    NX_HubMdl *mdl = NX_MemAlloc(len);
+    if (mdl == NX_NULL)
+    {
+        return NX_NULL;
+    }
+    NX_ListInit(&mdl->list);
+    mdl->startAddr = addr & NX_PAGE_ADDR_MASK;
+    mdl->mappedAddr = 0; 
+    mdl->byteOffset = addr - mdl->startAddr;
+    if (len > NX_HUB_MDL_LEN_MAX)
+    {
+        len = NX_HUB_MDL_LEN_MAX;
+    }
+    mdl->byteCount = len;
+    
+    NX_ListAdd(&mdl->list, &channel->mdlListHead);
+
+    return mdl;
+}
+
+NX_PRIVATE void *HubMapAddr(NX_HubChannel *channel, NX_Thread *source, NX_Thread *target, void *addr, NX_Size size)
+{
+    NX_Process *sourceProc, *targetProc;
+    NX_Error err;
+    void *mapAddr;
+    NX_Addr phyAddr;
+    NX_HubMdl *mdl;
+
+    targetProc = target->resource.process;
+    sourceProc = source->resource.process;
+    if (targetProc == NX_NULL || sourceProc == NX_NULL)
+    {
+		NX_LOG_E("hub map: thread not in process!");
+        return NX_NULL;
+    }
+
+    NX_LOG_D("hub map: virtual addr %p", addr);
+
+    phyAddr = NX_VmspaceVirToPhy(&sourceProc->vmspace, (NX_Addr)addr);
+    if (phyAddr == 0)
+    {
+        NX_LOG_E("hub map: addr %p not in process!", addr);
+        return NX_NULL;
+    }
+
+    NX_LOG_D("hub map: phy addr %p", phyAddr);
+
+    /* record mdl */
+    mdl = NX_HubCreateMDL(channel, addr, size);
+    if (mdl == NX_NULL)
+    {
+        NX_LOG_E("hub map: create mdl no enough memory!");
+        return NX_NULL;
+    }
+
+    /* FIXME: map phy page one by one, because pages may be non-contiguous  */
+    err = NX_VmspaceMapWithPhy(&targetProc->vmspace, 0, phyAddr,
+        mdl->byteOffset + mdl->byteCount, NX_PAGE_ATTR_USER, 0, &mapAddr);
+
+    if (err != NX_EOK)
+    {
+        NX_LOG_E("hub map: map phy addr %p failed!", phyAddr);
+        return NX_NULL;
+    }
+
+    NX_LOG_D("hub map: mapped addr %p", mapAddr);
+    return (char *)mapAddr + mdl->byteOffset;
+}
+
+void *NX_HubLocateAddr(void *addr, NX_Size size)
+{
+    NX_Thread *source, *target;
+
+    NX_Thread *cur = NX_ThreadSelf();
+	NX_Hub *hub = cur->resource.hub;
+	NX_HubChannel *channel = cur->resource.activeChannel;
+
+    if (!addr || !size)
+    {
+        return NX_NULL;
+    }
+
+	if (!hub)
+	{
+		return NX_NULL;
+	}
+
+	if (!channel)
+	{
+		return NX_NULL;
+	}
+
+    target = channel->targetThread;
+
+	if (target != cur)
+	{
+		NX_LOG_E("hub map: channel targe thread error!");
+		return NX_NULL;
+	}
+
+    source = channel->sourceThread;
+
+    if (source == NX_NULL)
+	{
+		NX_LOG_E("hub map: channel source thread error!");
+		return NX_NULL;
+	}
+
+    return HubMapAddr(channel, source, target, addr, size);
 }

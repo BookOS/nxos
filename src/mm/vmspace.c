@@ -618,3 +618,22 @@ NX_Error NX_VmspaceExit(NX_Vmspace *space)
     NX_ASSERT(NX_ProcessFreePageTable(space) == NX_EOK);
     return NX_EOK;
 }
+
+NX_Addr NX_VmspaceVirToPhy(NX_Vmspace *space, NX_Addr virAddr)
+{
+    if (!space)
+    {
+        return 0;
+    }
+    if (!space->mmu.table)
+    {
+        return 0;
+    }
+    
+    if (virAddr < space->spaceBase || virAddr >= space->spaceTop)
+    {
+        return 0;
+    }
+
+    return (NX_Addr)NX_MmuVir2Phy(&space->mmu, virAddr);
+}

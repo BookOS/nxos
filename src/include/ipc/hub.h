@@ -18,10 +18,10 @@
 #include <sched/mutex.h>
 #include <sched/thread.h>
 #include <sched/semaphore.h>
-#include <process/process.h>
 #include <utils/list.h>
+#include <time/clock.h>
 
-#define NX_HUB_SERVER_STACK_SIZE    (16 * NX_KB)
+#define NX_HUB_IDLE_TIME 10 /* seconds */
 
 #define NX_HUB_NAME_LEN 32
 typedef struct NX_Hub
@@ -29,15 +29,13 @@ typedef struct NX_Hub
     NX_List list;
     NX_List channelListHead;    /* channel on this hub */
     char name[NX_HUB_NAME_LEN];
-    NX_Addr callAddr;
     NX_Size maxClient;
-    NX_Process *process;
     NX_Atomic totalChannels;
-    NX_Atomic requestClients;
     NX_Spin lock;
+    NX_TimeVal idleTime;
 } NX_Hub;
 
-#define NX_HUB_PARAM_NR 7
+#define NX_HUB_PARAM_NR 8
 typedef struct NX_HubParam
 {
     NX_U32 api;
@@ -55,26 +53,39 @@ typedef enum NX_HubChannelState
 typedef struct NX_HubChannel
 {
     NX_List list;
+    NX_List mdlListHead;
     NX_HubChannelState state;
     NX_Thread *sourceThread;
     NX_Thread *targetThread;
     NX_Size retVal;
-
-    NX_Addr serverStackTop;
-    NX_Size serverStackSize;
+    NX_Error retErr;
     NX_Hub *hub;
     NX_Semaphore syncSem;
     NX_HubParam param;
 } NX_HubChannel;
 
-NX_Error NX_HubRegister(const char *name, NX_Addr callAddr, NX_Size maxClient, NX_Hub **outHub);
+#define NX_HUB_MDL_LEN_MAX (32 * NX_MB)
+
+/* hub memory description list */
+typedef struct NX_HubMDL
+{
+    NX_List list;
+    NX_Addr startAddr;  /* start addr (page aligned) */
+    NX_Addr mappedAddr; /* mapped addr (page aligned) */
+    NX_Size byteOffset; /* offset byte in page */
+    NX_Addr byteCount;  /* byte count in this mdl */
+} NX_HubMdl;
+
+NX_Error NX_HubRegister(const char *name, NX_Size maxClient, NX_Hub **outHub);
 NX_Error NX_HubUnregister(const char *name);
 
 NX_Error NX_HubCallParam(NX_Hub *hub, NX_HubParam *param, NX_Size *retVal);
 NX_Error NX_HubCallParamName(const char *name, NX_HubParam *param, NX_Size *retVal);
 
 NX_Error NX_HubPoll(NX_HubParam *param);
-NX_Error NX_HubReturn(NX_Size retVal);
+NX_Error NX_HubReturn(NX_Size retVal, NX_Error retErr);
+
+void *NX_HubLocateAddr(void *addr, NX_Size size);
 
 void NX_HubDump(NX_Hub *hub);
 void NX_HubChannelDump(NX_HubChannel *channel);
