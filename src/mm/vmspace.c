@@ -80,7 +80,7 @@ NX_Error NX_VmspaceListNodes(NX_Vmspace *space)
 NX_PRIVATE NX_Vmnode *VmnodeCreate(
     NX_Addr addr,
     NX_Size size,
-    NX_U32 attr,
+    NX_UArch attr,
     NX_U32 flags)
 {
     NX_Vmnode *node = NX_MemAlloc(sizeof(NX_Vmnode));
@@ -431,7 +431,7 @@ NX_Error __VmspaceMap(NX_Vmspace *space,
     NX_Addr vaddr,
     NX_Addr paddr,
     NX_Size size,
-    NX_U32 attr,
+    NX_UArch attr,
     NX_U32 flags,
     void **outAddr)
 {
@@ -518,7 +518,7 @@ NX_Error __VmspaceMap(NX_Vmspace *space,
 NX_Error NX_VmspaceMap(NX_Vmspace *space,
     NX_Addr addr,
     NX_Size size,
-    NX_U32 attr,
+    NX_UArch attr,
     NX_U32 flags,
     void **outAddr)
 {
@@ -529,7 +529,7 @@ NX_Error NX_VmspaceMapWithPhy(NX_Vmspace *space,
     NX_Addr vaddr,
     NX_Addr paddr,
     NX_Size size,
-    NX_U32 attr,
+    NX_UArch attr,
     NX_U32 flags,
     void **outAddr)
 {
