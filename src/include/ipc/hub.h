@@ -67,13 +67,14 @@ typedef struct NX_HubChannel
 #define NX_HUB_MDL_LEN_MAX (32 * NX_MB)
 
 /* hub memory description list */
-typedef struct NX_HubMDL
+typedef struct NX_HubMdl
 {
     NX_List list;
     NX_Addr startAddr;  /* start addr (page aligned) */
-    NX_Addr mappedAddr; /* mapped addr (page aligned) */
+    void *mappedAddr; /* mapped addr (page aligned) */
     NX_Size byteOffset; /* offset byte in page */
-    NX_Addr byteCount;  /* byte count in this mdl */
+    NX_Size byteCount;  /* byte count in this mdl */
+    NX_Vmspace *vmspace; /* mdl map space */
 } NX_HubMdl;
 
 NX_Error NX_HubRegister(const char *name, NX_Size maxClient, NX_Hub **outHub);
@@ -85,7 +86,7 @@ NX_Error NX_HubCallParamName(const char *name, NX_HubParam *param, NX_Size *retV
 NX_Error NX_HubPoll(NX_HubParam *param);
 NX_Error NX_HubReturn(NX_Size retVal, NX_Error retErr);
 
-void *NX_HubLocateAddr(void *addr, NX_Size size);
+void *NX_HubTranslate(void *addr, NX_Size size);
 
 void NX_HubDump(NX_Hub *hub);
 void NX_HubChannelDump(NX_HubChannel *channel);

@@ -187,9 +187,9 @@ NX_Error SysHubPoll(NX_HubParam *param)
     return NX_HubPoll(param);
 }
 
-void *SysHubLocateAddr(void *addr, NX_Size size)
+void *SysHubTranslate(void *addr, NX_Size size)
 {
-    return NX_HubLocateAddr(addr, size);
+    return NX_HubTranslate(addr, size);
 }
 
 /* xbook env syscall table  */
@@ -227,7 +227,7 @@ NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] =
     SysHubCallParamName,
     SysHubReturn,           /* 30 */
     SysHubPoll,
-    SysHubLocateAddr,
+    SysHubTranslate,
 };
 
 /* posix env syscall table */

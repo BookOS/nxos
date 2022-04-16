@@ -25,6 +25,8 @@
 NX_PRIVATE NX_LIST_HEAD(HubSystemListHead);
 NX_PRIVATE NX_SPIN_DEFINE_UNLOCKED(HubSystemLock);
 
+NX_PRIVATE void NX_HubReleaseMdl(NX_HubChannel *channel);
+
 void NX_HubDump(NX_Hub *hub)
 {
     NX_LOG_D("------------ Dump Hub ------------");
@@ -409,6 +411,9 @@ NX_Error NX_HubReturn(NX_Size retVal, NX_Error retErr)
     /* clear active channel */
 	cur->resource.activeChannel = NX_NULL;
 
+	/* release mdl */
+	NX_HubReleaseMdl(channel);
+
 	return HubMigrateToClient(hub, channel, retVal, retErr);
 }
 
@@ -487,7 +492,7 @@ NX_Error NX_HubPoll(NX_HubParam *param)
 	return err;
 }
 
-NX_HubMdl *NX_HubCreateMDL(NX_HubChannel *channel, NX_Addr addr, NX_Size len)
+NX_PRIVATE NX_HubMdl *CreateMdl(NX_HubChannel *channel, NX_Addr addr, NX_Size len, NX_Vmspace *space)
 {
     NX_HubMdl *mdl = NX_MemAlloc(len);
     if (mdl == NX_NULL)
@@ -496,25 +501,110 @@ NX_HubMdl *NX_HubCreateMDL(NX_HubChannel *channel, NX_Addr addr, NX_Size len)
     }
     NX_ListInit(&mdl->list);
     mdl->startAddr = addr & NX_PAGE_ADDR_MASK;
-    mdl->mappedAddr = 0; 
+    mdl->mappedAddr = NX_NULL; 
     mdl->byteOffset = addr - mdl->startAddr;
     if (len > NX_HUB_MDL_LEN_MAX)
     {
         len = NX_HUB_MDL_LEN_MAX;
     }
     mdl->byteCount = len;
-    
+    mdl->vmspace = space;
+
     NX_ListAdd(&mdl->list, &channel->mdlListHead);
 
     return mdl;
 }
 
-NX_PRIVATE void *HubMapAddr(NX_HubChannel *channel, NX_Thread *source, NX_Thread *target, void *addr, NX_Size size)
+NX_PRIVATE void DestroyMdl(NX_HubMdl *mdl)
+{
+	NX_ASSERT(mdl);
+
+    NX_ListDelInit(&mdl->list);
+    NX_MemFree(mdl);
+}
+
+NX_PRIVATE void *MapMdl(NX_HubMdl *mdl, NX_Vmspace *sourceSpace, NX_Vmspace *targetSpace)
+{
+    NX_Addr phyAddr;
+	NX_Addr virAddr;
+	void *mapAddr = NX_NULL;
+	
+	NX_Size pageCount;
+	NX_Size pageIdx;
+	NX_Size pageCountMapped;
+	
+	NX_ASSERT(mdl);
+	NX_ASSERT(sourceSpace);
+	NX_ASSERT(targetSpace);
+
+	pageCount = NX_DIV_ROUND_UP(mdl->byteOffset + mdl->byteCount, NX_PAGE_SIZE);
+	
+	/* check addr valid */
+	for (pageIdx = 0, virAddr = mdl->startAddr; pageIdx < pageCount; pageIdx++, virAddr += NX_PAGE_SIZE)
+	{
+		phyAddr = NX_VmspaceVirToPhy(sourceSpace, (NX_Addr)virAddr);
+		if (phyAddr == 0)
+		{
+			NX_LOG_E("hub map: addr %p not in process!", virAddr);
+			return NX_NULL;
+		}
+	}
+
+	/* map memory */
+	/* FIXME: lock vmspace while map virtual addr, Make sure the addresses are consecutive */
+	pageCountMapped = 0;
+	for (pageIdx = 0, virAddr = mdl->startAddr; pageIdx < pageCount; pageIdx++, virAddr += NX_PAGE_SIZE)
+	{
+		phyAddr = NX_VmspaceVirToPhy(sourceSpace, (NX_Addr)virAddr);
+		NX_ASSERT(phyAddr);
+
+		if (NX_VmspaceMapWithPhy(targetSpace, 0, phyAddr, NX_PAGE_SIZE, NX_PAGE_ATTR_USER, 0, &mapAddr) != NX_EOK)
+		{
+			if (pageCountMapped > 0) /* unmap mapped pages */
+			{
+				NX_VmspaceUnmap(targetSpace, mdl->startAddr, pageCountMapped * NX_PAGE_SIZE);
+			}
+			return NX_NULL;
+		}
+
+		pageCountMapped++;
+
+		if (mdl->mappedAddr == NX_NULL)
+		{
+			mdl->mappedAddr = mapAddr;
+		}
+	}
+	NX_ASSERT(mdl->mappedAddr);
+	return (void *)((NX_U8 *)mdl->mappedAddr + mdl->byteOffset);
+}
+
+NX_PRIVATE void UnmapMdl(NX_HubMdl *mdl)
+{
+	NX_Addr virAddr;
+	NX_Size pageCount;
+	NX_Size pageIdx;
+	NX_Vmspace *vmspace = mdl->vmspace;
+
+	NX_ASSERT(mdl);
+	NX_ASSERT(vmspace);
+
+	pageCount = NX_DIV_ROUND_UP(mdl->byteOffset + mdl->byteCount, NX_PAGE_SIZE);
+	
+	/* FIXME: lock vmspace while unmap virtual addr, Make sure the addresses are consecutive */
+	virAddr = (NX_Addr)mdl->mappedAddr;
+	for (pageIdx = 0; pageIdx < pageCount; pageIdx++, virAddr += NX_PAGE_SIZE)
+	{
+		if (NX_VmspaceUnmap(vmspace, virAddr, NX_PAGE_SIZE) != NX_EOK)
+		{
+			NX_LOG_W("hub mdl: unmap vitural addr %p error", virAddr);
+		}
+	}
+}
+
+NX_PRIVATE void *NX_HubMapAddr(NX_HubChannel *channel, NX_Thread *source, NX_Thread *target, void *addr, NX_Size size)
 {
     NX_Process *sourceProc, *targetProc;
-    NX_Error err;
     void *mapAddr;
-    NX_Addr phyAddr;
     NX_HubMdl *mdl;
 
     targetProc = target->resource.process;
@@ -525,40 +615,44 @@ NX_PRIVATE void *HubMapAddr(NX_HubChannel *channel, NX_Thread *source, NX_Thread
         return NX_NULL;
     }
 
-    NX_LOG_D("hub map: virtual addr %p", addr);
-
-    phyAddr = NX_VmspaceVirToPhy(&sourceProc->vmspace, (NX_Addr)addr);
-    if (phyAddr == 0)
-    {
-        NX_LOG_E("hub map: addr %p not in process!", addr);
-        return NX_NULL;
-    }
-
-    NX_LOG_D("hub map: phy addr %p", phyAddr);
-
-    /* record mdl */
-    mdl = NX_HubCreateMDL(channel, addr, size);
+	/* limit mdl list length */
+	if (NX_ListLength(&channel->mdlListHead) >= NX_HUB_PARAM_NR)
+	{
+		NX_LOG_E("hub mdl: too much mdl! max mdl is %d .", NX_HUB_PARAM_NR);
+		return NX_NULL;
+	}
+	
+    mdl = CreateMdl(channel, (NX_Addr)addr, size, &targetProc->vmspace);
     if (mdl == NX_NULL)
     {
         NX_LOG_E("hub map: create mdl no enough memory!");
         return NX_NULL;
     }
 
-    /* FIXME: map phy page one by one, because pages may be non-contiguous  */
-    err = NX_VmspaceMapWithPhy(&targetProc->vmspace, 0, phyAddr,
-        mdl->byteOffset + mdl->byteCount, NX_PAGE_ATTR_USER, 0, &mapAddr);
-
-    if (err != NX_EOK)
-    {
-        NX_LOG_E("hub map: map phy addr %p failed!", phyAddr);
-        return NX_NULL;
-    }
-
-    NX_LOG_D("hub map: mapped addr %p", mapAddr);
-    return (char *)mapAddr + mdl->byteOffset;
+	mapAddr = MapMdl(mdl, &sourceProc->vmspace, &targetProc->vmspace);
+	if (mapAddr == NX_NULL)
+	{
+        NX_LOG_E("hub map: map mdl failed!");
+        DestroyMdl(mdl);
+		return NX_NULL;
+	}
+    return (char *)mapAddr;
 }
 
-void *NX_HubLocateAddr(void *addr, NX_Size size)
+NX_PRIVATE NX_Bool ChannelMatchParam(NX_Size arg, NX_HubChannel *channel)
+{
+	int i;
+	for (i = 0; i < NX_HUB_PARAM_NR; i++)
+	{
+		if (arg == channel->param.args[i])
+		{
+			return NX_True;
+		}
+	}
+	return NX_False;
+}
+
+void *NX_HubTranslate(void *addr, NX_Size size)
 {
     NX_Thread *source, *target;
 
@@ -585,7 +679,7 @@ void *NX_HubLocateAddr(void *addr, NX_Size size)
 
 	if (target != cur)
 	{
-		NX_LOG_E("hub map: channel targe thread error!");
+		NX_LOG_E("hub translate: channel targe thread error!");
 		return NX_NULL;
 	}
 
@@ -593,9 +687,27 @@ void *NX_HubLocateAddr(void *addr, NX_Size size)
 
     if (source == NX_NULL)
 	{
-		NX_LOG_E("hub map: channel source thread error!");
+		NX_LOG_E("hub translate: channel source thread error!");
 		return NX_NULL;
 	}
 
-    return HubMapAddr(channel, source, target, addr, size);
+	/* check addr in channel param */
+	if (ChannelMatchParam((NX_Size)addr, channel) == NX_False)
+	{
+		NX_LOG_E("hub translate: arg %p not in channel param!", addr);
+		return NX_NULL;
+	}
+	
+    return NX_HubMapAddr(channel, source, target, addr, size);
+}
+
+NX_PRIVATE void NX_HubReleaseMdl(NX_HubChannel *channel)
+{
+	NX_HubMdl *mdl, *next;
+
+	NX_ListForEachEntrySafe(mdl, next, &channel->mdlListHead, list)
+	{
+		UnmapMdl(mdl);
+		DestroyMdl(mdl);
+	}
 }
