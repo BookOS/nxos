@@ -35,6 +35,9 @@ NX_PRIVATE void NX_HalEarlyMap(NX_Mmu *mmu, NX_Addr virStart, NX_Size size)
     /* map kernel self */
     NX_MmuMapPageWithPhy(mmu, virStart, virStart, size,
                          NX_PAGE_ATTR_KERNEL);
+    /* sbi */
+    NX_MmuMapPageWithPhy(mmu, MEM_SBI_BASE, MEM_SBI_BASE, MEM_SBI_SZ,
+                         NX_PAGE_ATTR_KERNEL);
     /* uart0 */
     NX_MmuMapPageWithPhy(mmu, UART0_PHY_ADDR, UART0_PHY_ADDR, NX_PAGE_SIZE,
                          NX_PAGE_ATTR_KERNEL);
@@ -46,8 +49,8 @@ NX_PRIVATE void NX_HalEarlyMap(NX_Mmu *mmu, NX_Addr virStart, NX_Size size)
                          NX_PAGE_ATTR_KERNEL);
     NX_MmuMapPageWithPhy(mmu, RISCV_PLIC_PADDR + 0x200000, RISCV_PLIC_PADDR + 0x200000, 0x4000,
                          NX_PAGE_ATTR_KERNEL);
-    
-    NX_LOG_I("OS map early on [%p~%p]", MEM_KERNEL_BASE, KernelMMU.earlyEnd);
+
+    NX_LOG_I("OS map early on [%p~%p]", virStart, virStart + size);
 }
 
 /**
@@ -93,6 +96,14 @@ void NX_HalPageZoneInit(void)
 
     NX_HalEarlyMap(&KernelMMU, KernelMMU.virStart, KernelMMU.earlyEnd - KernelMMU.virStart);
 
+#if defined(CONFIG_NX_PLATFORM_D1)
+    /* Set the low 1GB MMIO area to no Cache and Strong Order fetch mode */
+    KernelTable[0] &= ~(PTE_CACHE | PTE_SHARE);
+    KernelTable[0] |= PTE_SO;
+#endif
+
+    NX_LOG_I("set MMU table: %p", KernelMMU.table);
+
     NX_MmuSetPageTable((NX_UArch)KernelMMU.table);
     NX_MmuEnable();
 
@@ -111,5 +122,23 @@ NX_IMPORT NX_Addr __NX_BssEnd;
 
 void NX_HalClearBSS(void)
 {
-    NX_MemZero(&__NX_BssStart, &__NX_BssEnd - &__NX_BssStart);
+    NX_UArch *dst;
+
+    dst = &__NX_BssStart;
+    while (dst < &__NX_BssEnd)
+    {
+        *dst++ = 0x00UL;
+    }
+}
+
+NX_IMPORT int NX_Main(NX_UArch coreId);
+NX_PRIVATE NX_Size BootMagic = 0x5a5af0f0;
+void __NX_EarlyMain(NX_UArch coreId)
+{
+    if (BootMagic == 0x5a5af0f0)
+    {
+        NX_HalClearBSS();
+        BootMagic = 0;
+    }
+    NX_Main(coreId);
 }

@@ -22,9 +22,19 @@
 #error "not support 32bit!"
 #endif
 
+#if defined(CONFIG_NX_PLATFORM_K210) || \
+    defined(CONFIG_NX_PLATFORM_RISCV64_QEMU)
+
 /* local interrupt controller, which contains the timer. */
 #define RISCV_CLINT_PADDR       0x02000000UL
 /* Platform level interrupt controller */
 #define RISCV_PLIC_PADDR        0x0c000000UL
+
+#elif defined(CONFIG_NX_PLATFORM_D1)
+
+#define RISCV_CLINT_PADDR       0x04000000UL
+#define RISCV_PLIC_PADDR        0x10000000UL
+
+#endif
 
 #endif  /* __PLATFORM_RISCV__ */

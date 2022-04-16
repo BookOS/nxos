@@ -10,7 +10,7 @@
  */
 
     .section .text.start
-    .extern NX_Main
+    .extern __NX_EarlyMain
 
     .globl CPU_StackTop0
     .globl CPU_StackTop1
@@ -49,7 +49,13 @@ _SetSP3:
 _EnterMain:
     csrw sscratch, sp /* first set sscrach as cpu stack here */
     csrc sstatus, 0x2 /* disable interrupt */
-    call NX_Main
+
+.option push
+.option norelax
+  la gp, __global_pointer$
+.option pop
+    
+    call __NX_EarlyMain
 
 loop:
     j loop

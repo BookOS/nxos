@@ -7,6 +7,7 @@
  * Change Logs:
  * Date           Author            Notes
  * 2022-1-16      JasonHu           Init
+ * 2022-4-18      JasonHu           Add thead-c906 mmu support
  */
 
 #include <mm/mmu.h>
@@ -39,9 +40,10 @@
 /* use sv39 mmu mode */
 #define MMU_MODE_SV39   8L
 #define MMU_MODE_BIT_SHIFT   60
-#define MAKE_SATP(pageTable) ((MMU_MODE_SV39 << MMU_MODE_BIT_SHIFT) | (((NX_Addr)pageTable) >> NX_PAGE_SHIFT))
-#define GET_SATP_MODE(pageTable) (((NX_Addr)(pageTable) >> MMU_MODE_BIT_SHIFT))
+#define MMU_MODE_MASK   (0xfUL << 60)
 
+#define MAKE_SATP_ADDR(pageTable) (((NX_Addr)pageTable) >> NX_PAGE_SHIFT)
+#define MAKE_SATP_MODE (MMU_MODE_SV39 << MMU_MODE_BIT_SHIFT)
 #define GET_ADDR_FROM_SATP(satp) ((((NX_Addr)satp) << NX_PAGE_SHIFT))
 
 NX_INLINE void SFenceVMA()
@@ -88,7 +90,7 @@ NX_PRIVATE MMU_PTE *PageWalk(MMU_PDE *pageTable, NX_Addr virAddr, NX_Bool allocP
             NX_ASSERT(pageTable);
             NX_PageIncrease(levelPageTable);
             
-            *pte = PADDR2PTE(pageTable) | PTE_V;
+            *pte = PADDR2PTE(pageTable) | PTE_V | NX_PAGE_ATTR_EXT;
         }
         pageTable = (MMU_PDE *)NX_Phy2Virt(pageTable);
     }
@@ -160,7 +162,7 @@ NX_PRIVATE NX_Error MapOnePage(NX_Mmu *mmu, NX_Addr virAddr, NX_Addr phyAddr, NX
     void *levelPageTable = (void *)(NX_Virt2Phy((NX_Addr)pte) & NX_PAGE_ADDR_MASK);
     NX_PageIncrease(levelPageTable);
     
-    *pte = PADDR2PTE(phyAddr) | attr;
+    *pte = PADDR2PTE(phyAddr) | attr | NX_PAGE_ATTR_EXT;
 
     return NX_EOK;
 }
@@ -359,7 +361,10 @@ NX_PRIVATE void *NX_HalVir2Phy(NX_Mmu *mmu, NX_Addr virAddr)
 
 NX_PRIVATE void NX_HalSetPageTable(NX_Addr addr)
 {
-    WriteCSR(satp, MAKE_SATP(addr));
+    NX_Addr satp = ReadCSR(satp);
+    satp &= MMU_MODE_MASK;
+    satp |= MAKE_SATP_ADDR(addr);
+    WriteCSR(satp, satp);
     MMU_FlushTLB();
 }
 
@@ -371,6 +376,9 @@ NX_PRIVATE NX_Addr NX_HalGetPageTable(void)
 
 NX_PRIVATE void NX_HalEnable(void)
 {
+    NX_Addr satp = ReadCSR(satp);
+    satp |= MAKE_SATP_MODE;
+    WriteCSR(satp, satp);
     MMU_FlushTLB();
 }
 

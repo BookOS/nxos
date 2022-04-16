@@ -20,7 +20,18 @@
 #define NX_LOG_NAME "Clock"
 #include <utils/log.h>
 
-#define NX_TIMER_CLK_FREQ 10000000  /* qemu has 10MHZ clock frequency */
+#if defined(CONFIG_NX_PLATFORM_D1)
+
+#define NX_TIMER_CLK_FREQ (24000000) /* 24MHZ */
+
+#elif defined(CONFIG_NX_PLATFORM_RISCV64_QEMU) || \
+      defined(CONFIG_NX_PLATFORM_K210)
+
+#define NX_TIMER_CLK_FREQ (10000000) /* 10MHZ*/
+
+#else
+#error "no clock frequency"
+#endif
 
 NX_PRIVATE NX_U64 TickDelta = NX_TIMER_CLK_FREQ / NX_TICKS_PER_SECOND;
 
