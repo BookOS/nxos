@@ -269,6 +269,10 @@ NX_Error NX_BuddyIncreasePage(NX_BuddySystem* system, void *ptr)
 
     if (ptr)
     {
+        if (ptr < system->pageStart || ptr >= (void *)((NX_U8 *)system->pageStart + (system->maxPFN + 1) * NX_PAGE_SIZE))
+        {
+            return NX_EINVAL;
+        }
         NX_Page* page = NX_PageFromPtr(system, ptr);
         NX_AtomicInc(&page->reference);
         return NX_EOK;
