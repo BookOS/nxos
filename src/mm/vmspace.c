@@ -490,6 +490,8 @@ NX_Error __VmspaceMap(NX_Vmspace *space,
     {
         if (paddr)
         {
+            /* increase page reference, if not in system, igonre it. */
+            NX_PageIncrease(paddr & NX_PAGE_ADDR_MASK);
             mapAddr = NX_MmuMapPageWithPhy(&space->mmu, vaddr, paddr, size, attr);
         }
         else
