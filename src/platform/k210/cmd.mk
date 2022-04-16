@@ -2,7 +2,7 @@
 # Copyright (c) 2018-2022, NXOS Development Team
 # SPDX-License-Identifier: Apache-2.0
 # 
-# Contains: Makefile for run QEMU Riscv64 Platform
+# Contains: Makefile for run k210 Platform
 # 
 # Change Logs:
 # Date           Author            Notes
