@@ -493,7 +493,7 @@ NX_Error NX_HubPoll(NX_HubParam *param)
 
 NX_PRIVATE NX_HubMdl *CreateMdl(NX_HubChannel *channel, NX_Addr addr, NX_Size len, NX_Vmspace *space)
 {
-    NX_HubMdl *mdl = NX_MemAlloc(len);
+    NX_HubMdl *mdl = NX_MemAllocEx(NX_HubMdl);
     if (mdl == NX_NULL)
     {
         return NX_NULL;
