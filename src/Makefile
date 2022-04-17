@@ -94,6 +94,7 @@ SRCDIRS		+=	drivers/
 SRCDIRS		+=	fs/
 SRCDIRS		+=	test/
 SRCDIRS		+=	time/
+SRCDIRS		+=	ipc/
 
 #
 # XBuild variables

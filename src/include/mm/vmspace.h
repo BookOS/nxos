@@ -82,4 +82,6 @@ NX_Error NX_VmspaceUnmap(NX_Vmspace *space, NX_Addr addr, NX_Size size);
 
 NX_Error NX_VmspaceListNodes(NX_Vmspace *space);
 
+NX_Addr NX_VmspaceVirToPhy(NX_Vmspace *space, NX_Addr virAddr);
+
 #endif /* __MM_VMSPACE__ */

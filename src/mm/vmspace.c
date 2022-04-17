@@ -256,13 +256,16 @@ NX_PRIVATE NX_Error VmspaceSplitNode(NX_Vmspace *space, NX_Vmnode *node, NX_Addr
     NX_UArch level;
     NX_Addr start = addr;
     NX_Addr end = addr + size;
-    NX_Addr oldStart = node->start;
-    NX_Addr oldEnd = node->end;
+    NX_Addr oldStart;
+    NX_Addr oldEnd;
 
     if (!space || !node)
     {
         return NX_EINVAL;
     }
+
+    oldStart = node->start;
+    oldEnd = node->end;
 
     /* no need to split node */
     if (node->start == start && node->end == end)
@@ -456,7 +459,6 @@ NX_Error __VmspaceMap(NX_Vmspace *space,
         {
             return NX_ENOMEM;
         }
-        NX_LOG_W("get map addr: %p", vaddr);
     }
 
     /* addr and size page align */
@@ -491,6 +493,8 @@ NX_Error __VmspaceMap(NX_Vmspace *space,
     {
         if (paddr)
         {
+            /* increase page reference, if not in system, igonre it. */
+            NX_PageIncrease(paddr & NX_PAGE_ADDR_MASK);
             mapAddr = NX_MmuMapPageWithPhy(&space->mmu, vaddr, paddr, size, attr);
         }
         else
@@ -618,4 +622,23 @@ NX_Error NX_VmspaceExit(NX_Vmspace *space)
     /* free page table */
     NX_ASSERT(NX_ProcessFreePageTable(space) == NX_EOK);
     return NX_EOK;
+}
+
+NX_Addr NX_VmspaceVirToPhy(NX_Vmspace *space, NX_Addr virAddr)
+{
+    if (!space)
+    {
+        return 0;
+    }
+    if (!space->mmu.table)
+    {
+        return 0;
+    }
+    
+    if (virAddr < space->spaceBase || virAddr >= space->spaceTop)
+    {
+        return 0;
+    }
+
+    return (NX_Addr)NX_MmuVir2Phy(&space->mmu, virAddr);
 }

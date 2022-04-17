@@ -5,3 +5,7 @@ config NX_TEST_INTEGRATION_THREAD
 config NX_TEST_INTEGRATION_THREAD_ID
     bool "Enable integration for thread id"
     default n
+
+config NX_TEST_INTEGRATION_SEMAPHORE
+    bool "Enable integration for semaphore"
+    default n

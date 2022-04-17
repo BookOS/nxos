@@ -42,7 +42,8 @@ NX_PRIVATE NX_Error ThreadInit(NX_Thread *thread,
     NX_ListInit(&thread->globalList);
     NX_ListInit(&thread->exitList);
     NX_ListInit(&thread->processList);
-    
+    NX_ListInit(&thread->blockList);
+
     NX_StrCopy(thread->name, name);
     thread->tid = NX_ThreadIdAlloc();
     if (thread->tid < 0)
@@ -70,6 +71,8 @@ NX_PRIVATE NX_Error ThreadInit(NX_Thread *thread,
     thread->resource.sleepTimer = NX_NULL;
     thread->resource.process = NX_NULL;
     thread->resource.fileTable = NX_VfsGetDefaultFileTable();
+    thread->resource.hub = NX_NULL;
+    thread->resource.activeChannel = NX_NULL;
 
     NX_SpinInit(&thread->lock);
     return NX_EOK;
@@ -152,6 +155,12 @@ NX_PRIVATE void NX_ThreadAddToGlobalPendingList(NX_Thread *thread, int flags)
     NX_AtomicInc(&NX_ThreadManagerObject.pendingThreadCount);
 }
 
+NX_PRIVATE void NX_ThreadDelFromGlobalPendingList(NX_Thread *thread)
+{
+    NX_ListDel(&thread->list);
+    NX_AtomicDec(&NX_ThreadManagerObject.pendingThreadCount);
+}
+
 void NX_ThreadReadyRunLocked(NX_Thread *thread, int flags)
 {
     thread->state = NX_THREAD_READY;
@@ -174,6 +183,32 @@ void NX_ThreadReadyRunUnlocked(NX_Thread *thread, int flags)
     NX_ThreadReadyRunLocked(thread, flags);
     
     NX_SpinUnlockIRQ(&NX_ThreadManagerObject.lock, level);
+}
+
+void NX_ThreadUnreadyRunLocked(NX_Thread *thread)
+{
+    if (thread->onCore < NX_MULTI_CORES_NR) /* add to core pending list */
+    {
+        NX_SMP_DequeueThreadIrqDisabled(thread->onCore, thread);
+    }
+    else /* add to global pending list */
+    {
+        NX_ThreadDelFromGlobalPendingList(thread);
+    }
+}
+
+void NX_ThreadUnreadyRun(NX_Thread *thread)
+{
+    NX_ASSERT(thread->state != NX_THREAD_READY);
+
+    if (thread->onCore < NX_MULTI_CORES_NR) /* add to core pending list */
+    {        
+        NX_SMP_DequeueThread(thread->onCore, thread);
+    }
+    else /* add to global pending list */
+    {
+        NX_ThreadDequeuePendingList(thread);
+    }
 }
 
 NX_INLINE void NX_ThreadEnququeGlobalListUnlocked(NX_Thread *thread)
@@ -225,7 +260,7 @@ NX_Error NX_ThreadTerminate(NX_Thread *thread)
 
     NX_UArch level = NX_IRQ_SaveLevel();
     thread->isTerminated = 1;
-    NX_ThreadWakeup(thread);
+    NX_ThreadUnblock(thread);
     NX_IRQ_RestoreLevel(level);
     return NX_EOK;
 }
@@ -277,50 +312,86 @@ NX_Thread *NX_ThreadSelf(void)
 }
 
 /**
- * must called when interrupt disabled
+ * must called with interrupt disabled.
  */
-NX_PRIVATE void ThreadBlockInterruptDisabled(NX_ThreadState state, NX_UArch irqLevel)
-{
-    NX_ASSERT(state == NX_THREAD_SLEEP || state == NX_THREAD_DEEPSLEEP);
-    NX_CurrentThread->state = state;
-    NX_SchedWithInterruptDisabled(irqLevel);
-}
-
-/**
- * must called when interrupt disabled
- * quickly: thread can be run quickly
- */
-NX_PRIVATE void ThreadUnblockInterruptDisabled(NX_Thread *thread)
-{
-    NX_ThreadReadyRunLocked(thread, NX_SCHED_HEAD);
-}
-
-/**
- * wakeup a thread, must called interrupt disabled
- */
-NX_Error NX_ThreadWakeup(NX_Thread *thread)
+NX_Error NX_ThreadBlockLockedIRQ(NX_Thread *thread, NX_Spin *lock, NX_UArch irqLevel)
 {
     if (thread == NX_NULL)
     {
         return NX_EINVAL;
     }
-    /* if thread in sleep, then wakeup it */
-    if (thread->state == NX_THREAD_SLEEP)
-    {
-        ThreadUnblockInterruptDisabled(thread);
+
+    if (thread->state == NX_THREAD_READY)
+    {   /* remove from ready list */
+        thread->state = NX_THREAD_BLOCKED;
+        NX_ThreadUnreadyRun(thread);
+
+        if (lock)
+        {
+            NX_SpinUnlockIRQ(lock, irqLevel);
+        }
+        else
+        {
+            NX_IRQ_RestoreLevel(irqLevel);
+        }
     }
+    else if (thread->state == NX_THREAD_RUNNING)
+    {   /* set as block, then sched */
+        thread->state = NX_THREAD_BLOCKED;
+        NX_SchedLockedIRQ(irqLevel, lock);
+        
+        if (thread->isTerminated != 0) /* check exit */
+        {
+            NX_ThreadExit();
+        }
+    }
+    
     return NX_EOK;
+}
+
+/**
+ * must called when interrupt disabled
+ */
+NX_Error NX_ThreadBlockInterruptDisabled(NX_Thread *thread, NX_UArch irqLevel)
+{
+    return NX_ThreadBlockLockedIRQ(thread, NX_NULL, irqLevel);
+}
+
+NX_Error NX_ThreadBlock(NX_Thread *thread)
+{
+    NX_UArch level = NX_IRQ_SaveLevel();
+    return NX_ThreadBlockLockedIRQ(thread, NX_NULL, level);
+}
+
+/**
+ * wakeup a thread, must called interrupt disabled
+ */
+NX_Error NX_ThreadUnblock(NX_Thread *thread)
+{
+    if (thread == NX_NULL)
+    {
+        return NX_EINVAL;
+    }
+
+    /* if thread in sleep, then wakeup it */
+    if (thread->state == NX_THREAD_BLOCKED)
+    {
+        NX_ThreadReadyRunUnlocked(thread, NX_SCHED_HEAD);
+        return NX_EOK;
+    }
+
+    return NX_EBUSY;
 }
 
 NX_PRIVATE NX_Bool TimerThreadSleepTimeout(NX_Timer *timer, void *arg)
 {
     NX_Thread *thread = (NX_Thread *)arg; /* the thread wait for timeout  */
 
-    NX_ASSERT(thread->state == NX_THREAD_SLEEP);
+    NX_ASSERT(thread->state == NX_THREAD_BLOCKED);
 
     thread->resource.sleepTimer = NX_NULL; /* cleanup sleep timer */
 
-    if (NX_ThreadWakeup(thread) != NX_EOK)
+    if (NX_ThreadUnblock(thread) != NX_EOK)
     {
         NX_LOG_E("Wakeup thread:%s/%d failed!", thread->name, thread->tid);
     }
@@ -367,7 +438,7 @@ NX_Error NX_ThreadSleep(NX_UArch microseconds)
     NX_TimerStart(self->resource.sleepTimer);
 
     /* set thread as sleep state */
-    ThreadBlockInterruptDisabled(NX_THREAD_SLEEP, irqLevel);
+    NX_ThreadBlockInterruptDisabled(self, irqLevel);
 
     /* if sleep timer always here, it means that the thread was interrupted! */
     if (self->resource.sleepTimer != NX_NULL)
@@ -405,12 +476,19 @@ void NX_ThreadEnqueuePendingList(NX_Thread *thread)
 {
     NX_UArch level;
     NX_SpinLockIRQ(&NX_ThreadManagerObject.lock, &level);
-    NX_ListAdd(&thread->list, &NX_ThreadManagerObject.pendingList);
-    NX_AtomicInc(&NX_ThreadManagerObject.pendingThreadCount);
+    NX_ThreadAddToGlobalPendingList(thread, NX_SCHED_HEAD);
     NX_SpinUnlockIRQ(&NX_ThreadManagerObject.lock, level);
 }
 
-NX_Thread *NX_ThreadDequeuePendingList(void)
+void NX_ThreadDequeuePendingList(NX_Thread *thread)
+{
+    NX_UArch level;
+    NX_SpinLockIRQ(&NX_ThreadManagerObject.lock, &level);
+    NX_ThreadDelFromGlobalPendingList(thread);
+    NX_SpinUnlockIRQ(&NX_ThreadManagerObject.lock, level);
+}
+
+NX_Thread *NX_ThreadPickPendingList(void)
 {
     NX_Thread *thread;
     NX_SpinLock(&NX_ThreadManagerObject.lock);

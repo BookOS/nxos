@@ -15,6 +15,7 @@
 #include <mm/heap_cache.h>
 
 #define NX_MemAlloc(size) NX_HeapAlloc(size)
+#define NX_MemAllocEx(structType) NX_HeapAlloc(sizeof(structType)) /* alloc struct size */
 #define NX_MemFree(ptr) NX_HeapFree(ptr)
 #define NX_MemFreeSafety(ptr) NX_HeapFreeSatety(ptr)
 

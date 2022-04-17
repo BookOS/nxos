@@ -41,7 +41,7 @@ void *NX_PageZoneGetBuddySystem(NX_PageZone zone);
 
 #define NX_PageAlloc(count) NX_PageAllocInZone(NX_PAGE_ZONE_NORMAL, count)
 #define NX_PageFree(ptr) NX_PageFreeInZone(NX_PAGE_ZONE_NORMAL, ptr)
-#define NX_PageIncrease(ptr) NX_PageIncreaseInZone(NX_PAGE_ZONE_NORMAL, ptr)
+#define NX_PageIncrease(ptr) NX_PageIncreaseInZone(NX_PAGE_ZONE_NORMAL, (void *)(ptr))
 
 #define NX_Phy2Virt(addr) ((addr) + NX_KVADDR_OFFSET)
 #define NX_Virt2Phy(addr) ((addr) - NX_KVADDR_OFFSET)

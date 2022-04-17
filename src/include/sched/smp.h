@@ -49,7 +49,11 @@ void NX_SMP_Stage2(NX_UArch appCoreId);
 NX_UArch NX_SMP_GetBootCore(void);
 
 void NX_SMP_EnqueueThreadIrqDisabled(NX_UArch coreId, NX_Thread *thread, int flags);
-NX_Thread *NX_SMP_DeququeThreadIrqDisabled(NX_UArch coreId);
+void NX_SMP_DequeueThreadIrqDisabled(NX_UArch coreId, NX_Thread *thread);
+
+void NX_SMP_DequeueThread(NX_UArch coreId, NX_Thread *thread);
+
+NX_Thread *NX_SMP_PickThreadIrqDisabled(NX_UArch coreId);
 NX_Error NX_SMP_SetRunning(NX_UArch coreId, NX_Thread *thread);
 
 NX_Cpu *NX_CpuGetIndex(NX_UArch coreId);

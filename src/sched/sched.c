@@ -56,7 +56,7 @@ NX_INLINE void SchedFromPrevToNext(NX_Thread *prev, NX_Thread *next)
 void NX_SchedToFirstThread(void)
 {
     NX_UArch coreId = NX_SMP_GetIdx();
-    NX_Thread *thread = NX_SMP_DeququeThreadIrqDisabled(coreId);
+    NX_Thread *thread = NX_SMP_PickThreadIrqDisabled(coreId);
     NX_ASSERT(thread != NX_NULL);
     NX_ASSERT(NX_SMP_SetRunning(coreId, thread) == NX_EOK);
     NX_LOG_D("Sched to first thread:%s/%d", thread->name, thread->tid);
@@ -85,7 +85,7 @@ NX_PRIVATE void PullOrPushThread(NX_UArch coreId)
     if (coreThreadCount < threadsPerCore)
     {
         /* pull from pending */
-        thread = NX_ThreadDequeuePendingList();
+        thread = NX_ThreadPickPendingList();
         if (thread != NX_NULL)
         {
             NX_LOG_D("---> core#%d: pull thread:%s/%d", coreId, thread->name, thread->tid);
@@ -109,8 +109,10 @@ NX_PRIVATE void PullOrPushThread(NX_UArch coreId)
 
 /**
  * NOTE: must disable interrupt before call this!
+ * @lock: if not NX_NULL, the lock need unblock before sched to other thread
+ * @lockIrqLevel: lock irq level
  */
-void NX_SchedWithInterruptDisabled(NX_UArch irqLevel)
+void NX_SchedLockedIRQ(NX_UArch irqLevel, NX_Spin *lock)
 {
     NX_Thread *next, *prev;
     NX_UArch coreId = NX_SMP_GetIdx();
@@ -122,14 +124,20 @@ void NX_SchedWithInterruptDisabled(NX_UArch irqLevel)
     {
         prev = NX_NULL;    /* not save prev context */
     }
-    
+
     /* pull thread from pending list or push thread to pending list */
     PullOrPushThread(coreId);
 
     /* get next from local list */
-    next = NX_SMP_DeququeThreadIrqDisabled(coreId);
+    next = NX_SMP_PickThreadIrqDisabled(coreId);
     NX_ASSERT(next != NX_NULL);
     NX_SMP_SetRunning(coreId, next);
+
+    /* unlock lock before sched */
+    if (lock)
+    {
+        NX_SpinUnlock(lock);
+    }
 
     if (prev != NX_NULL)
     {
@@ -144,6 +152,14 @@ void NX_SchedWithInterruptDisabled(NX_UArch irqLevel)
     NX_IRQ_RestoreLevel(irqLevel);
 }
 
+/**
+ * NOTE: must disable interrupt before call this!
+ */
+void NX_SchedInterruptDisabled(NX_UArch irqLevel)
+{
+    NX_SchedLockedIRQ(irqLevel, NX_NULL);
+}
+
 void NX_SchedYield(void)
 {
     NX_UArch level = NX_IRQ_SaveLevel();
@@ -152,7 +168,7 @@ void NX_SchedYield(void)
     
     NX_ThreadReadyRunUnlocked(cur, NX_SCHED_TAIL);
 
-    NX_SchedWithInterruptDisabled(level);
+    NX_SchedInterruptDisabled(level);
 }
 
 void NX_SchedExit(void)
@@ -165,7 +181,7 @@ void NX_SchedExit(void)
     cur->state = NX_THREAD_EXIT;
     NX_ThreadEnququeExitList(cur);
 
-    NX_SchedWithInterruptDisabled(level);
+    NX_SchedInterruptDisabled(level);
 }
 
 void NX_ReSchedCheck(void)
@@ -189,7 +205,7 @@ void NX_ReSchedCheck(void)
 
         NX_ThreadReadyRunUnlocked(thread, NX_SCHED_TAIL);
 
-        NX_SchedWithInterruptDisabled(level);
+        NX_SchedInterruptDisabled(level);
     }
     NX_IRQ_Disable();
 }

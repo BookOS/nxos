@@ -40,7 +40,7 @@
  * step M -> AlignDown((N / 8), 2^n)
  */
 
-#define MAX_SIZE_CLASS_VALUE 16
+#define MIN_SIZE_CLASS_VALUE 16
 
 #define MAX_SIZE_CLASS_NR 96
 
@@ -105,7 +105,7 @@ NX_PRIVATE void HeapSizeClassInit(void)
 
     int i;
 
-    CacheSizeAarray[n].size = MAX_SIZE_CLASS_VALUE;
+    CacheSizeAarray[n].size = MIN_SIZE_CLASS_VALUE;
     n++;
 
     for (i = 32; i <= 128; i+=16)
@@ -332,7 +332,7 @@ void *NX_HeapAlloc(NX_Size size)
     }
 
     /* size align up with 16 */
-    size = NX_ALIGN_UP(size, MAX_SIZE_CLASS_VALUE);
+    size = NX_ALIGN_UP(size, MIN_SIZE_CLASS_VALUE);
 
     pageCount = SizeToPageCount(size);
 

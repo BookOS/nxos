@@ -12,6 +12,7 @@
 #include <sched/smp.h>
 #include <sched/thread.h>
 #include <sched/sched.h>
+#include <io/irq.h>
 #define NX_LOG_NAME "smp"
 #define NX_LOG_LEVEL NX_LOG_INFO
 #include <utils/log.h>
@@ -122,6 +123,30 @@ void NX_SMP_EnqueueThreadIrqDisabled(NX_UArch coreId, NX_Thread *thread, int fla
     NX_SpinUnlock(&cpu->lock);
 }
 
+void NX_SMP_DequeueThreadIrqDisabled(NX_UArch coreId, NX_Thread *thread)
+{
+    NX_ASSERT(thread->priority >= 0 && thread->priority < NX_THREAD_MAX_PRIORITY_NR);
+
+    NX_Cpu *cpu = NX_CpuGetIndex(coreId);
+
+    NX_SpinLock(&cpu->lock);
+
+    NX_ListDel(&thread->list);
+    NX_AtomicDec(&cpu->threadCount);
+
+    NX_SpinUnlock(&cpu->lock);
+}
+
+void NX_SMP_DequeueThread(NX_UArch coreId, NX_Thread *thread)
+{
+    NX_UArch level;
+    level = NX_IRQ_SaveLevel();
+
+    NX_SMP_DequeueThreadIrqDisabled(thread->onCore, thread);
+    
+    NX_IRQ_RestoreLevel(level);
+}
+
 /**
  * This is based on a multi-level feedback queue scheduling algorithm to do the calculations.
  */
@@ -138,7 +163,7 @@ NX_PRIVATE void NX_ThreadLowerPriority(NX_Thread *thread)
     }
 }
 
-NX_Thread *NX_SMP_DeququeThreadIrqDisabled(NX_UArch coreId)
+NX_Thread *NX_SMP_PickThreadIrqDisabled(NX_UArch coreId)
 {
     NX_Thread *thread = NX_NULL;
     int prio;

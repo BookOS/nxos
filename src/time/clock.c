@@ -83,6 +83,11 @@ NX_PRIVATE void NX_TimerIrqHandler(void *arg)
 NX_PRIVATE void NX_SchedIrqHandler(void *arg)
 {
     NX_Thread *thread = NX_ThreadSelf();
+    if (thread->isTerminated != 0) /* check exit */
+    {
+        NX_ThreadExit();
+    }
+
     thread->ticks--;
     if (thread->ticks == 0)
     {

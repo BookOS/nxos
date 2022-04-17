@@ -50,30 +50,34 @@ typedef void (*NX_ThreadHandler)(void *arg);
 
 enum NX_ThreadState
 {
-    NX_THREAD_INIT,
+    NX_THREAD_INIT = 0,
     NX_THREAD_READY,
     NX_THREAD_RUNNING,
-    NX_THREAD_SLEEP,
-    NX_THREAD_DEEPSLEEP,
+    NX_THREAD_BLOCKED,
     NX_THREAD_EXIT,
 };
 typedef enum NX_ThreadState NX_ThreadState;
 
+struct NX_Hub;
+struct NX_HubChannel;
 struct NX_ThreadResource
 {
     NX_Timer *sleepTimer;
     NX_Process *process;
     NX_VfsFileTable *fileTable;
+    struct NX_Hub *hub; /* hub for each thread */
+    struct NX_HubChannel *activeChannel; /* channel for this thread */
 };
 typedef struct NX_ThreadResource NX_ThreadResource;
 
 struct NX_Thread
 {
     /* thread list */
-    NX_List list;
+    NX_List list;   /* ready list */
     NX_List globalList;
     NX_List exitList;
     NX_List processList;    /* list for process */
+    NX_List blockList;    /* list for block on somewhere */
 
     NX_Spin lock;  /* lock for thread */
 
@@ -135,8 +139,13 @@ NX_Error NX_ThreadStart(NX_Thread *thread);
 void NX_ThreadYield(void);
 NX_Error NX_ThreadSetAffinity(NX_Thread *thread, NX_UArch coreId);
 
+NX_Error NX_ThreadBlock(NX_Thread *thread);
+NX_Error NX_ThreadBlockInterruptDisabled(NX_Thread *thread, NX_UArch irqLevel);
+NX_Error NX_ThreadBlockLockedIRQ(NX_Thread *thread, NX_Spin *lock, NX_UArch irqLevel);
+
+NX_Error NX_ThreadUnblock(NX_Thread *thread);
+
 NX_Error NX_ThreadSleep(NX_UArch microseconds);
-NX_Error NX_ThreadWakeup(NX_Thread *thread);
 
 void NX_ThreadsInit(void);
 
@@ -147,10 +156,14 @@ void NX_ThreadEnququeExitList(NX_Thread *thread);
 NX_Thread *NX_ThreadDeququeExitList(void);
 
 void NX_ThreadEnqueuePendingList(NX_Thread *thread);
-NX_Thread *NX_ThreadDequeuePendingList(void);
+void NX_ThreadDequeuePendingList(NX_Thread *thread);
+NX_Thread *NX_ThreadPickPendingList(void);
 
 void NX_ThreadReadyRunLocked(NX_Thread *thread, int flags);
 void NX_ThreadReadyRunUnlocked(NX_Thread *thread, int flags);
+
+void NX_ThreadUnreadyRunLocked(NX_Thread *thread);
+void NX_ThreadUnreadyRun(NX_Thread *thread);
 
 void NX_ThreadExitProcess(NX_Thread *thread, NX_Process *process);
 
