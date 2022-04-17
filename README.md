@@ -26,9 +26,10 @@
 
 | ARCH    | PLATFORM   |STATUS      |
 | ------- | ---------- | ---------- |
-| x86     | i386       | DOING      |
-| riscv64 | qemu       | DOING      |
-| riscv64 | k210       | DOING      |
+| x86     | i386       | DONE       |
+| riscv64 | qemu       | DONE       |
+| riscv64 | k210       | DONE       |
+| riscv64 | d1         | DONE       |
 | x86_64  | amd64      | TODO       |
 | arm64   | qemu       | TODO       |
 | arm32   | qemu       | TODO       |
