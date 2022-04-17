@@ -256,13 +256,16 @@ NX_PRIVATE NX_Error VmspaceSplitNode(NX_Vmspace *space, NX_Vmnode *node, NX_Addr
     NX_UArch level;
     NX_Addr start = addr;
     NX_Addr end = addr + size;
-    NX_Addr oldStart = node->start;
-    NX_Addr oldEnd = node->end;
+    NX_Addr oldStart;
+    NX_Addr oldEnd;
 
     if (!space || !node)
     {
         return NX_EINVAL;
     }
+
+    oldStart = node->start;
+    oldEnd = node->end;
 
     /* no need to split node */
     if (node->start == start && node->end == end)

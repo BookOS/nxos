@@ -108,7 +108,7 @@ NX_BuddySystem* NX_BuddyCreate(void *mem, NX_Size size)
 
     // Alloc NX_BuddySystem
     NX_BuddySystem* system = BuddyCreateFromMemory(mem);
-    mem += sizeof(NX_BuddySystem);
+    mem = (void *)((NX_U8 *)mem + sizeof(NX_BuddySystem));
     size -= sizeof(NX_BuddySystem);
 
     NX_Size page_count = size >> NX_PAGE_SHIFT;
@@ -116,12 +116,12 @@ NX_BuddySystem* NX_BuddyCreate(void *mem, NX_Size size)
     // Alloc page map
     NX_Size map_size = BuddyAlignUp(page_count * sizeof(NX_Page), NX_PAGE_SIZE);
     page_count -= map_size / NX_PAGE_SIZE;
-    mem += map_size;
+    mem = (void *)((NX_U8 *)mem + map_size);
     size -= map_size;
 
     // Alloc page
     NX_Size mem_diff = (NX_TYPE_CAST(NX_PtrDiff, BuddyAlignPtr(mem, NX_PAGE_SIZE)) - NX_TYPE_CAST(NX_PtrDiff, mem));
-    mem += mem_diff;
+    mem = (void *)((NX_U8 *)mem + mem_diff);
     size -= mem_diff;
     page_count = size >> NX_PAGE_SHIFT;
 

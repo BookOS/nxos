@@ -73,7 +73,6 @@ NX_PRIVATE NX_HubChannel *CreateChannel(NX_Hub *hub)
 
 NX_PRIVATE NX_Error DestroyChannel(NX_HubChannel *channel)
 {
-    NX_Error err;
     NX_Hub *hub;
 	NX_ASSERT(channel);
 
@@ -84,7 +83,7 @@ NX_PRIVATE NX_Error DestroyChannel(NX_HubChannel *channel)
     }
 
 	NX_MemFree(channel);
-	return err;
+	return NX_EOK;
 }
 
 NX_PRIVATE NX_Error HubAddChannel(NX_Hub *hub, NX_HubChannel *channel)
