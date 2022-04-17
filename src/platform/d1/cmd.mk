@@ -14,7 +14,13 @@
 # 
 TOOL_DIR 	:= ./tools
 SBI			:= $(TOOL_DIR)/SBI/opensbi-d1.bin
+
+ifeq ($(HOSTOS), windows)
 XFEL		:= $(TOOL_DIR)/xfel/xfel.exe
+else
+XFEL		:= $(TOOL_DIR)/xfel/xfel
+endif
+
 RM			:= rm
 MAKE		:= make
 SU			:= sudo
@@ -59,6 +65,10 @@ clean:
 prepare:
 	-$(RM) -rf $(TOOL_DIR)
 	git clone https://gitee.com/BookOS/nxos-platform-d1-tools $(TOOL_DIR)
+ifeq ($(HOSTOS), linux) # install libusb in linux
+	@echo install libusb. 
+	sudo apt install libusb-1.0-0-dev
+endif
 	echo "parpare done."
 
 # 
