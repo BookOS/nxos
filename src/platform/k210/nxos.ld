@@ -7,30 +7,34 @@
  * Change Logs:
  * Date           Author            Notes
  * 2022-1-25      JasonHu           Init
+ * 2022-4-18      JasonHu           update and add __global_pointer$
  */
 
 OUTPUT_FORMAT("elf64-littleriscv", "elf64-littleriscv", "elf64-littleriscv")
 OUTPUT_ARCH(riscv)
 ENTRY(_Start)
 
-/* rustsbi defined here */
-BASE_ADDRESS = 0x80020000;
+MEMORY
+{
+    /* rustsbi jump to 0x80020000 */
+    SRAM : ORIGIN = 0x80020000, LENGTH = 0x5E0000
+}
 
 SECTIONS
 {
-    /* Load the OS at this address: "." means the current address */
-    . = BASE_ADDRESS;
-
     /* code segment */
     . = ALIGN(8);
-    __NX_TextStart = .;
     .text : 
     {
+        __NX_TextStart = .;
         *(.text.start)
         *(.text)
         *(.init.text)
 		*(.exit.text)
         
+        *(.rodata)
+        *(.rodata.*)
+
         . = ALIGN(8);
         PROVIDE(__NX_InitCallStart = .);
         KEEP(*(.initCall0.text))
@@ -70,43 +74,55 @@ SECTIONS
         PROVIDE(__NX_IntegrationTableStart = .);
         KEEP(*(IntegrationTable))
         PROVIDE(__NX_IntegrationTableEnd = .);
-    }
-    __NX_TextEnd = .;
-
+        __NX_TextEnd = .;
+    } > SRAM
 
     /* data segment */
     . = ALIGN(8);
-    __NX_DataStart = .;
 
     .data :
     {
+        __NX_DataStart = .;
         *(.data)
         *(.data.*)
-        *(.rodata)
-        *(.rodata.*)
-    }
 
+        . = ALIGN(8);
+        PROVIDE( __global_pointer$ = . + 0x800 );
+        
+        *(.sdata)
+        *(.sdata.*)
+    } > SRAM
+    
 	.romdisk ALIGN(8) :
 	{
 		PROVIDE(__NX_RomdiskStart = .);
 		KEEP(*(.romdisk))
 		PROVIDE(__NX_RomdiskEnd = .);
-	}
+        __NX_DataEnd = .;
+	} > SRAM
+
     . = ALIGN(8);
     
     __NX_DataEnd = .;
     
     /* bss segement */
-    
-    . = ALIGN(8);
-    __NX_BssStart = .;
-    .bss       :
+
+    .sbss : 
+    {
+        __NX_BssStart = .;
+        *(.sbss)
+        *(.sbss.*)
+        *(.dynsbss)
+        *(.scommon)
+    } > SRAM
+
+    .bss :
     {
         *(.bss)
         *(.bss.*)
+        *(.dynbss)
         *(COMMON)
-    }
-    . = ALIGN(8);
-    __NX_BssEnd = .;
-
+        . = ALIGN(8);
+        __NX_BssEnd = .;
+    } > SRAM
 }

@@ -30,8 +30,6 @@ NX_IMPORT char CPU_StackTop0[];
 
 NX_INTERFACE NX_Error NX_HalPlatformInit(NX_UArch coreId)
 {
-    NX_HalClearBSS();
-
     /* NOTE: init trap first before do anything */
     CPU_InitTrap(coreId);
 
