@@ -2,19 +2,19 @@
 # Copyright (c) 2018-2022, NXOS Development Team
 # SPDX-License-Identifier: Apache-2.0
 # 
-# Contains: Makefile for run k210 Platform
+# Contains: Makefile for run d1 Platform
 # 
 # Change Logs:
 # Date           Author            Notes
-# 2021-10-1      JasonHu           Init
+# 2022-4-17      JasonHu           Init
 ##
 
 #
 # Tools
 # 
-TOOL_DIR 	:= tools
-RUSTSBI_DIR	:= $(TOOL_DIR)/SBI
-SBI			:= $(TOOL_DIR)/SBI/rustsbi-k210
+TOOL_DIR 	:= ./tools
+SBI			:= $(TOOL_DIR)/SBI/opensbi-d1.bin
+XFEL		:= $(TOOL_DIR)/xfel/xfel.exe
 RM			:= rm
 MAKE		:= make
 SU			:= sudo
@@ -25,34 +25,31 @@ DEBUGER		:= $(CROSS_COMPILE)gdb
 DUMP		:= $(CROSS_COMPILE)objdump
 OC			:= $(CROSS_COMPILE)objcopy
 
-K210_BIN	:= k210.bin
-UART 		?= /dev/ttyUSB0
-KFLASH 		:= ./tools/kflash.py
-
 #
 # Args for make
 #
 .PHONY: run clean
 
 #
-# flush into k210 devboard
+# flush into d1 devboard
 # 
 run:
 	$(OC) $(NXOS_NAME).elf --strip-all -O binary $(NXOS_NAME).bin
-	$(OC) $(SBI) --strip-all -O binary $(K210_BIN)
-	$(DD) if=$(NXOS_NAME).bin of=$(K210_BIN) bs=128k seek=1
-	echo "K210 run..."
-ifeq ($(HOSTOS),linux)
-	$(SU) chmod 777 $(UART)
-endif
-	$(PYTHON) $(KFLASH) -p $(UART) -b 1500000 -t $(K210_BIN)
+	echo "allwinner-d1 run..."
+	$(XFEL) version
+	$(XFEL) ddr d1
+	$(XFEL) write 0x40000000 $(SBI)
+	$(XFEL) write 0x40200000 $(NXOS_NAME).bin
+	$(XFEL) exec 0x40000000 
+	echo "start d1 done."
+	
+# run d1 with xfel
 
 # 
 # Clear target file
 # 
 clean:
 	-$(RM) $(NXOS_NAME).elf
-	-$(RM) $(K210_BIN)
 	-$(RM) $(NXOS_NAME).dump.S
 	-$(RM) $(NXOS_NAME).bin
 
@@ -61,7 +58,7 @@ clean:
 # 
 prepare:
 	-$(RM) -rf $(TOOL_DIR)
-	git clone https://gitee.com/BookOS/nxos-platform-k210-tools $(TOOL_DIR)
+	git clone https://gitee.com/BookOS/nxos-platform-d1-tools $(TOOL_DIR)
 	echo "parpare done."
 
 # 

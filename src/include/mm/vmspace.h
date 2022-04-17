@@ -44,7 +44,7 @@ struct NX_Vmnode
     NX_List list;   /* vmnode list */
     NX_Addr start;  /* node area: [start, end) */
     NX_Addr end;
-    NX_U32 attr;
+    NX_UArch attr;
     NX_U32 flags;
     NX_Vmspace *space;
 };
@@ -66,7 +66,7 @@ NX_Error NX_VmspaceExit(NX_Vmspace *space);
 NX_Error NX_VmspaceMap(NX_Vmspace *space,
     NX_Addr addr,
     NX_Size size,
-    NX_U32 attr,
+    NX_UArch attr,
     NX_U32 flags,
     void **outAddr);
 
@@ -74,7 +74,7 @@ NX_Error NX_VmspaceMapWithPhy(NX_Vmspace *space,
     NX_Addr vaddr,
     NX_Addr paddr,
     NX_Size size,
-    NX_U32 attr,
+    NX_UArch attr,
     NX_U32 flags,
     void **outAddr);
 

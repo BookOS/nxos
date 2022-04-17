@@ -36,7 +36,11 @@ NX_HalContextSwitchPrevNext:
      * set as supervisor mode and enable interupt 
      * make sure kernel mode thread do context switch
      */
+#ifdef CONFIG_NX_PLATFORM_K210
+    li t1, SSTATUS_SPP | SSTATUS_SPIE
+#else
     li t1, SSTATUS_SPP | SSTATUS_SPIE | SSTATUS_SUM
+#endif
     csrs sstatus, t1
 
     /**

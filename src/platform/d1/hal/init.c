@@ -2,11 +2,11 @@
  * Copyright (c) 2018-2022, NXOS Development Team
  * SPDX-License-Identifier: Apache-2.0
  * 
- * Contains: Init Riscv64 Qemu platfrom 
+ * Contains: Init allwinner-d1 platfrom 
  * 
  * Change Logs:
  * Date           Author            Notes
- * 2021-10-1      JasonHu           Init
+ * 2022-4-17      JasonHu           Init
  */
 
 #include <xbook.h>
@@ -20,13 +20,10 @@
 #include <drivers/direct_uart.h>
 #include <sched/smp.h>
 #include <utils/log.h>
-#include <io/irq.h>
 
 #define NX_LOG_LEVEL NX_LOG_INFO
 #define NX_LOG_NAME "INIT"
 #include <xbook/debug.h>
-
-NX_IMPORT char CPU_StackTop0[];
 
 NX_INTERFACE NX_Error NX_HalPlatformInit(NX_UArch coreId)
 {
@@ -34,8 +31,11 @@ NX_INTERFACE NX_Error NX_HalPlatformInit(NX_UArch coreId)
     CPU_InitTrap(coreId);
 
     NX_HalDirectUartInit();
-    
-    NX_LOG_I("Hello, world!");
+
+    sbi_init();
+    sbi_print_version();
+
+    NX_LOG_I("Hello, Allwinner-D1!");
     
     PLIC_Init(NX_True);
     

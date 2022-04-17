@@ -2,12 +2,11 @@
  * Copyright (c) 2018-2022, NXOS Development Team
  * SPDX-License-Identifier: Apache-2.0
  * 
- * Contains: Link script for Riscv64 k210 Platform
+ * Contains: Link script for allwinner-d1 Platform
  * 
  * Change Logs:
  * Date           Author            Notes
- * 2022-1-25      JasonHu           Init
- * 2022-4-18      JasonHu           update and add __global_pointer$
+ * 2022-4-17      JasonHu           Init
  */
 
 OUTPUT_FORMAT("elf64-littleriscv", "elf64-littleriscv", "elf64-littleriscv")
@@ -16,14 +15,13 @@ ENTRY(_Start)
 
 MEMORY
 {
-    /* rustsbi jump to 0x80020000 */
-    SRAM : ORIGIN = 0x80020000, LENGTH = 0x5E0000
+    /* opensbi jump to 0x40200000 */
+    SRAM : ORIGIN = 0x40200000, LENGTH = 0x1E00000
 }
 
 SECTIONS
 {
     /* code segment */
-    . = ALIGN(8);
     .text : 
     {
         __NX_TextStart = .;
@@ -31,7 +29,7 @@ SECTIONS
         *(.text)
         *(.init.text)
 		*(.exit.text)
-        
+
         *(.rodata)
         *(.rodata.*)
 
@@ -74,8 +72,10 @@ SECTIONS
         PROVIDE(__NX_IntegrationTableStart = .);
         KEEP(*(IntegrationTable))
         PROVIDE(__NX_IntegrationTableEnd = .);
+        
         __NX_TextEnd = .;
     } > SRAM
+
 
     /* data segment */
     . = ALIGN(8);
@@ -88,23 +88,20 @@ SECTIONS
 
         . = ALIGN(8);
         PROVIDE( __global_pointer$ = . + 0x800 );
-        
+
         *(.sdata)
         *(.sdata.*)
     } > SRAM
-    
+
 	.romdisk ALIGN(8) :
 	{
 		PROVIDE(__NX_RomdiskStart = .);
 		KEEP(*(.romdisk))
 		PROVIDE(__NX_RomdiskEnd = .);
-        __NX_DataEnd = .;
-	} > SRAM
-
+	    __NX_DataEnd = .;
+    } > SRAM
     . = ALIGN(8);
-    
-    __NX_DataEnd = .;
-    
+        
     /* bss segement */
 
     .sbss : 

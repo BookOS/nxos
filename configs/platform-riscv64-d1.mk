@@ -1,0 +1,1 @@
+ARCH_PLATFORM?=riscv64-d1

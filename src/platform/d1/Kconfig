@@ -1,0 +1,4 @@
+config NX_PLATFORM_D1
+    bool
+    default y
+    select NX_CPU_64BITS
