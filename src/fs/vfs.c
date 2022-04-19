@@ -1114,6 +1114,37 @@ NX_U64 NX_VfsWrite(int fd, void * buf, NX_U64 len, NX_Error *outErr)
 	return ret;
 }
 
+NX_Error NX_VfsIoctl(int fd, NX_U32 cmd, void *arg)
+{
+	NX_VfsNode * n;
+	NX_VfsFile * f;
+	NX_Error err;
+    NX_VfsFileTable *ft;
+
+    ft = VFS_GET_FILE_TABLE();
+	f = VfsFileDescriptorToFile(ft, fd);
+	if(!f)
+    {
+		return NX_ENORES;
+    }
+
+	NX_MutexLock(&f->lock);
+	n = f->node;
+	if(!n)
+	{
+		NX_MutexUnlock(&f->lock);
+		return NX_EFAULT;
+	}
+
+	NX_MutexLock(&n->lock);
+	err = n->mount->fs->ioctl(n, cmd, arg);
+	NX_MutexUnlock(&n->lock);
+
+	NX_MutexUnlock(&f->lock);
+
+	return err;
+}
+
 NX_I64 NX_VfsFileSeek(int fd, NX_I64 off, int whence, NX_Error *outErr)
 {
 	NX_VfsNode * n;
