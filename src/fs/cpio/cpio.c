@@ -231,6 +231,11 @@ NX_PRIVATE NX_U64 CpioWrite(NX_VfsNode * n, NX_I64 off, void * buf, NX_U64 len, 
 	return 0;
 }
 
+NX_PRIVATE NX_Error CpioIoctl(NX_VfsNode * n, NX_U32 cmd, void *arg)
+{
+	return NX_ENOFUNC;
+}
+
 NX_PRIVATE NX_Error CpioTruncate(NX_VfsNode * n, NX_I64 off)
 {
 	return NX_EPERM; /* can't truncate */
@@ -507,6 +512,7 @@ NX_PRIVATE NX_VfsFileSystem cpio = {
 
 	.read		= CpioRead,
 	.write		= CpioWrite,
+    .ioctl      = CpioIoctl,
 	.truncate	= CpioTruncate,
 	.sync		= CpioSync,
 	.readdir	= CpioReaddir,

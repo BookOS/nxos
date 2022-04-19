@@ -81,6 +81,11 @@ NX_PRIVATE NX_Size SysVfsWrite(int fd, void * buf, NX_Size len, NX_Error *outErr
     return NX_VfsWrite(fd, buf, len, outErr);
 }
 
+NX_Error SysVfsIoctl(int fd, NX_U32 cmd, void *arg)
+{
+    return NX_VfsIoctl(fd, cmd, arg);
+}
+
 /* NOTICE: To compate 32 bit cpu, syscall need use NX_Offset not NX_I64 */
 NX_PRIVATE NX_Offset SysVfsFileSeek(int fd, NX_Offset off, int whence, NX_Error *outErr)
 {
@@ -228,6 +233,7 @@ NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] =
     SysHubReturn,           /* 30 */
     SysHubPoll,
     SysHubTranslate,
+    SysVfsIoctl,
 };
 
 /* posix env syscall table */

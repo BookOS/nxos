@@ -117,6 +117,15 @@ NX_PRIVATE NX_U64 DevWrite(NX_VfsNode * n, NX_I64 off, void * buf, NX_U64 len, N
 	return outLen;
 }
 
+NX_PRIVATE NX_Error DevIoctl(NX_VfsNode * n, NX_U32 cmd, void *arg)
+{
+    NX_Device *dev;
+
+    dev = n->data;
+
+    return NX_DeviceControl(dev, cmd, arg);
+}
+
 NX_PRIVATE NX_Error DevTruncate(NX_VfsNode * n, NX_I64 off)
 {
 	return NX_EPERM; /* can't truncate */
@@ -148,7 +157,7 @@ NX_PRIVATE NX_Error DevReaddir(NX_VfsNode * dn, NX_I64 off, NX_VfsDirent * d)
     
 	NX_StrCopyN(d->name, device->name, sizeof(d->name));
     d->name[sizeof(device->name) - 1] = '\0';
-    
+
 	d->off = off;
 	d->reclen = 1;
 
@@ -227,6 +236,7 @@ NX_PRIVATE NX_VfsFileSystem devfs = {
 
 	.read		= DevRead,
 	.write		= DevWrite,
+    .ioctl      = DevIoctl,
 	.truncate	= DevTruncate,
 	.sync		= DevSync,
 	.readdir	= DevReaddir,
