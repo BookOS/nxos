@@ -1,0 +1,3 @@
+config NX_FS_DEVFS
+    bool "Enable device file system"
+    default n
