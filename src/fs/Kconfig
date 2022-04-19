@@ -1,4 +1,5 @@
 source "$NXOS_SRC_DIR/fs/cpio/Kconfig"
+source "$NXOS_SRC_DIR/fs/devfs/Kconfig"
 
 config NX_ENABLE_EXECUTE_USER
     bool "Enable execute first user process"

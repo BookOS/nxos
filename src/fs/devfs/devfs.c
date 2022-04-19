@@ -11,11 +11,12 @@
 
 #include <xbook.h>
 
+#ifdef CONFIG_NX_FS_DEVFS
 #include <fs/vfs.h>
 #include <utils/string.h>
-#include <utils/memory.h>
+#define NX_LOG_NAME "devfs"
 #include <utils/log.h>
-#include <io/block.h>
+#include <io/driver.h>
 
 NX_PRIVATE NX_Error DevMount(NX_VfsMount * m, const char * dev)
 {
@@ -252,6 +253,7 @@ NX_PRIVATE NX_VfsFileSystem devfs = {
 NX_PRIVATE void NX_FileSystemDevInit(void)
 {
 	NX_VfsRegisterFileSystem(&devfs);
+    NX_LOG_I("register devfs done.");
 }
 
 NX_PRIVATE void NX_FileSystemDevExit(void)
@@ -261,3 +263,5 @@ NX_PRIVATE void NX_FileSystemDevExit(void)
 
 NX_FS_INIT(NX_FileSystemDevInit);
 NX_FS_EXIT(NX_FileSystemDevExit);
+
+#endif /* CONFIG_NX_FS_DEVFS */
