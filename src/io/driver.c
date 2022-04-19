@@ -275,6 +275,31 @@ NX_PRIVATE NX_Device *NX_DeviceSearchLocked(const char *name)
     return NX_NULL;
 }
 
+NX_Device *NX_DeviceEnum(NX_Offset offset)
+{
+    NX_Driver *driver;
+    NX_Device *device;
+    NX_UArch level;
+    NX_Offset idx;
+
+    idx = 0;
+    NX_SpinLockIRQ(&DriverLock, &level);
+    NX_ListForEachEntry(driver, &DriverListHead, list)
+    {
+        NX_ListForEachEntry(device, &driver->deviceListHead, list)
+        {
+            if (idx == offset)
+            {
+                NX_SpinUnlockIRQ(&DriverLock, level);
+                return device;
+            }
+            idx++;
+        }
+    }
+    NX_SpinUnlockIRQ(&DriverLock, level);
+    return NX_NULL;
+}
+
 NX_Error NX_DeviceOpen(const char *name, NX_U32 flags, NX_Device **outDevice)
 {
     if (!name)

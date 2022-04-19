@@ -98,5 +98,6 @@ NX_Error NX_DeviceReadEx(NX_Device *device, void *buf, NX_Offset off, NX_Size le
 NX_Error NX_DeviceWriteEx(NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen);
 NX_Error NX_DeviceControl(NX_Device *device, NX_U32 cmd, void *arg);
 NX_Device *NX_DeviceSearch(const char *name);
+NX_Device *NX_DeviceEnum(NX_Offset offset);
 
 #endif  /* __XBOOK_IO_DRIVER__ */
