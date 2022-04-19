@@ -129,8 +129,30 @@ NX_PRIVATE NX_Error DevSync(NX_VfsNode * n)
 
 NX_PRIVATE NX_Error DevReaddir(NX_VfsNode * dn, NX_I64 off, NX_VfsDirent * d)
 {
-	
-	return NX_EOK;
+    NX_Device *device;
+
+	device = NX_DeviceEnum(off);
+	if (device == NX_NULL)
+    {
+        return NX_ENORES;
+    }
+
+    if (device->driver->type == NX_DEVICE_TYPE_BLOCK)
+    {
+        d->type = NX_VFS_DIR_TYPE_BLK;
+    }
+    else
+    {
+        d->type = NX_VFS_DIR_TYPE_CHR;
+    }
+    
+	NX_StrCopyN(d->name, device->name, sizeof(d->name));
+    d->name[sizeof(device->name) - 1] = '\0';
+    
+	d->off = off;
+	d->reclen = 1;
+
+    return NX_EOK;
 }
 
 NX_PRIVATE NX_Error DevLookup(NX_VfsNode * dn, const char * name, NX_VfsNode * n)
