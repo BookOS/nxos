@@ -48,10 +48,14 @@ NX_Error NX_VmspaceInit(NX_Vmspace *space,
     space->imageEnd = imageEnd;
     space->heapStart = heapStart;
     space->heapEnd = heapEnd;
+    space->heapCurrent = heapStart;
     space->mapStart = mapStart;
     space->mapEnd = mapEnd;
     space->stackStart = stackStart;
     space->stackEnd = stackEnd;
+
+    NX_ASSERT(!(space->heapCurrent & NX_PAGE_MASK));
+
     return NX_EOK;
 }
 
@@ -641,4 +645,108 @@ NX_Addr NX_VmspaceVirToPhy(NX_Vmspace *space, NX_Addr virAddr)
     }
 
     return (NX_Addr)NX_MmuVir2Phy(&space->mmu, virAddr);
+}
+
+void NX_VmspaceResizeImage(NX_Vmspace *space, NX_Size newImageSize)
+{
+    NX_ASSERT(space);
+
+    space->imageEnd = NX_PAGE_ALIGNUP(space->imageStart + newImageSize);
+    if (space->imageEnd + NX_PAGE_SIZE < space->heapStart)
+    {
+        space->heapStart = space->imageEnd + NX_PAGE_SIZE;
+    }
+    space->heapCurrent = space->heapStart;
+}
+
+/**
+ * @brief update vmspace heap current position
+ * 
+ * @param space the vmspace
+ * @param virAddr update to the addr. 
+ * @param outErr err value for tail info
+ * @return void* heap addr
+ *          1. if virAddr == 0, return current heap.
+ *          2. if virAddr >= heapEnd or virAddr < heapStart but not zero, return err.
+ *          3. if virAddr not map and higher than heapStart, map it.
+ *          4. if virAddr mapped and lower than heapEnd, unmap higher addr.
+ */
+void *NX_VmspaceUpdateHeap(NX_Vmspace *space, NX_Addr virAddr, NX_Error *outErr)
+{
+    NX_Addr newHeap, oldHeap;
+    void *mapped;
+    NX_Error err;
+
+    if (!space)
+    {
+        err = NX_EINVAL;
+        goto failed;
+    }
+    if (!space->mmu.table)
+    {
+        err = NX_EFAULT;
+        goto failed;
+    }
+    
+    if (virAddr == 0) /* return current heap */
+    {
+        virAddr = space->heapCurrent;
+        err = NX_EOK;
+        goto updateHeap;
+    }
+
+    if (virAddr < space->heapStart)
+    {
+        err = NX_EINVAL;
+        goto failed;
+    }
+
+    if (virAddr >= space->heapEnd)
+    {
+        err = NX_ENOMEM;
+        goto failed;
+    }
+
+    /* check page aligned addr */
+    newHeap = NX_PAGE_ALIGNUP(virAddr);
+    oldHeap = NX_PAGE_ALIGNUP(space->heapCurrent);
+
+    /* if in same page, update heap addr */
+    if (newHeap == oldHeap)
+    {    
+        err = NX_EOK;
+        goto updateHeap;
+    }
+
+    mapped = NX_NULL;
+    /* if virAddr > Current, map higher addr */
+    if (newHeap > oldHeap)
+    {
+        err = NX_VmspaceMap(space, oldHeap, newHeap - oldHeap, NX_PAGE_ATTR_USER, 0, &mapped);
+        if (err != NX_EOK)
+        {
+            goto failed;
+        }
+        if ((NX_Addr)mapped != oldHeap)
+        {
+            goto failed;
+        }
+    }
+    else /* if virAddr < Current, unmap higher addr */
+    {
+        err = NX_VmspaceUnmap(space, newHeap, oldHeap - newHeap);
+        if (err != NX_EOK)
+        {
+            goto failed;
+        }
+    }
+
+updateHeap:
+    space->heapCurrent = virAddr;
+    NX_ErrorSet(outErr, NX_EOK);
+    return (void *)space->heapCurrent;
+
+failed:
+    NX_ErrorSet(outErr, err);
+    return NX_NULL;
 }

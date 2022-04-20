@@ -18,6 +18,9 @@
 #include <sched/thread.h>
 #include <fs/vfs.h>
 #include <ipc/hub.h>
+#include <mm/vmspace.h>
+#include <process/uaccess.h>
+#include <mm/page.h>
 
 NX_PRIVATE int SysInvalidCall(void)
 {
@@ -162,39 +165,113 @@ NX_PRIVATE NX_Error SysVfsStat(const char * path, NX_VfsStatInfo * st)
     return NX_VfsStat(path, st);
 }
 
-NX_Error SysHubRegister(const char *name, NX_Size maxClient)
+NX_PRIVATE NX_Error SysHubRegister(const char *name, NX_Size maxClient)
 {
     return NX_HubRegister(name, maxClient, NX_NULL);
 }
 
-NX_Error SysHubUnregister(const char *name)
+NX_PRIVATE NX_Error SysHubUnregister(const char *name)
 {
     return NX_HubUnregister(name);
 }
 
-NX_Error SysHubCallParam(NX_Hub *hub, NX_HubParam *param, NX_Size *retVal)
+NX_PRIVATE NX_Error SysHubCallParam(NX_Hub *hub, NX_HubParam *param, NX_Size *retVal)
 {
     return NX_HubCallParam(hub, param, retVal);
 }
 
-NX_Error SysHubCallParamName(const char *name, NX_HubParam *param, NX_Size *retVal)
+NX_PRIVATE NX_Error SysHubCallParamName(const char *name, NX_HubParam *param, NX_Size *retVal)
 {
     return NX_HubCallParamName(name, param, retVal);
 }
 
-NX_Error SysHubReturn(NX_Size retVal, NX_Error retErr)
+NX_PRIVATE NX_Error SysHubReturn(NX_Size retVal, NX_Error retErr)
 {
     return NX_HubReturn(retVal, retErr);
 }
 
-NX_Error SysHubPoll(NX_HubParam *param)
+NX_PRIVATE NX_Error SysHubPoll(NX_HubParam *param)
 {
     return NX_HubPoll(param);
 }
 
-void *SysHubTranslate(void *addr, NX_Size size)
+NX_PRIVATE void *SysHubTranslate(void *addr, NX_Size size)
 {
     return NX_HubTranslate(addr, size);
+}
+
+NX_PRIVATE void *SysMemMap(void * addr, NX_Size length, NX_U32 prot, NX_Error *outErr)
+{
+    NX_Error err;
+    NX_Thread *self;
+    void *outAddr = NX_NULL;
+    NX_UArch attr;
+
+    if (!length || !prot)
+    {
+        err = NX_EINVAL;
+        if (outErr)
+        {
+            NX_CopyToUser((char *)outErr, (char *)&err, sizeof(NX_Error));
+        }
+        return NX_NULL;
+    }
+
+    self = NX_ThreadSelf();
+
+    /* make attr */
+    attr = NX_PAGE_ATTR_USER & (~NX_PAGE_ATTR_RWX);
+    if (prot & NX_PROT_READ)
+    {
+        attr |= NX_PAGE_ATTR_READ;
+    }
+    if (prot & NX_PROT_WRITE)
+    {
+        attr |= NX_PAGE_ATTR_WRITE;
+    }
+    if (prot & NX_PROT_EXEC)
+    {
+        attr |= NX_PAGE_ATTR_EXEC;
+    }
+
+    err = NX_VmspaceMap(&self->resource.process->vmspace,
+                        (NX_Addr)addr, length, attr, 0, &outAddr);
+
+    if (outErr)
+    {
+        NX_CopyToUser((char *)outErr, (char *)&err, sizeof(NX_Error));
+    }
+    return outAddr;
+}
+
+NX_PRIVATE NX_Error SysMemUnmap(void *addr, NX_Size length)
+{
+    NX_Thread *self;
+    
+    if (addr == NX_NULL || !length)
+    {
+        return NX_EINVAL;
+    }
+
+    self = NX_ThreadSelf();
+
+    return NX_VmspaceUnmap(&self->resource.process->vmspace, NX_PAGE_ALIGNDOWN((NX_Addr)addr), length);
+}
+
+NX_PRIVATE void *SysMemHeap(void *addr, NX_Error *outErr)
+{
+    NX_Error err;
+    NX_Thread *self;
+    void *heapAddr;
+
+    self = NX_ThreadSelf();
+
+    heapAddr = NX_VmspaceUpdateHeap(&self->resource.process->vmspace, (NX_Addr)addr, &err);
+    if (outErr)
+    {
+        NX_CopyToUser((char *)outErr, (char *)&err, sizeof(NX_Error));
+    }
+    return heapAddr;
 }
 
 /* xbook env syscall table  */
@@ -234,6 +311,9 @@ NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] =
     SysHubPoll,
     SysHubTranslate,
     SysVfsIoctl,
+    SysMemMap,
+    SysMemUnmap,            /* 35 */
+    SysMemHeap,
 };
 
 /* posix env syscall table */

@@ -386,11 +386,7 @@ NX_PRIVATE NX_Error NX_LoadFileData(int fd, NX_Size len, NX_Vmspace *space, Elf_
     NX_LOG_D("elf used memory size %p", memSize);
 
     /* space resize image and heap size */
-    space->imageEnd = NX_PAGE_ALIGNUP(space->imageStart + memSize);
-    if (space->imageEnd + NX_PAGE_SIZE < space->heapStart)
-    {
-        space->heapStart = space->imageEnd + NX_PAGE_SIZE;
-    }
+    NX_VmspaceResizeImage(space, memSize);
 
     return NX_EOK;
 }

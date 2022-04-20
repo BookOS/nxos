@@ -20,6 +20,10 @@
 /* vmspace flags */
 #define NX_VMSPACE_DELAY_MAP 0x01   /* delay map phy addr when read/write */
 
+#define NX_PROT_READ    0x01    /* space readable */
+#define NX_PROT_WRITE   0x02    /* space writable */
+#define NX_PROT_EXEC    0x04    /* space executeable */
+
 struct NX_Vmspace
 {
     NX_Mmu mmu;
@@ -32,6 +36,7 @@ struct NX_Vmspace
     NX_Addr imageEnd;
     NX_Addr heapStart;
     NX_Addr heapEnd;
+    NX_Addr heapCurrent; /* current heap: must page aligned */
     NX_Addr mapStart;
     NX_Addr mapEnd;
     NX_Addr stackStart;
@@ -69,7 +74,6 @@ NX_Error NX_VmspaceMap(NX_Vmspace *space,
     NX_UArch attr,
     NX_U32 flags,
     void **outAddr);
-
 NX_Error NX_VmspaceMapWithPhy(NX_Vmspace *space,
     NX_Addr vaddr,
     NX_Addr paddr,
@@ -77,11 +81,12 @@ NX_Error NX_VmspaceMapWithPhy(NX_Vmspace *space,
     NX_UArch attr,
     NX_U32 flags,
     void **outAddr);
-
 NX_Error NX_VmspaceUnmap(NX_Vmspace *space, NX_Addr addr, NX_Size size);
 
-NX_Error NX_VmspaceListNodes(NX_Vmspace *space);
-
 NX_Addr NX_VmspaceVirToPhy(NX_Vmspace *space, NX_Addr virAddr);
+void *NX_VmspaceUpdateHeap(NX_Vmspace *space, NX_Addr virAddr, NX_Error *outErr);
+
+NX_Error NX_VmspaceListNodes(NX_Vmspace *space);
+void NX_VmspaceResizeImage(NX_Vmspace *space, NX_Size newImageSize);
 
 #endif /* __MM_VMSPACE__ */
