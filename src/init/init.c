@@ -53,7 +53,31 @@ NX_PRIVATE void CallsEntry(void *arg)
 #ifdef CONFIG_NX_ENABLE_MOUNT_TABLE
     {
         NX_Error err = NX_VfsMountFileSystem(CONFIG_NX_MOUNT_DEVICE_DEFAULT, CONFIG_NX_MOUNT_PATH_DEFAULT, CONFIG_NX_MOUNT_FSNAME_DEFAULT, 0);
-        NX_LOG_I("mount dev:%s on path:%s as fs:%s with state %d", CONFIG_NX_MOUNT_DEVICE_DEFAULT, CONFIG_NX_MOUNT_PATH_DEFAULT, CONFIG_NX_MOUNT_FSNAME_DEFAULT, err);
+        NX_LOG_I("---------------- Mount file system begin ----------------");
+        if (err != NX_EOK)
+        {
+            NX_LOG_W("mount dev:%s on path:%s as fs:%s with state %d/%s",
+                    CONFIG_NX_MOUNT_DEVICE_DEFAULT, CONFIG_NX_MOUNT_PATH_DEFAULT, CONFIG_NX_MOUNT_FSNAME_DEFAULT, err, NX_ErrorToString(err));
+        }
+        else
+        {
+            NX_LOG_I("mount dev:%s on path:%s as fs:%s with state %d/%s",
+                    CONFIG_NX_MOUNT_DEVICE_DEFAULT, CONFIG_NX_MOUNT_PATH_DEFAULT, CONFIG_NX_MOUNT_FSNAME_DEFAULT, err, NX_ErrorToString(err));
+        }
+
+#ifdef CONFIG_NX_FS_DEVFS
+        err = NX_VfsMountFileSystem(NX_NULL, CONFIG_NX_DEVFS_PATH_DEFAULT, CONFIG_NX_DEVFS_FSNAME_DEFAULT, 0);
+        if (err != NX_EOK)
+        {
+            NX_LOG_W("mount (null) dev on path:%s as fs:%s with state %d/%s", CONFIG_NX_DEVFS_PATH_DEFAULT, CONFIG_NX_DEVFS_FSNAME_DEFAULT, err, NX_ErrorToString(err));
+        }
+        else
+        {            
+            NX_LOG_I("mount (null) dev on path:%s as fs:%s with state %d/%s", CONFIG_NX_DEVFS_PATH_DEFAULT, CONFIG_NX_DEVFS_FSNAME_DEFAULT, err, NX_ErrorToString(err));
+        }
+#endif /* CONFIG_NX_FS_DEVFS */
+
+        NX_LOG_I("---------------- Mount file system end ----------------");
     }
 #endif /* CONFIG_NX_ENABLE_MOUNT_TABLE */
 
