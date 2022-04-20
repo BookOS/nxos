@@ -19,8 +19,8 @@
 
 #define NX_Endln NX_CON_NEWLINE
 
-void NX_ConsoleOutChar(char ch);
-void NX_ConsoleOutStr(const char *str);
+void NX_ConsoleSendData(char ch);
+void NX_ConsoleReceveData(char ch);
 
 void NX_Printf(const char *fmt, ...);
 

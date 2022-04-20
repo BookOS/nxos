@@ -1,3 +1,7 @@
+config NX_DRIVER_CONSOLE
+    bool "Enable console device"
+    default y
+
 config NX_PRINT_BUF_LEN
     int "printf buffer length"
     default 256

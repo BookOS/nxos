@@ -13,6 +13,7 @@
 #include <xbook.h>
 #include <io/delay_irq.h>
 #include <drivers/direct_uart.h>
+#include <drivers/console.h>
 #include <utils/log.h>
 #include <xbook/debug.h>
 
@@ -73,7 +74,7 @@ int NX_HalDirectUartGetc(void)
 #endif
 }
 
-NX_INTERFACE void NX_HalConsoleOutChar(char ch)
+NX_INTERFACE void NX_ConsoleSendData(char ch)
 {
     NX_HalDirectUartPutc(ch);
 }
@@ -100,7 +101,7 @@ void NX_HalDirectUartInit(void)
 */
 NX_WEAK_SYM void NX_HalDirectUartGetcHandler(char data)
 {
-    NX_LOG_I("Deafult uart handler:%x/%c\n", data, data);
+    NX_ConsoleReceveData(data);
 }
 
 NX_PRIVATE NX_Error UartIrqHandler(NX_IRQ_Number irqno, void *arg)

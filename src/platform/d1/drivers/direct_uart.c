@@ -11,6 +11,7 @@
 
 #include <xbook.h>
 #include <drivers/direct_uart.h>
+#include <drivers/console.h>
 #include <utils/log.h>
 #include <xbook/debug.h>
 #include <sched/thread.h>
@@ -32,7 +33,7 @@ int NX_HalDirectUartGetc(void)
     return (int)Read32(UART0_RBR);
 }
 
-NX_INTERFACE void NX_HalConsoleOutChar(char ch)
+NX_INTERFACE void NX_ConsoleSendData(char ch)
 {
     NX_HalDirectUartPutc(ch);
 }
@@ -46,7 +47,7 @@ void NX_HalDirectUartInit(void)
 */
 NX_WEAK_SYM void NX_HalDirectUartGetcHandler(char data)
 {
-    NX_LOG_I("Deafult uart handler:%x/%c\n", data, data);
+    NX_ConsoleReceveData(data);
 }
 
 NX_PRIVATE NX_Error UartPollHandler(void)
