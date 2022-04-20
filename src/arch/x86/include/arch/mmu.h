@@ -26,6 +26,10 @@
 #define PTE_A     0x020 // Accessed
 #define PTE_D     0x040 // Dirty
 
+#define NX_PAGE_ATTR_READ     (PTE_R)
+#define NX_PAGE_ATTR_WRITE    (PTE_W)
+#define NX_PAGE_ATTR_EXEC     (PTE_X)
+
 #define NX_PAGE_ATTR_RWX      (PTE_X | PTE_W | PTE_R)
 
 #define NX_PAGE_ATTR_KERNEL   (PTE_P | NX_PAGE_ATTR_RWX | PTE_S)

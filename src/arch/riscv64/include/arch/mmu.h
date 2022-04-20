@@ -45,6 +45,10 @@
 #define NX_PAGE_ATTR_EXT 0x00000000UL
 #endif
 
+#define NX_PAGE_ATTR_READ     (PTE_R)
+#define NX_PAGE_ATTR_WRITE    (PTE_W | PTE_R) /* risc arch need both read and write */
+#define NX_PAGE_ATTR_EXEC     (PTE_X)
+
 #define NX_PAGE_ATTR_RWX    (PTE_X | PTE_W | PTE_R)
 
 #define NX_PAGE_ATTR_KERNEL (PTE_V | NX_PAGE_ATTR_RWX | PTE_S | PTE_G)
