@@ -67,6 +67,34 @@ NX_Error NX_SemaphoreWait(NX_Semaphore *sem)
     return NX_EOK;
 }
 
+NX_Error NX_SemaphoreTryWait(NX_Semaphore *sem)
+{
+    NX_Error err;
+    NX_UArch level;
+
+    if (!sem)
+    {
+        return NX_EINVAL;
+    }
+
+    if (sem->magic != SEMPAHORE_MAGIC)
+    {
+        return NX_EFAULT;
+    }
+
+    err = NX_EAGAIN;
+    NX_SpinLockIRQ(&sem->lock, &level);
+    
+    if (NX_AtomicGet(&sem->value) > 0) /* wait success */
+    {
+        NX_AtomicDec(&sem->value);
+        err = NX_EOK;
+    }
+    NX_SpinUnlockIRQ(&sem->lock, level);
+
+    return err;
+}
+
 NX_Error NX_SemaphoreSignal(NX_Semaphore *sem)
 {
     NX_Thread *thread, *next;

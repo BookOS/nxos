@@ -27,6 +27,7 @@ typedef struct NX_Semaphore
 
 NX_Error NX_SemaphoreInit(NX_Semaphore *sem, NX_IArch value);
 NX_Error NX_SemaphoreWait(NX_Semaphore *sem);
+NX_Error NX_SemaphoreTryWait(NX_Semaphore *sem);
 NX_Error NX_SemaphoreSignal(NX_Semaphore *sem);
 
 #endif /* __SCHED_SEMAPHORE_H__ */
