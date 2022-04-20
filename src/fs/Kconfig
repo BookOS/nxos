@@ -33,6 +33,16 @@ config NX_ENABLE_MOUNT_TABLE
         config NX_MOUNT_FSNAME_DEFAULT
             string "default mount fsname"
             default "cpio"
+            
+        if NX_FS_DEVFS
+            config NX_DEVFS_PATH_DEFAULT
+                string "default devfs mount path"
+                default "/dev"
+
+            config NX_DEVFS_FSNAME_DEFAULT
+                string "default devfs fsname"
+                default "devfs"
+        endif
 
     endif
 
