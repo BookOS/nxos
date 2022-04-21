@@ -17,6 +17,7 @@
 #include <sched/spin.h>
 #include <mm/vmspace.h>
 #include <fs/vfs.h>
+#include <sched/semaphore.h>
 
 #define NX_PROCESS_USER_SATCK_SIZE (NX_PAGE_SIZE * 4)
 
@@ -31,9 +32,13 @@ struct NX_Process
     NX_Spin lock;   /* lock for process */
 
     int exitCode;   /* exit code for process */
+    int waitExitCode;   /* exit code for this process wait another process */
 
     NX_VfsFileTable *fileTable; /* file table */
     
+    NX_Semaphore waiterSem; /* The semaphore of the process waiting for this process to exit */
+    NX_Size waiterNumber; /* waiters */
+
     /* thread group */
 };
 typedef struct NX_Process NX_Process;

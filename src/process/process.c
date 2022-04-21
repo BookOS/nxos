@@ -26,6 +26,7 @@
 #include <xbook/debug.h>
 #include <process/elf.h>
 #include <fs/vfs.h>
+#include <xbook/debug.h>
 
 NX_PRIVATE void ProcessAppendThread(NX_Process *process, NX_Thread *thread)
 {
@@ -94,6 +95,12 @@ NX_PRIVATE NX_Process *NX_ProcessCreateObject(NX_U32 flags)
     NX_ListInit(&process->threadPoolListHead);
 
     NX_SpinInit(&process->lock);
+
+    process->exitCode = 0;
+    process->waitExitCode = 0;
+
+    NX_SemaphoreInit(&process->waiterSem, 0);
+    process->waiterNumber = 0;
 
     return process;
 }
@@ -583,5 +590,38 @@ void NX_ThreadExitProcess(NX_Thread *thread, NX_Process *process)
     {
         /* thread exit need to free process in the last */
         thread->resource.process = process;
+        /* TODO: process exit, notify waiter to do something */
+
+        /* copy return value */
+        NX_Thread * waiterThread;
+
+        NX_ListForEachEntry(waiterThread, &process->waiterSem.semWaitList, blockList)
+        {
+            NX_ASSERT(waiterThread->resource.process);
+            waiterThread->resource.process->waitExitCode = process->exitCode;
+        }
+
+        /* wakeup waiter */
+        NX_IArch waiters = process->waiterNumber;
+        while (waiters-- > 0)
+        {
+            NX_SemaphoreSignal(&process->waiterSem);
+        }
     }
+}
+
+void NX_ProcessWait(NX_Thread *thread, NX_Process *process)
+{
+    NX_ASSERT(process != NX_NULL && thread != NX_NULL);
+    
+    /* wait on process exit sem */
+    NX_SemaphoreWait(&process->waiterSem);
+    thread->resource.process->waitExitCode;
+}
+
+void NX_ProcessWaitId(int pid, NX_U32 flags)
+{
+    /* find process */
+
+    /*  */
 }
