@@ -20,7 +20,7 @@
 #include <arch/mmu.h>
 
 #define NX_LOG_NAME "process"
-#define NX_LOG_LEVEL NX_LOG_INFO
+#define NX_LOG_LEVEL NX_LOG_WARNING
 #include <utils/log.h>
 
 #include <xbook/debug.h>

@@ -13,6 +13,7 @@
 #include <xbook/debug.h>
 
 #define NX_LOG_NAME "deamon"
+#define NX_LOG_LEVEL NX_LOG_WARNING
 #include <utils/log.h>
 
 NX_IMPORT NX_Error NX_ProcessDestroyObject(NX_Process *process);
