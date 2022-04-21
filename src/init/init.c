@@ -83,7 +83,7 @@ NX_PRIVATE void CallsEntry(void *arg)
 
 #ifdef CONFIG_NX_ENABLE_EXECUTE_USER
     {
-        NX_Error err = NX_ProcessLaunch(CONFIG_NX_FIRST_USER_NAME, CONFIG_NX_FIRST_USER_PATH, 0);
+        NX_Error err = NX_ProcessLaunch(CONFIG_NX_FIRST_USER_NAME, CONFIG_NX_FIRST_USER_PATH, 0, NX_NULL);
         NX_LOG_I("execute first user:%s on path:%s with state %d", CONFIG_NX_FIRST_USER_NAME, CONFIG_NX_FIRST_USER_PATH, err);        
     }
 #endif /* CONFIG_NX_ENABLE_EXECUTE_USER */

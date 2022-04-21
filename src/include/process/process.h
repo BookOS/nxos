@@ -21,6 +21,8 @@
 
 #define NX_PROCESS_USER_SATCK_SIZE (NX_PAGE_SIZE * 4)
 
+#define NX_PROC_FLAG_WAIT_START 0x01
+
 struct NX_Process
 {
     NX_U32 flags;
@@ -37,7 +39,9 @@ struct NX_Process
     NX_VfsFileTable *fileTable; /* file table */
     
     NX_Semaphore waiterSem; /* The semaphore of the process waiting for this process to exit */
-    NX_Size waiterNumber; /* waiters */
+    NX_Atomic waiterNumber; /* waiters */
+
+    NX_I32 pid; /* process id */
 
     /* thread group */
 };
@@ -60,7 +64,8 @@ NX_INTERFACE NX_IMPORT struct NX_ProcessOps NX_ProcessOpsInterface;
 #define NX_ProcessExecuteUser           NX_ProcessOpsInterface.executeUser
 #define NX_ProcessFreePageTable         NX_ProcessOpsInterface.freePageTable
 
-NX_Error NX_ProcessLaunch(char *name, char *path, NX_U32 flags);
+NX_Error NX_ProcessLaunch(char *name, char *path, NX_U32 flags, int *outPid);
 void NX_ProcessExit(int exitCode);
+NX_Error NX_ProcessWait(int pid, int *retCode);
 
 #endif /* __PROCESS_PROCESS___ */

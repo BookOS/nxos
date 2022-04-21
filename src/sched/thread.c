@@ -242,6 +242,22 @@ NX_Error NX_ThreadStart(NX_Thread *thread)
     return NX_EOK;
 }
 
+NX_Error NX_ThreadStartNotReady(NX_Thread *thread)
+{
+    if (thread == NX_NULL)
+    {
+        return NX_EINVAL;
+    }
+
+    NX_UArch level;
+    NX_SpinLockIRQ(&NX_ThreadManagerObject.lock, &level);
+
+    NX_ThreadEnququeGlobalListUnlocked(thread);
+
+    NX_SpinUnlockIRQ(&NX_ThreadManagerObject.lock, level);
+    return NX_EOK;
+}
+
 void NX_ThreadYield(void)
 {
     NX_SchedYield();

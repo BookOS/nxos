@@ -27,6 +27,8 @@
 #include <process/elf.h>
 #include <fs/vfs.h>
 #include <xbook/debug.h>
+#include <process/uaccess.h>
+#include <sched/sched.h>
 
 NX_PRIVATE void ProcessAppendThread(NX_Process *process, NX_Thread *thread)
 {
@@ -100,7 +102,9 @@ NX_PRIVATE NX_Process *NX_ProcessCreateObject(NX_U32 flags)
     process->waitExitCode = 0;
 
     NX_SemaphoreInit(&process->waiterSem, 0);
-    process->waiterNumber = 0;
+    NX_AtomicSet(&process->waiterNumber, 0);
+
+    process->pid = 0;
 
     return process;
 }
@@ -493,7 +497,7 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
 /**
  * launch a process with image
  */
-NX_Error NX_ProcessLaunch(char *name, char *path, NX_U32 flags)
+NX_Error NX_ProcessLaunch(char *name, char *path, NX_U32 flags, int *outPid)
 {
     NX_Vmspace *space;
 
@@ -523,7 +527,7 @@ NX_Error NX_ProcessLaunch(char *name, char *path, NX_U32 flags)
     {
         NX_ProcessDestroyObject(process);
         NX_ThreadDestroy(thread);
-        return NX_EIO;
+        return NX_ENORES;
     }
 
     space = &process->vmspace;
@@ -540,15 +544,37 @@ NX_Error NX_ProcessLaunch(char *name, char *path, NX_U32 flags)
 
     /* override default file table */
     NX_ThreadSetFileTable(thread, process->fileTable);
+    process->pid = thread->tid;
 
-    if (NX_ThreadStart(thread) != NX_EOK)
+    /* start when some one wait me. */
+    if ((process->flags & NX_PROC_FLAG_WAIT_START))
     {
-        NX_ASSERT(NX_VmspaceUnmap(space, space->stackEnd - NX_PROCESS_USER_SATCK_SIZE, NX_PROCESS_USER_SATCK_SIZE) == NX_EOK);
-        NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
-        NX_ProcessDestroyObject(process);
-        NX_ThreadDestroy(thread);
-        return NX_EFAULT;
+        if (NX_ThreadStartNotReady(thread) != NX_EOK)
+        {
+            NX_ASSERT(NX_VmspaceUnmap(space, space->stackEnd - NX_PROCESS_USER_SATCK_SIZE, NX_PROCESS_USER_SATCK_SIZE) == NX_EOK);
+            NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
+            NX_ProcessDestroyObject(process);
+            NX_ThreadDestroy(thread);
+            return NX_EFAULT;
+        }
     }
+    else
+    {
+        if (NX_ThreadStart(thread) != NX_EOK)
+        {
+            NX_ASSERT(NX_VmspaceUnmap(space, space->stackEnd - NX_PROCESS_USER_SATCK_SIZE, NX_PROCESS_USER_SATCK_SIZE) == NX_EOK);
+            NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
+            NX_ProcessDestroyObject(process);
+            NX_ThreadDestroy(thread);
+            return NX_EFAULT;
+        }
+    }
+
+    if (outPid)
+    {
+        *outPid = process->pid;
+    }
+
     return NX_EOK;
 }
 
@@ -581,6 +607,26 @@ void NX_ProcessExit(int exitCode)
     NX_PANIC("NX_ProcessExit should never be here!");
 }
 
+NX_PRIVATE void ProcessExitNotify(NX_Process * process)
+{
+    /* copy return value */
+    NX_Thread * waiterThread;
+
+    NX_ListForEachEntry(waiterThread, &process->waiterSem.semWaitList, blockList)
+    {
+        NX_ASSERT(waiterThread->resource.process);
+        waiterThread->resource.process->waitExitCode = process->exitCode;
+    }
+
+    /* wakeup waiter */
+    NX_IArch waiters = NX_AtomicGet(&process->waiterNumber);
+
+    while (waiters-- > 0)
+    {
+        NX_SemaphoreSignal(&process->waiterSem);
+    }
+}
+
 void NX_ThreadExitProcess(NX_Thread *thread, NX_Process *process)
 {
     NX_ASSERT(process != NX_NULL && thread != NX_NULL);
@@ -590,38 +636,51 @@ void NX_ThreadExitProcess(NX_Thread *thread, NX_Process *process)
     {
         /* thread exit need to free process in the last */
         thread->resource.process = process;
-        /* TODO: process exit, notify waiter to do something */
 
-        /* copy return value */
-        NX_Thread * waiterThread;
-
-        NX_ListForEachEntry(waiterThread, &process->waiterSem.semWaitList, blockList)
-        {
-            NX_ASSERT(waiterThread->resource.process);
-            waiterThread->resource.process->waitExitCode = process->exitCode;
-        }
-
-        /* wakeup waiter */
-        NX_IArch waiters = process->waiterNumber;
-        while (waiters-- > 0)
-        {
-            NX_SemaphoreSignal(&process->waiterSem);
-        }
+        ProcessExitNotify(process);
     }
 }
 
-void NX_ProcessWait(NX_Thread *thread, NX_Process *process)
+NX_Error NX_ProcessWait(int pid, int *retCode)
 {
-    NX_ASSERT(process != NX_NULL && thread != NX_NULL);
+    NX_Process * process;
+    NX_Thread * self;
     
-    /* wait on process exit sem */
-    NX_SemaphoreWait(&process->waiterSem);
-    thread->resource.process->waitExitCode;
-}
-
-void NX_ProcessWaitId(int pid, NX_U32 flags)
-{
     /* find process */
+    NX_Thread *thread = NX_ThreadFindById(pid);
+    if (thread == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
 
-    /*  */
+    process = thread->resource.process;
+
+    if (process == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (process->pid != pid)
+    {
+        return NX_ENOSRCH;
+    }
+
+    self = NX_ThreadSelf();
+
+    /* check process delay start */
+    if (process->flags & NX_PROC_FLAG_WAIT_START)
+    {
+        process->flags &= ~NX_PROC_FLAG_WAIT_START;
+        NX_ThreadReadyRunUnlocked(thread, NX_SCHED_TAIL);
+    }
+
+    NX_AtomicInc(&process->waiterNumber);
+    /* wait on waiters sem */
+    NX_SemaphoreWait(&process->waiterSem);
+    if (retCode)
+    {
+        NX_CopyToUser((char *)retCode, (char *)&self->resource.process->waitExitCode, sizeof(*retCode));
+    }
+
+    return NX_EOK;
 }
