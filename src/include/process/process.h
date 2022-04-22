@@ -21,7 +21,8 @@
 
 #define NX_PROCESS_USER_SATCK_SIZE (NX_PAGE_SIZE * 4)
 
-#define NX_PROC_FLAG_WAIT_START 0x01
+#define NX_PROC_FLAG_NOWAIT 0x00
+#define NX_PROC_FLAG_WAIT 0x01
 
 struct NX_Process
 {
@@ -64,8 +65,7 @@ NX_INTERFACE NX_IMPORT struct NX_ProcessOps NX_ProcessOpsInterface;
 #define NX_ProcessExecuteUser           NX_ProcessOpsInterface.executeUser
 #define NX_ProcessFreePageTable         NX_ProcessOpsInterface.freePageTable
 
-NX_Error NX_ProcessLaunch(char *name, char *path, NX_U32 flags, int *outPid);
+NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, int *retCode, char *cmd, char *env);
 void NX_ProcessExit(int exitCode);
-NX_Error NX_ProcessWait(int pid, int *retCode);
 
 #endif /* __PROCESS_PROCESS___ */

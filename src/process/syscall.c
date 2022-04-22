@@ -42,19 +42,14 @@ NX_PRIVATE void SysProcessExit(NX_Error errCode)
     NX_PANIC("process exit syscall failed !");
 }
 
-NX_PRIVATE NX_Error SysProcessWait(int pid, int *retCode)
+NX_PRIVATE NX_Error SysProcessLaunch(char *path, NX_U32 flags, int *outRetCode, char *cmd, char *env)
 {
-    return NX_ProcessWait(pid, retCode);
-}
-
-NX_PRIVATE NX_Error SysProcessLaunch(char *name, char *path, NX_U32 flags, int *outPid)
-{
-    int pid = 0;
+    int retCode = 0;
     NX_Error err = NX_EOK;
-    err = NX_ProcessLaunch(name, path, flags, &pid);
-    if (outPid)
+    err = NX_ProcessLaunch(path, flags, &retCode, cmd, env);
+    if (outRetCode)
     {
-        NX_CopyToUser((char *)outPid, (char *)&pid, sizeof(pid));
+        NX_CopyToUser((char *)outRetCode, (char *)&retCode, sizeof(retCode));
     }
     return err;
 }
@@ -326,7 +321,6 @@ NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] =
     SysMemMap,
     SysMemUnmap,            /* 35 */
     SysMemHeap,
-    SysProcessWait,
 };
 
 /* posix env syscall table */

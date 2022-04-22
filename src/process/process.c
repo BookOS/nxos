@@ -15,6 +15,7 @@
 #include <mm/alloc.h>
 #include <xbook/debug.h>
 #include <utils/memory.h>
+#include <utils/string.h>
 #include <mm/mmu.h>
 #include <mm/page.h>
 #include <arch/mmu.h>
@@ -29,6 +30,8 @@
 #include <xbook/debug.h>
 #include <process/uaccess.h>
 #include <sched/sched.h>
+
+NX_PRIVATE NX_Error NX_ProcessWait(NX_Process * process, int *retCode);
 
 NX_PRIVATE void ProcessAppendThread(NX_Process *process, NX_Thread *thread)
 {
@@ -497,17 +500,32 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
 /**
  * launch a process with image
  */
-NX_Error NX_ProcessLaunch(char *name, char *path, NX_U32 flags, int *outPid)
+NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, int *retCode, char *cmd, char *env)
 {
     NX_Vmspace *space;
+    char *name;
 
-    if (name == NX_NULL || path == NX_NULL)
+    if (path == NX_NULL)
     {
         return NX_EINVAL;
     }
 
-    /* TODO: check path exist */
+    /* check path exist */
+    if (NX_VfsAccess(path, NX_VFS_R_OK) != NX_EOK)
+    {
+        return NX_EPERM;
+    }
 
+    /* make name */
+    name = NX_StrChrReverse(path, '/');
+    if (name == NX_NULL) /* no '/' */
+    {
+        name = path;
+    }
+    else
+    {
+        name++; /* skip '/' */
+    }
 
     NX_Process *process = NX_ProcessCreateObject(flags);
     if (process == NX_NULL)
@@ -546,33 +564,18 @@ NX_Error NX_ProcessLaunch(char *name, char *path, NX_U32 flags, int *outPid)
     NX_ThreadSetFileTable(thread, process->fileTable);
     process->pid = thread->tid;
 
-    /* start when some one wait me. */
-    if ((process->flags & NX_PROC_FLAG_WAIT_START))
+    if (NX_ThreadStart(thread) != NX_EOK)
     {
-        if (NX_ThreadStartNotReady(thread) != NX_EOK)
-        {
-            NX_ASSERT(NX_VmspaceUnmap(space, space->stackEnd - NX_PROCESS_USER_SATCK_SIZE, NX_PROCESS_USER_SATCK_SIZE) == NX_EOK);
-            NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
-            NX_ProcessDestroyObject(process);
-            NX_ThreadDestroy(thread);
-            return NX_EFAULT;
-        }
+        NX_ASSERT(NX_VmspaceUnmap(space, space->stackEnd - NX_PROCESS_USER_SATCK_SIZE, NX_PROCESS_USER_SATCK_SIZE) == NX_EOK);
+        NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
+        NX_ProcessDestroyObject(process);
+        NX_ThreadDestroy(thread);
+        return NX_EFAULT;
     }
-    else
+    
+    if (process->flags & NX_PROC_FLAG_WAIT)
     {
-        if (NX_ThreadStart(thread) != NX_EOK)
-        {
-            NX_ASSERT(NX_VmspaceUnmap(space, space->stackEnd - NX_PROCESS_USER_SATCK_SIZE, NX_PROCESS_USER_SATCK_SIZE) == NX_EOK);
-            NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
-            NX_ProcessDestroyObject(process);
-            NX_ThreadDestroy(thread);
-            return NX_EFAULT;
-        }
-    }
-
-    if (outPid)
-    {
-        *outPid = process->pid;
+        return NX_ProcessWait(process, retCode);
     }
 
     return NX_EOK;
@@ -641,45 +644,23 @@ void NX_ThreadExitProcess(NX_Thread *thread, NX_Process *process)
     }
 }
 
-NX_Error NX_ProcessWait(int pid, int *retCode)
+NX_PRIVATE NX_Error NX_ProcessWait(NX_Process * process, int *retCode)
 {
-    NX_Process * process;
     NX_Thread * self;
     
-    /* find process */
-    NX_Thread *thread = NX_ThreadFindById(pid);
-    if (thread == NX_NULL)
-    {
-        return NX_ENOSRCH;
-    }
-
-    process = thread->resource.process;
-
     if (process == NX_NULL)
-    {
-        return NX_ENOSRCH;
-    }
-
-    if (process->pid != pid)
     {
         return NX_ENOSRCH;
     }
 
     self = NX_ThreadSelf();
 
-    /* check process delay start */
-    if (process->flags & NX_PROC_FLAG_WAIT_START)
-    {
-        process->flags &= ~NX_PROC_FLAG_WAIT_START;
-        NX_ThreadReadyRunUnlocked(thread, NX_SCHED_TAIL);
-    }
-
     NX_AtomicInc(&process->waiterNumber);
     /* wait on waiters sem */
     NX_SemaphoreWait(&process->waiterSem);
     if (retCode)
     {
-        NX_CopyToUser((char *)retCode, (char *)&self->resource.process->waitExitCode, sizeof(*retCode));
+        *retCode = self->resource.process->waitExitCode;
     }
 
     return NX_EOK;
