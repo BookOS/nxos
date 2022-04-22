@@ -108,6 +108,7 @@ NX_PRIVATE NX_Process *NX_ProcessCreateObject(NX_U32 flags)
     NX_AtomicSet(&process->waiterNumber, 0);
 
     process->pid = 0;
+    process->args = NX_NULL;
 
     return process;
 }
@@ -131,9 +132,11 @@ NX_Error NX_ProcessDestroyObject(NX_Process *process)
 NX_PRIVATE void ProcessThreadEntry(void *arg)
 {
     NX_Thread *thread = NX_ThreadSelf();
+    NX_Process * process = thread->resource.process;
     NX_LOG_I("Process %s/%d running...", thread->name, thread->tid);
     /* Jump into userspace to run app */
-    NX_ProcessExecuteUser((void *)NX_USER_IMAGE_VADDR, (void *)NX_USER_STACK_TOP, thread->stackBase + thread->stackSize, NX_NULL);
+    NX_ProcessExecuteUser((void *)NX_USER_IMAGE_VADDR, (void *)NX_PAGE_ALIGNDOWN((NX_Addr)process->args),
+                          thread->stackBase + thread->stackSize, process->args);
 }
 
 NX_PRIVATE NX_Error NX_LoadCheckMachine(NX_U16 machineType)
@@ -497,6 +500,113 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
     return NX_EOK;
 }
 
+NX_PRIVATE NX_Error ProcessMapStack(NX_Process *process, char *cmd, char *env)
+{
+    NX_Vmspace * space = NX_NULL;
+    NX_Size stackSize = NX_PROCESS_USER_SATCK_SIZE;
+    NX_Size cmdLen = 0;
+    NX_Size envLen = 0;
+    NX_Size argLen = 0;
+    NX_Size pageCount;
+    NX_Addr cmdStackAddr;
+    NX_Addr envStackAddr;
+    NX_Addr argsStackAddr;
+    void *args[NX_PROCESS_ARGS + 1] = {0,};
+    
+    space = &process->vmspace;
+
+    /* clac stack args len */
+    if (cmd)
+    {
+        cmdLen = NX_ALIGN_UP(NX_StrLen(cmd) + 1, sizeof(NX_Addr));
+    }
+    else
+    {
+        cmdLen = sizeof(NX_Addr);
+    }
+
+    if (env)
+    {        
+        envLen = NX_ALIGN_UP(NX_StrLen(env) + 1, sizeof(NX_Addr));
+    }
+    else
+    {
+        envLen = sizeof(NX_Addr);
+    }
+
+    argLen = sizeof(args);
+
+    /* calc stack size */
+    stackSize += cmdLen; /* reserve cmd size */
+    stackSize += envLen; /* reserve env size */
+
+    stackSize += argLen; /* reserve args array size */
+
+    pageCount = NX_DIV_ROUND_UP(stackSize, NX_PAGE_SIZE); /* calc stack page size */
+
+    envStackAddr = space->stackEnd - envLen;
+    cmdStackAddr = envStackAddr - cmdLen;
+    argsStackAddr = cmdStackAddr - argLen;
+
+    /* make args */
+    args[0] = (void *)cmdStackAddr;
+    args[1] = (void *)envStackAddr;
+
+    /* check stack */
+    space->stackBottom = space->stackEnd - pageCount * NX_PAGE_SIZE;
+    if (space->stackBottom < space->stackStart) /* stack overflow! */
+    {
+        NX_LOG_E("stack overflow! pages %d needed, stack too big, please check you cmd or env.", pageCount);
+        return NX_ENOMEM;
+    }
+
+    /* map user stack */
+    space = &process->vmspace;
+    if (NX_VmspaceMap(space, space->stackBottom, pageCount * NX_PAGE_SIZE, NX_PAGE_ATTR_USER, 0, NX_NULL) != NX_EOK)
+    {
+        return NX_ENOMEM;
+    }
+
+    /* copy stack */
+    if (NX_VmspaceWrite(space, (char *)argsStackAddr, (char *)args, argLen))
+    {
+        goto copyFailed;
+    }
+
+    if (cmd)
+    {
+        if (NX_VmspaceWrite(space, (char *)cmdStackAddr, cmd, cmdLen))
+        {
+            goto copyFailed;
+        }
+    }
+
+    if (env)
+    {
+        if (NX_VmspaceWrite(space, (char *)envStackAddr, env, envLen))
+        {
+            goto copyFailed;
+        }
+    }
+
+    /* save args on the stack */
+    process->args = (void *)argsStackAddr;
+
+    return NX_EOK;
+
+copyFailed:
+    NX_VmspaceUnmap(space, space->stackBottom, pageCount * NX_PAGE_SIZE);
+    return NX_EFAULT;
+}
+
+NX_PRIVATE NX_Error ProcessUnmapStack(NX_Process *process)
+{
+    NX_Vmspace *space;
+    space = &process->vmspace;
+
+    return NX_VmspaceUnmap(space, space->stackBottom, space->stackEnd - space->stackBottom);
+}
+
 /**
  * launch a process with image
  */
@@ -549,8 +659,8 @@ NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, int *retCode, char *cmd, cha
     }
 
     space = &process->vmspace;
-    /* map user stack */
-    if (NX_VmspaceMap(space, space->stackEnd - NX_PROCESS_USER_SATCK_SIZE, NX_PROCESS_USER_SATCK_SIZE, NX_PAGE_ATTR_USER, 0, NX_NULL) != NX_EOK)
+
+    if (ProcessMapStack(process, cmd, env) != NX_EOK)
     {
         NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
         NX_ProcessDestroyObject(process);
@@ -566,7 +676,7 @@ NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, int *retCode, char *cmd, cha
 
     if (NX_ThreadStart(thread) != NX_EOK)
     {
-        NX_ASSERT(NX_VmspaceUnmap(space, space->stackEnd - NX_PROCESS_USER_SATCK_SIZE, NX_PROCESS_USER_SATCK_SIZE) == NX_EOK);
+        ProcessUnmapStack(process);
         NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
         NX_ProcessDestroyObject(process);
         NX_ThreadDestroy(thread);

@@ -24,6 +24,8 @@
 #define NX_PROC_FLAG_NOWAIT 0x00
 #define NX_PROC_FLAG_WAIT 0x01
 
+#define NX_PROCESS_ARGS 2
+
 struct NX_Process
 {
     NX_U32 flags;
@@ -44,7 +46,7 @@ struct NX_Process
 
     NX_I32 pid; /* process id */
 
-    /* thread group */
+    void *args; /* process args */
 };
 typedef struct NX_Process NX_Process;
 

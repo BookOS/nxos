@@ -41,6 +41,7 @@ struct NX_Vmspace
     NX_Addr mapEnd;
     NX_Addr stackStart;
     NX_Addr stackEnd;
+    NX_Addr stackBottom; /* current stack bottom */
 };
 typedef struct NX_Vmspace NX_Vmspace;
 
@@ -88,5 +89,8 @@ void *NX_VmspaceUpdateHeap(NX_Vmspace *space, NX_Addr virAddr, NX_Error *outErr)
 
 NX_Error NX_VmspaceListNodes(NX_Vmspace *space);
 void NX_VmspaceResizeImage(NX_Vmspace *space, NX_Size newImageSize);
+
+NX_Error NX_VmspaceRead(NX_Vmspace *space, char *spaceAddr, char *buf, NX_Size size);
+NX_Error NX_VmspaceWrite(NX_Vmspace *space, char *spaceAddr, char *buf, NX_Size size);
 
 #endif /* __MM_VMSPACE__ */
