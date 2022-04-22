@@ -783,11 +783,11 @@ NX_PRIVATE NX_Error NX_VmspaceCopyData(NX_Vmspace *space, char *spaceAddr, char 
         /* copy data */
         if (direction == VMSPACE_COPY_IN)
         {
-            NX_MemCopy(vaddr, buf, chunk);
+            NX_MemCopy((void *)vaddr, (void *)buf, chunk);
         }
         else if (direction == VMSPACE_COPY_OUT)
         {
-            NX_MemCopy(buf, vaddr, chunk);
+            NX_MemCopy((void *)buf, (void *)vaddr, chunk);
         }
 
         size -= chunk;
