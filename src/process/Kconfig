@@ -1,0 +1,3 @@
+config NX_PORCESS_ENV_ARGS
+    int "max process env args"
+    default 1024
