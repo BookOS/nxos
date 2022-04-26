@@ -2,7 +2,8 @@
  * Copyright (c) 2018-2022, NXOS Development Team
  * SPDX-License-Identifier: Apache-2.0
  * 
- * Contains: string tools 
+ * Contains: string tools
+ * 			 port from xboot.
  * 
  * Change Logs:
  * Date           Author            Notes
@@ -18,11 +19,6 @@
 
 char *NX_StrCopy(const char *dst, const char *src)
 {
-    if (dst == NX_NULL || src == NX_NULL)
-    {
-        NX_LOG_D("NX_NULL arg: %s", __func__);
-        return NX_NULL;
-    }
     char *dstPtr = (char *) dst;
     while ((*dstPtr++ = *src++));
 
@@ -30,30 +26,24 @@ char *NX_StrCopy(const char *dst, const char *src)
 }
 
 /*
- * Writes exactly n bytes, copying from source or adding nulls
+ * A variant of NX_StrCopy that truncates the result to fit in the destination buffer
  */
-char *NX_StrCopyN(char * dest, const char * src, NX_Size n)
+NX_Size NX_StrCopyN(char *dest, const char *src, NX_Size len)
 {
-	char * tmp = dest;
+	NX_Size n;
+	NX_Size ret = NX_StrLen(src);
 
-	while (n)
+	if (len)
 	{
-		if ((*tmp = *src) != 0)
-			src++;
-		tmp++;
-		n--;
+		n = (ret >= len) ? len - 1 : ret;
+		NX_MemCopy(dest, (void *)src, n);
+		dest[n] = '\0';
 	}
-	return dest;
+	return ret;
 }
 
 int NX_StrCmp(const char *a, const char *b)
 {
-    if (a == NX_NULL || b == NX_NULL)
-    {
-        NX_LOG_D("NX_NULL arg: %s", __func__);
-        return 0;
-    }
-
     while (*a && *a == *b)
     {
         a++;
@@ -80,31 +70,9 @@ int NX_StrCmpN(const char * s1, const char * s2, NX_Size n)
 
 int NX_StrLen(const char *str)
 {
-    if (str == NX_NULL)
-    {
-        NX_LOG_D("NX_NULL arg: %s", __func__);
-        return 0;
-    }
     const char *p = str;
     while(*p++);
     return (p - str - 1);
-}
-
-/*
- * A variant of NX_StrCopy that truncates the result to fit in the destination buffer
- */
-NX_Size NX_StrCopySafe(char *dest, const char *src, NX_Size len)
-{
-	NX_Size n;
-	NX_Size ret = NX_StrLen(src);
-
-	if (len)
-	{
-		n = (ret >= len) ? len - 1 : ret;
-		NX_MemCopy(dest, (void *)src, n);
-		dest[n] = '\0';
-	}
-	return ret;
 }
 
 /*
@@ -245,4 +213,27 @@ char * NX_StrDup(const char *s)
     	return NX_NULL;
 	}
 	return NX_MemCopy(newStr, s, len);
+}
+
+/*
+ * A variant of strcat that truncates the result to fit in the destination buffer
+ */
+NX_Size NX_StrCatN(char * dest, const char * src, NX_Size n)
+{
+	NX_Size dsize = NX_StrLen(dest);
+	NX_Size len = NX_StrLen(src);
+	NX_Size res = dsize + len;
+
+	dest += dsize;
+	n -= dsize;
+
+	if (len >= n)
+	{
+		len = n-1;
+	}
+
+	NX_MemCopy(dest, src, len);
+	dest[len] = 0;
+
+	return res;
 }

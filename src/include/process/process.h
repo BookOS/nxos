@@ -22,9 +22,11 @@
 #define NX_PROCESS_USER_SATCK_SIZE (NX_PAGE_SIZE * 4)
 
 #define NX_PROC_FLAG_NOWAIT 0x00
-#define NX_PROC_FLAG_WAIT 0x01
+#define NX_PROC_FLAG_WAIT   0x01
 
 #define NX_PROCESS_ARGS 2
+
+#define NX_PROCESS_CWD_DEFAULT "/"
 
 struct NX_Process
 {
@@ -46,6 +48,7 @@ struct NX_Process
     NX_I32 pid; /* process id */
 
     void *args; /* process args */
+    char cwd[NX_VFS_MAX_PATH]; /* current work diretory */
 };
 typedef struct NX_Process NX_Process;
 
@@ -68,5 +71,8 @@ NX_INTERFACE NX_IMPORT struct NX_ProcessOps NX_ProcessOpsInterface;
 
 NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, int *retCode, char *cmd, char *env);
 void NX_ProcessExit(int exitCode);
+
+char * NX_ProcessGetCwd(NX_Process * process);
+NX_Error NX_ProcessSetCwd(NX_Process * process, const char * path);
 
 #endif /* __PROCESS_PROCESS___ */

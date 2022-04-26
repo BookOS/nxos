@@ -109,6 +109,8 @@ NX_PRIVATE NX_Process *NX_ProcessCreateObject(NX_U32 flags)
 
     process->pid = 0;
     process->args = NX_NULL;
+    NX_MemZero(process->cwd, sizeof(process->cwd));
+    NX_StrCopy(process->cwd, NX_PROCESS_CWD_DEFAULT);
 
     return process;
 }
@@ -827,5 +829,49 @@ NX_PRIVATE NX_Error NX_ProcessWait(NX_Process * process, int *retCode)
         *retCode = self->resource.process->waitExitCode;
     }
 
+    return NX_EOK;
+}
+
+char * NX_ProcessGetCwd(NX_Process * process)
+{
+    if (!process)
+    {
+        return NX_NULL;
+    }
+    return &process->cwd[0];
+}
+
+NX_Error NX_ProcessSetCwd(NX_Process * process, const char * path)
+{
+    NX_Error err;
+    NX_VfsStatInfo st;
+    char absPath[NX_VFS_MAX_PATH + 1] = {0};
+
+    if (!process || !path)
+    {
+        return NX_EINVAL;
+    }
+
+    if (NX_StrLen(path) >= NX_VFS_MAX_PATH)
+    {
+        return NX_EINVAL;
+    }
+
+    if ((err = NX_VfsBuildAbsPath(path, absPath)) != NX_EOK)
+    {
+        return err;
+    }
+
+    if (NX_VfsStat(absPath, &st) != NX_EOK)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (!NX_VFS_S_ISDIR(st.mode)) /* not dir */
+    {
+        return NX_EPERM;
+    }
+
+    NX_StrCopyN(process->cwd, absPath, NX_VFS_MAX_PATH);
     return NX_EOK;
 }

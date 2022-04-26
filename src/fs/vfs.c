@@ -23,6 +23,7 @@
 #include <utils/log.h>
 #include <io/block.h>
 #include <sched/thread.h>
+#include <process/process.h>
 
 #define VFS_GET_FILE_TABLE() NX_ThreadGetFileTable(NX_ThreadSelf())
 
@@ -249,7 +250,7 @@ NX_PRIVATE NX_VfsNode * VfsNodeGet(NX_VfsMount * m, const char * path)
 	NX_MutexInit(&n->lock);
 	n->mount = m;
 	NX_AtomicSet(&n->refcnt, 1);
-	if(NX_StrCopySafe(n->path, path, sizeof(n->path)) >= sizeof(n->path))
+	if(NX_StrCopyN(n->path, path, sizeof(n->path)) >= sizeof(n->path))
 	{
 		NX_MemFree(n);
 		return NX_NULL;
@@ -431,7 +432,7 @@ NX_PRIVATE void VfsNodeRelease(NX_VfsNode * n)
 		return;
 	}
 
-	if(NX_StrCopySafe(path, n->path, sizeof(path)) >= sizeof(path))
+	if(NX_StrCopyN(path, n->path, sizeof(path)) >= sizeof(path))
     {
 		return;
     }
@@ -538,17 +539,118 @@ NX_PRIVATE int VfsNodeAcquire(const char * path, NX_VfsNode ** np)
 	return 0;
 }
 
-NX_Error NX_VfsMountFileSystem(const char * dev, const char * dir, const char * fsname, NX_U32 flags)
+/* build path(relative or absolte) to absolte path */
+NX_Error NX_VfsBuildAbsPath(const char * path, char * absPath)
+{
+	char * p, * q, * s;
+	int leftLen, fullLen;
+	char left[NX_VFS_MAX_PATH];
+	char nextToken[NX_VFS_MAX_PATH];
+
+	if(path[0] == '/')
+	{
+		absPath[0] = '/';
+		absPath[1] = '\0';
+		if(path[1] == '\0')
+		{
+			return NX_EOK;
+		}
+
+		fullLen = 1;
+		leftLen = NX_StrCopyN(left, (const char *)(path + 1), sizeof(left));
+	}
+	else
+	{
+		char * cwd = NX_ProcessGetCwd(NX_ThreadSelf()->resource.process);
+        if (!cwd)
+        {
+            NX_LOG_E("kernel thread no cwd! must use absolute path on %s .", path);
+            return NX_ENORES;
+        }
+		NX_StrCopyN(absPath, cwd, NX_VFS_MAX_PATH);
+
+		fullLen = NX_StrLen(absPath);
+		leftLen = NX_StrCopyN(left, path, sizeof(left));
+	}
+	if((leftLen >= sizeof(left)) || (fullLen >= NX_VFS_MAX_PATH))
+	{
+		return NX_EINVAL;
+	}
+
+	while(leftLen != 0)
+	{
+		p = NX_StrChr(left, '/');
+		s = p ? p : left + leftLen;
+		if((int)(s - left) >= sizeof(nextToken))
+		{
+			return NX_ERROR;
+		}
+
+		NX_MemCopy(nextToken, left, s - left);
+		nextToken[s - left] = '\0';
+		leftLen -= s - left;
+		if(p != NX_NULL)
+		{
+			NX_MemMove(left, s + 1, leftLen + 1);
+		}
+
+		if(absPath[fullLen - 1] != '/')
+		{
+			if (fullLen + 1 >= NX_VFS_MAX_PATH)
+			{
+				return NX_EINVAL;
+			}
+
+			absPath[fullLen++] = '/';
+			absPath[fullLen] = '\0';
+		}
+		if(nextToken[0] == '\0' || NX_StrCmp(nextToken, ".") == 0)
+		{
+			continue;
+		}
+		else if(NX_StrCmp(nextToken, "..") == 0)
+		{
+			if(fullLen > 1)
+			{
+				absPath[fullLen - 1] = '\0';
+				q = NX_StrChrReverse(absPath, '/') + 1;
+				*q = '\0';
+				fullLen = q - absPath;
+			}
+			continue;
+		}
+
+		fullLen = NX_StrCatN(absPath, nextToken, NX_VFS_MAX_PATH);
+		if(fullLen >= NX_VFS_MAX_PATH)
+		{
+			return NX_EINVAL;
+		}
+	}
+
+	if(fullLen > 1 && absPath[fullLen - 1] == '/')
+	{
+		absPath[fullLen - 1] = '\0';
+	}
+	return NX_EOK;
+}
+
+NX_Error NX_VfsMountFileSystem(const char * dev, const char * path, const char * fsname, NX_U32 flags)
 {
 	NX_Device * bdev;
 	NX_VfsFileSystem * fs;
 	NX_VfsMount * m, * tm;
 	NX_VfsNode * n, * n_covered;
-	int err;
-
-	if(!dir || *dir == '\0')
+	NX_Error err;
+    char absPath[NX_VFS_MAX_PATH + 1] = {0};
+    
+	if(!path || *path == '\0')
     {
 		return NX_EINVAL;
+    }
+
+    if ((err = NX_VfsBuildAbsPath(path, absPath)) != NX_EOK)
+    {
+        return err;
     }
 
 	if(!(fs = NX_VfsSearchFileSystem(fsname)))
@@ -578,20 +680,20 @@ NX_Error NX_VfsMountFileSystem(const char * dev, const char * dir, const char * 
 	m->fs = fs;
 	m->flags = flags & NX_VFS_MOUNT_MASK;
 	NX_AtomicSet(&m->refcnt, 0);
-	if(NX_StrCopySafe(m->path, dir, sizeof(m->path)) >= sizeof(m->path))
+	if(NX_StrCopyN(m->path, absPath, sizeof(m->path)) >= sizeof(m->path))
 	{
 		NX_MemFree(m);
 		return NX_EFAULT;
 	}
 	m->dev = bdev;
 
-	if(*dir == '/' && *(dir + 1) == '\0')
+	if(*absPath == '/' && *(absPath + 1) == '\0')
 	{
 		n_covered = NX_NULL;
 	}
 	else
 	{
-		if(VfsNodeAcquire(dir, &n_covered) != 0)
+		if(VfsNodeAcquire(absPath, &n_covered) != 0)
 		{
 			NX_MemFree(m);
 			return NX_ENORES;
@@ -641,7 +743,7 @@ NX_Error NX_VfsMountFileSystem(const char * dev, const char * dir, const char * 
 	NX_MutexLock(&NX_FileSystemMountLock);
 	NX_ListForEachEntry(tm, &NX_FileSystemMountList, link)
 	{
-		if(!NX_StrCmp(tm->path, dir) || ((dev != NX_NULL) && (tm->dev == bdev)))
+		if(!NX_StrCmp(tm->path, absPath) || ((dev != NX_NULL) && (tm->dev == bdev)))
 		{
 			NX_MutexUnlock(&NX_FileSystemMountLock);
 			NX_MutexLock(&m->lock);
@@ -667,12 +769,18 @@ NX_Error NX_VfsUnmountFileSystem(const char * path)
 	NX_VfsMount * m;
 	int found;
 	NX_Error err;
+    char absPath[NX_VFS_MAX_PATH + 1] = {0};
+
+    if ((err = NX_VfsBuildAbsPath(path, absPath)) != NX_EOK)
+    {
+        return err;
+    }
 
 	NX_MutexLock(&NX_FileSystemMountLock);
 	found = 0;
 	NX_ListForEachEntry(m, &NX_FileSystemMountList, link)
 	{
-		if(!NX_StrCmp(path, m->path))
+		if(!NX_StrCmp(absPath, m->path))
 		{
 			found = 1;
 			break;
@@ -782,7 +890,7 @@ NX_PRIVATE int VfsLookupDir(const char * path, NX_VfsNode ** np, char ** name)
 	char * file, * dir;
 	int err;
 
-	if(NX_StrCopySafe(buf, path, sizeof(buf)) >= sizeof(buf))
+	if(NX_StrCopyN(buf, path, sizeof(buf)) >= sizeof(buf))
     {
 		return -1;
     }
@@ -836,6 +944,7 @@ int NX_VfsOpen(const char * path, NX_U32 flags, NX_U32 mode, NX_Error *outErr)
 	char * filename;
 	int err, fd;
     NX_VfsFileTable *ft;
+    char absPath[NX_VFS_MAX_PATH + 1] = {0};
 
 	if(!path || !(flags & NX_VFS_O_ACCMODE))
     {
@@ -851,12 +960,18 @@ int NX_VfsOpen(const char * path, NX_U32 flags, NX_U32 mode, NX_Error *outErr)
         return -1;
     }
 
+    if (NX_VfsBuildAbsPath(path, absPath) != NX_EOK)
+    {
+        NX_ErrorSet(outErr, NX_ENOSRCH);
+        return -1;
+    }
+
 	if(flags & NX_VFS_O_CREAT)
 	{
-		err = VfsNodeAcquire(path, &n);
+		err = VfsNodeAcquire(absPath, &n);
 		if(err)
 		{
-			if((err = VfsLookupDir(path, &dn, &filename)))
+			if((err = VfsLookupDir(absPath, &dn, &filename)))
             {
                 NX_ErrorSet(outErr, NX_ENOSRCH);
 				return err;
@@ -882,7 +997,7 @@ int NX_VfsOpen(const char * path, NX_U32 flags, NX_U32 mode, NX_Error *outErr)
                 NX_ErrorSet(outErr, err);
 				return -1;
             }
-			if((err = VfsNodeAcquire(path, &n)))
+			if((err = VfsNodeAcquire(absPath, &n)))
             {
                 NX_ErrorSet(outErr, NX_ENORES);
 				return err;
@@ -902,7 +1017,7 @@ int NX_VfsOpen(const char * path, NX_U32 flags, NX_U32 mode, NX_Error *outErr)
 	}
 	else
 	{
-		if((err = VfsNodeAcquire(path, &n)))
+		if((err = VfsNodeAcquire(absPath, &n)))
 		{
             NX_ErrorSet(outErr, NX_ENORES);
 			return err;
@@ -1474,19 +1589,25 @@ NX_Error NX_VfsMakeDir(const char * path, NX_U32 mode)
 	NX_VfsNode * n, * dn;
 	char * name;
 	NX_Error err;
+    char absPath[NX_VFS_MAX_PATH + 1] = {0};
 
 	if(!path)
     {
 		return NX_EINVAL;
     }
 
-	if(!VfsNodeAcquire(path, &n))
+    if ((err = NX_VfsBuildAbsPath(path, absPath)) != NX_EOK)
+    {
+        return err;
+    }
+
+	if(!VfsNodeAcquire(absPath, &n))
 	{
 		VfsNodeRelease(n);
 		return NX_EAGAIN;
 	}
 
-	if((err = VfsLookupDir(path, &dn, &name)))
+	if((err = VfsLookupDir(absPath, &dn, &name)))
     {
 		return NX_ENOSRCH;
     }
@@ -1559,18 +1680,24 @@ NX_Error NX_VfsRemoveDir(const char * path)
 	NX_VfsNode * n, * dn;
 	char * name;
 	NX_Error err;
+    char absPath[NX_VFS_MAX_PATH + 1] = {0};
 
 	if(!path)
     {
 		return NX_EINVAL;
     }
 
-	if((err = VfsCheckDirEmpty(path)) != NX_EOK)
+    if ((err = NX_VfsBuildAbsPath(path, absPath)) != NX_EOK)
+    {
+        return err;
+    }
+
+	if((err = VfsCheckDirEmpty(absPath)) != NX_EOK)
     {
 		return err;
     }
 
-	if(VfsNodeAcquire(path, &n))
+	if(VfsNodeAcquire(absPath, &n))
     {
 		return NX_ENORES;
     }
@@ -1587,7 +1714,7 @@ NX_Error NX_VfsRemoveDir(const char * path)
 		return NX_EPERM;
 	}
 
-	if(VfsLookupDir(path, &dn, &name))
+	if(VfsLookupDir(absPath, &dn, &name))
 	{
 		VfsNodeRelease(n);
 		return NX_ENOSRCH;
@@ -1624,6 +1751,8 @@ NX_Error NX_VfsRename(const char * src, const char * dst)
 	char * sname, * dname;
 	int len;
     NX_Error err;
+    char srcAbsPath[NX_VFS_MAX_PATH + 1] = {0};
+    char dstAbsPath[NX_VFS_MAX_PATH + 1] = {0};
 
 	if(!NX_StrCmpN(src, dst, NX_VFS_MAX_PATH))
     {
@@ -1641,7 +1770,17 @@ NX_Error NX_VfsRename(const char * src, const char * dst)
 		return NX_EINVAL;
     }
 
-	if(VfsNodeAcquire(src, &n1))
+    if ((err = NX_VfsBuildAbsPath(src, srcAbsPath)) != NX_EOK)
+    {
+        return err;
+    }
+
+    if ((err = NX_VfsBuildAbsPath(dst, dstAbsPath)) != NX_EOK)
+    {
+        return err;
+    }
+
+	if(VfsNodeAcquire(srcAbsPath, &n1))
     {
 		return NX_ENORES;
     }
@@ -1658,20 +1797,20 @@ NX_Error NX_VfsRename(const char * src, const char * dst)
 		goto fail1;
 	}
 
-	if(VfsLookupDir(src, &sn, &sname))
+	if(VfsLookupDir(srcAbsPath, &sn, &sname))
     {
         err = NX_ENOSRCH;
 		goto fail1;
     }
 
-	if(!VfsNodeAcquire(dst, &n2))
+	if(!VfsNodeAcquire(dstAbsPath, &n2))
 	{
 		VfsNodeRelease(n2);
 		err = NX_EBUSY;
 		goto fail2;
 	}
 
-	if(VfsLookupDir(dst, &dn, &dname))
+	if(VfsLookupDir(dstAbsPath, &dn, &dname))
     {
         err = NX_ENOSRCH;
 		goto fail2;
@@ -1730,13 +1869,19 @@ NX_Error NX_VfsUnlink(const char * path)
 	NX_VfsNode * n, * dn;
 	char * name;
 	NX_Error err;
+    char absPath[NX_VFS_MAX_PATH + 1] = {0};
 
 	if(!path)
     {
 		return NX_EINVAL;
     }
 
-	if(VfsNodeAcquire(path, &n))
+    if ((err = NX_VfsBuildAbsPath(path, absPath)) != NX_EOK)
+    {
+        return err;
+    }
+
+	if(VfsNodeAcquire(absPath, &n))
     {
 		return NX_ENOSRCH;
     }
@@ -1759,7 +1904,7 @@ NX_Error NX_VfsUnlink(const char * path)
 		return NX_EPERM;
 	}
 
-	if(VfsLookupDir(path, &dn, &name))
+	if(VfsLookupDir(absPath, &dn, &name))
 	{
 		VfsNodeRelease(n);
 		return NX_ENOSRCH;
@@ -1800,13 +1945,19 @@ NX_Error NX_VfsAccess(const char * path, NX_U32 mode)
 {
 	NX_VfsNode * n;
 	NX_Error err = NX_EOK;
+    char absPath[NX_VFS_MAX_PATH + 1] = {0};
 
 	if(!path)
     {
 		return NX_EINVAL;
     }
 
-	if(VfsNodeAcquire(path, &n))
+    if ((err = NX_VfsBuildAbsPath(path, absPath)) != NX_EOK)
+    {
+        return err;
+    }
+
+	if(VfsNodeAcquire(absPath, &n))
     {
 		return NX_ENOSRCH;
     }
@@ -1825,13 +1976,19 @@ NX_Error NX_VfsChmod(const char * path, NX_U32 mode)
 {
 	NX_VfsNode * n;
 	NX_Error err;
+    char absPath[NX_VFS_MAX_PATH + 1] = {0};
 
 	if(!path)
     {
 		return NX_EINVAL;
     }
 
-	if(VfsNodeAcquire(path, &n))
+    if ((err = NX_VfsBuildAbsPath(path, absPath)) != NX_EOK)
+    {
+        return err;
+    }
+
+	if(VfsNodeAcquire(absPath, &n))
     {
 		return NX_ENOSRCH;
     }
@@ -1857,13 +2014,19 @@ NX_Error NX_VfsStat(const char * path, NX_VfsStatInfo * st)
 {
 	NX_VfsNode * n;
 	NX_Error err = NX_EOK;
+    char absPath[NX_VFS_MAX_PATH + 1] = {0};
 
 	if(!path || !st)
     {
 		return NX_EINVAL;
     }
 
-	if(VfsNodeAcquire(path, &n))
+    if ((err = NX_VfsBuildAbsPath(path, absPath)) != NX_EOK)
+    {
+        return err;
+    }
+
+	if(VfsNodeAcquire(absPath, &n))
     {
 		return NX_ENOSRCH;
     }
