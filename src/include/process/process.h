@@ -17,8 +17,14 @@
 #include <sched/spin.h>
 #include <mm/vmspace.h>
 #include <fs/vfs.h>
+#include <sched/semaphore.h>
 
 #define NX_PROCESS_USER_SATCK_SIZE (NX_PAGE_SIZE * 4)
+
+#define NX_PROC_FLAG_NOWAIT 0x00
+#define NX_PROC_FLAG_WAIT 0x01
+
+#define NX_PROCESS_ARGS 2
 
 struct NX_Process
 {
@@ -31,10 +37,15 @@ struct NX_Process
     NX_Spin lock;   /* lock for process */
 
     int exitCode;   /* exit code for process */
+    int waitExitCode;   /* exit code for this process wait another process */
 
     NX_VfsFileTable *fileTable; /* file table */
     
-    /* thread group */
+    NX_Semaphore waiterSem; /* The semaphore of the process waiting for this process to exit */
+
+    NX_I32 pid; /* process id */
+
+    void *args; /* process args */
 };
 typedef struct NX_Process NX_Process;
 
@@ -55,7 +66,7 @@ NX_INTERFACE NX_IMPORT struct NX_ProcessOps NX_ProcessOpsInterface;
 #define NX_ProcessExecuteUser           NX_ProcessOpsInterface.executeUser
 #define NX_ProcessFreePageTable         NX_ProcessOpsInterface.freePageTable
 
-NX_Error NX_ProcessLaunch(char *name, char *path, NX_U32 flags);
+NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, int *retCode, char *cmd, char *env);
 void NX_ProcessExit(int exitCode);
 
 #endif /* __PROCESS_PROCESS___ */

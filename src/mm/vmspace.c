@@ -18,6 +18,7 @@
 
 #define NX_LOG_NAME "vmspace"
 #include <utils/log.h>
+#include <utils/memory.h>
 
 /* remove node with destroy node */
 #define VMNODE_REMOVE_WITH_DESTORY 0x01
@@ -53,6 +54,7 @@ NX_Error NX_VmspaceInit(NX_Vmspace *space,
     space->mapEnd = mapEnd;
     space->stackStart = stackStart;
     space->stackEnd = stackEnd;
+    space->stackBottom = space->stackEnd;
 
     NX_ASSERT(!(space->heapCurrent & NX_PAGE_MASK));
 
@@ -749,4 +751,69 @@ updateHeap:
 failed:
     NX_ErrorSet(outErr, err);
     return NX_NULL;
+}
+
+#define VMSPACE_COPY_IN 0
+#define VMSPACE_COPY_OUT 1
+
+NX_PRIVATE NX_Error NX_VmspaceCopyData(NX_Vmspace *space, char *spaceAddr, char *buf, NX_Size size, int direction)
+{
+    NX_ASSERT(space);
+    NX_ASSERT(spaceAddr);
+    NX_ASSERT(buf);
+    NX_ASSERT(size);
+
+    NX_Addr paddr, vaddr;
+    NX_Addr baseAddr;
+    NX_Size chunk;
+
+    baseAddr = (NX_Addr)spaceAddr;
+
+    while (size > 0)
+    {
+        paddr = NX_VmspaceVirToPhy(space, baseAddr);
+        if (!paddr)
+        {
+            return NX_EFAULT;
+        }
+        vaddr = NX_Phy2Virt(paddr);
+
+        chunk = (size < NX_PAGE_SIZE) ? size : NX_PAGE_SIZE;
+
+        /* copy data */
+        if (direction == VMSPACE_COPY_IN)
+        {
+            NX_MemCopy((void *)vaddr, (void *)buf, chunk);
+        }
+        else if (direction == VMSPACE_COPY_OUT)
+        {
+            NX_MemCopy((void *)buf, (void *)vaddr, chunk);
+        }
+
+        size -= chunk;
+        baseAddr += chunk;
+        buf += chunk;
+    }
+    
+    return NX_EOK;
+}
+
+NX_Error NX_VmspaceRead(NX_Vmspace *space, char *spaceAddr, char *buf, NX_Size size)
+{
+    if (!space || !spaceAddr || !buf || !size)
+    {
+        return NX_EINVAL;
+    }
+
+    return NX_VmspaceCopyData(space, spaceAddr, buf, size, VMSPACE_COPY_OUT);
+}
+
+NX_Error NX_VmspaceWrite(NX_Vmspace *space, char *spaceAddr, char *buf, NX_Size size)
+{
+    if (!space || !spaceAddr || !buf || !size)
+    {
+        return NX_EINVAL;
+    }
+
+    return NX_VmspaceCopyData(space, spaceAddr, buf, size, VMSPACE_COPY_IN);
 }

@@ -29,6 +29,15 @@ NX_Error NX_SemaphoreInit(NX_Semaphore *sem, NX_IArch value)
     return NX_EOK;
 }
 
+NX_IArch NX_SemaphoreGetValue(NX_Semaphore *sem)
+{
+    if (!sem)
+    {
+        return 0;
+    }
+    return sem->value.value;
+}
+
 NX_Error NX_SemaphoreWait(NX_Semaphore *sem)
 {
     NX_Thread *cur;
@@ -125,6 +134,43 @@ NX_Error NX_SemaphoreSignal(NX_Semaphore *sem)
 
                 NX_ThreadUnblock(thread);
                 break;
+            }
+        }
+    }
+
+    NX_SpinUnlockIRQ(&sem->lock, level);
+    return NX_EOK;
+}
+
+NX_Error NX_SemaphoreSignalAll(NX_Semaphore *sem)
+{
+    NX_Thread *thread, *next;
+    NX_UArch level;
+
+    if (!sem)
+    {
+        return NX_EINVAL;
+    }
+
+    if (sem->magic != SEMPAHORE_MAGIC)
+    {
+        return NX_EFAULT;
+    }
+
+    NX_SpinLockIRQ(&sem->lock, &level);
+
+    NX_AtomicInc(&sem->value);
+
+    if (NX_AtomicGet(&sem->value) > 0)
+    {
+        if (!NX_ListEmpty(&sem->semWaitList))
+        {
+            /* wakeup all thread */
+            NX_ListForEachEntrySafe(thread, next, &sem->semWaitList, blockList)
+            {
+                NX_ListDelInit(&thread->blockList);
+
+                NX_ThreadUnblock(thread);
             }
         }
     }

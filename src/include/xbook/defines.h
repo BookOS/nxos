@@ -62,7 +62,7 @@
 /**
  * Align
  */
-#define NX_ALIGN_UP(x, y) ((x + (y - 1)) & (~(y - 1)))
+#define NX_ALIGN_UP(x, y) (((x) + ((y) - 1)) & (~((y) - 1)))
 #define NX_ALIGN_DOWN(x, y) ((x) & ~((y) - 1))
 
 /**

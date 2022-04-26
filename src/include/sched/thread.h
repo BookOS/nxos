@@ -136,6 +136,8 @@ NX_Thread *NX_ThreadSelf(void);
 NX_Thread *NX_ThreadFindById(NX_U32 tid);
 
 NX_Error NX_ThreadStart(NX_Thread *thread);
+NX_Error NX_ThreadStartNotReady(NX_Thread *thread);
+
 void NX_ThreadYield(void);
 NX_Error NX_ThreadSetAffinity(NX_Thread *thread, NX_UArch coreId);
 

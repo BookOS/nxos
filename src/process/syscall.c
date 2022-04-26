@@ -42,9 +42,16 @@ NX_PRIVATE void SysProcessExit(NX_Error errCode)
     NX_PANIC("process exit syscall failed !");
 }
 
-NX_PRIVATE NX_Error SysProcessLaunch(char *name, char *path, NX_U32 flags)
+NX_PRIVATE NX_Error SysProcessLaunch(char *path, NX_U32 flags, int *outRetCode, char *cmd, char *env)
 {
-    return NX_ProcessLaunch(name, path, flags);
+    int retCode = 0;
+    NX_Error err = NX_EOK;
+    err = NX_ProcessLaunch(path, flags, &retCode, cmd, env);
+    if (outRetCode)
+    {
+        NX_CopyToUser((char *)outRetCode, (char *)&retCode, sizeof(retCode));
+    }
+    return err;
 }
 
 NX_PRIVATE NX_Error SysVfsMount(const char * dev, const char * dir, const char * fsname, NX_U32 flags)

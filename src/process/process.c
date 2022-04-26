@@ -15,6 +15,7 @@
 #include <mm/alloc.h>
 #include <xbook/debug.h>
 #include <utils/memory.h>
+#include <utils/string.h>
 #include <mm/mmu.h>
 #include <mm/page.h>
 #include <arch/mmu.h>
@@ -26,6 +27,12 @@
 #include <xbook/debug.h>
 #include <process/elf.h>
 #include <fs/vfs.h>
+#include <xbook/debug.h>
+#include <process/uaccess.h>
+#include <sched/sched.h>
+#include <process/env.h>
+
+NX_PRIVATE NX_Error NX_ProcessWait(NX_Process * process, int *retCode);
 
 NX_PRIVATE void ProcessAppendThread(NX_Process *process, NX_Thread *thread)
 {
@@ -95,6 +102,14 @@ NX_PRIVATE NX_Process *NX_ProcessCreateObject(NX_U32 flags)
 
     NX_SpinInit(&process->lock);
 
+    process->exitCode = 0;
+    process->waitExitCode = 0;
+
+    NX_SemaphoreInit(&process->waiterSem, 0);
+
+    process->pid = 0;
+    process->args = NX_NULL;
+
     return process;
 }
 
@@ -117,9 +132,11 @@ NX_Error NX_ProcessDestroyObject(NX_Process *process)
 NX_PRIVATE void ProcessThreadEntry(void *arg)
 {
     NX_Thread *thread = NX_ThreadSelf();
+    NX_Process * process = thread->resource.process;
     NX_LOG_I("Process %s/%d running...", thread->name, thread->tid);
     /* Jump into userspace to run app */
-    NX_ProcessExecuteUser((void *)NX_USER_IMAGE_VADDR, (void *)NX_USER_STACK_TOP, thread->stackBase + thread->stackSize, NX_NULL);
+    NX_ProcessExecuteUser((void *)NX_USER_IMAGE_VADDR, (void *)NX_PAGE_ALIGNDOWN((NX_Addr)process->args),
+                          thread->stackBase + thread->stackSize, process->args);
 }
 
 NX_PRIVATE NX_Error NX_LoadCheckMachine(NX_U16 machineType)
@@ -483,20 +500,202 @@ NX_PRIVATE NX_Error NX_ProcessLoadImage(NX_Process *process, char *path)
     return NX_EOK;
 }
 
+NX_PRIVATE NX_Error ProcessMapStack(NX_Process *process, char *cmd, char *env)
+{
+    NX_Vmspace * space = NX_NULL;
+    NX_Size stackSize = NX_PROCESS_USER_SATCK_SIZE;
+    NX_Size cmdLen = 0;
+    NX_Size envLen = 0;
+    NX_Size argLen = 0;
+    NX_Size pageCount;
+    NX_Addr cmdStackAddr;
+    NX_Addr envStackAddr;
+    NX_Addr argsStackAddr;
+    void *args[NX_PROCESS_ARGS + 1] = {0,};
+    
+    space = &process->vmspace;
+
+    /* clac stack args len */
+    if (cmd)
+    {
+        cmdLen = NX_ALIGN_UP(NX_StrLen(cmd) + 1, sizeof(NX_Addr));
+    }
+    else
+    {
+        cmdLen = sizeof(NX_Addr);
+    }
+
+    if (env)
+    {        
+        envLen = NX_ALIGN_UP(NX_StrLen(env) + 1, sizeof(NX_Addr));
+    }
+    else
+    {
+        envLen = sizeof(NX_Addr);
+    }
+
+    argLen = sizeof(args);
+
+    /* calc stack size */
+    stackSize += cmdLen; /* reserve cmd size */
+    stackSize += envLen; /* reserve env size */
+
+    stackSize += argLen; /* reserve args array size */
+
+    pageCount = NX_DIV_ROUND_UP(stackSize, NX_PAGE_SIZE); /* calc stack page size */
+
+    envStackAddr = space->stackEnd - envLen;
+    cmdStackAddr = envStackAddr - cmdLen;
+    argsStackAddr = cmdStackAddr - argLen;
+
+    /* make args */
+    args[0] = (void *)cmdStackAddr;
+    args[1] = (void *)envStackAddr;
+
+    /* check stack */
+    space->stackBottom = space->stackEnd - pageCount * NX_PAGE_SIZE;
+    if (space->stackBottom < space->stackStart) /* stack overflow! */
+    {
+        NX_LOG_E("stack overflow! pages %d needed, stack too big, please check you cmd or env.", pageCount);
+        return NX_ENOMEM;
+    }
+
+    /* map user stack */
+    space = &process->vmspace;
+    if (NX_VmspaceMap(space, space->stackBottom, pageCount * NX_PAGE_SIZE, NX_PAGE_ATTR_USER, 0, NX_NULL) != NX_EOK)
+    {
+        return NX_ENOMEM;
+    }
+
+    /* copy stack */
+    if (NX_VmspaceWrite(space, (char *)argsStackAddr, (char *)args, argLen))
+    {
+        goto copyFailed;
+    }
+
+    if (cmd)
+    {
+        if (NX_VmspaceWrite(space, (char *)cmdStackAddr, cmd, cmdLen))
+        {
+            goto copyFailed;
+        }
+    }
+
+    if (env)
+    {
+        if (NX_VmspaceWrite(space, (char *)envStackAddr, env, envLen))
+        {
+            goto copyFailed;
+        }
+    }
+
+    /* save args on the stack */
+    process->args = (void *)argsStackAddr;
+
+    return NX_EOK;
+
+copyFailed:
+    NX_VmspaceUnmap(space, space->stackBottom, pageCount * NX_PAGE_SIZE);
+    return NX_EFAULT;
+}
+
+NX_PRIVATE NX_Error ProcessUnmapStack(NX_Process *process)
+{
+    NX_Vmspace *space;
+    space = &process->vmspace;
+
+    return NX_VmspaceUnmap(space, space->stackBottom, space->stackEnd - space->stackBottom);
+}
+
+NX_PRIVATE NX_Error SearchInEnv(char * path, char * absPath, char *env)
+{
+    char * array[NX_PORCESS_ENV_ARGS + 1];
+    int argc;
+    int i;
+    char * p;
+    char * tmpEnv;
+
+    tmpEnv = NX_StrDup(env);
+    if (tmpEnv == NX_NULL)
+    {
+        return NX_ENOMEM;
+    }
+
+    argc = NX_EnvToArray(tmpEnv, array, NX_PORCESS_ENV_ARGS);
+    if (argc > 0)
+    {
+        for (i = 0; i < argc; i++)
+        {
+            p = array[i];
+            NX_ASSERT(*p);
+
+            if (*p != '/')
+            {
+                continue;
+            }
+
+            /* abs path = env + / + path */
+            NX_MemZero(absPath, NX_VFS_MAX_PATH);
+
+            NX_StrCat(absPath, p);
+            if (absPath[NX_StrLen(absPath) - 1] != '/')
+            {
+                NX_StrCat(absPath, "/");
+            }
+            NX_StrCat(absPath, path);
+
+            if (NX_VfsAccess(absPath, NX_VFS_R_OK) == NX_EOK)
+            {
+                NX_MemFree(tmpEnv);
+                return NX_EOK;
+            }
+        }
+    }
+
+    NX_MemFree(tmpEnv);
+    return NX_ENOSRCH;
+}
+
 /**
  * launch a process with image
  */
-NX_Error NX_ProcessLaunch(char *name, char *path, NX_U32 flags)
+NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, int *retCode, char *cmd, char *env)
 {
     NX_Vmspace *space;
+    char *name;
+    char absPath[NX_VFS_MAX_PATH] = {0,};
 
-    if (name == NX_NULL || path == NX_NULL)
+    if (path == NX_NULL)
     {
         return NX_EINVAL;
     }
 
-    /* TODO: check path exist */
+    NX_CopyFromUser(absPath, path, NX_StrLen(path));
 
+    /* check path exist */
+    if (NX_VfsAccess(absPath, NX_VFS_R_OK) != NX_EOK)
+    {
+        if (*absPath == '/') /* abs path means no res */
+        {
+            return NX_ENOSRCH;
+        }
+
+        if (SearchInEnv(path, absPath, env) != NX_EOK)
+        {
+            return NX_ENOSRCH;
+        }
+    }
+
+    /* make name */
+    name = NX_StrChrReverse(absPath, '/');
+    if (name == NX_NULL) /* no '/' */
+    {
+        name = absPath;
+    }
+    else
+    {
+        name++; /* skip '/' */
+    }
 
     NX_Process *process = NX_ProcessCreateObject(flags);
     if (process == NX_NULL)
@@ -512,16 +711,16 @@ NX_Error NX_ProcessLaunch(char *name, char *path, NX_U32 flags)
         return NX_ENOMEM;
     }
 
-    if (NX_ProcessLoadImage(process, path) != NX_EOK)
+    if (NX_ProcessLoadImage(process, absPath) != NX_EOK)
     {
         NX_ProcessDestroyObject(process);
         NX_ThreadDestroy(thread);
-        return NX_EIO;
+        return NX_ENORES;
     }
 
     space = &process->vmspace;
-    /* map user stack */
-    if (NX_VmspaceMap(space, space->stackEnd - NX_PROCESS_USER_SATCK_SIZE, NX_PROCESS_USER_SATCK_SIZE, NX_PAGE_ATTR_USER, 0, NX_NULL) != NX_EOK)
+
+    if (ProcessMapStack(process, cmd, env) != NX_EOK)
     {
         NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
         NX_ProcessDestroyObject(process);
@@ -533,15 +732,22 @@ NX_Error NX_ProcessLaunch(char *name, char *path, NX_U32 flags)
 
     /* override default file table */
     NX_ThreadSetFileTable(thread, process->fileTable);
+    process->pid = thread->tid;
 
     if (NX_ThreadStart(thread) != NX_EOK)
     {
-        NX_ASSERT(NX_VmspaceUnmap(space, space->stackEnd - NX_PROCESS_USER_SATCK_SIZE, NX_PROCESS_USER_SATCK_SIZE) == NX_EOK);
+        ProcessUnmapStack(process);
         NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
         NX_ProcessDestroyObject(process);
         NX_ThreadDestroy(thread);
         return NX_EFAULT;
     }
+    
+    if (process->flags & NX_PROC_FLAG_WAIT)
+    {
+        return NX_ProcessWait(process, retCode);
+    }
+
     return NX_EOK;
 }
 
@@ -574,6 +780,21 @@ void NX_ProcessExit(int exitCode)
     NX_PANIC("NX_ProcessExit should never be here!");
 }
 
+NX_PRIVATE void ProcessExitNotify(NX_Process * process)
+{
+    /* copy return value */
+    NX_Thread * waiterThread;
+
+    NX_ListForEachEntry(waiterThread, &process->waiterSem.semWaitList, blockList)
+    {
+        NX_ASSERT(waiterThread->resource.process);
+        waiterThread->resource.process->waitExitCode = process->exitCode;
+    }
+
+    /* wakeup waiter */
+    NX_SemaphoreSignalAll(&process->waiterSem);
+}
+
 void NX_ThreadExitProcess(NX_Thread *thread, NX_Process *process)
 {
     NX_ASSERT(process != NX_NULL && thread != NX_NULL);
@@ -583,5 +804,28 @@ void NX_ThreadExitProcess(NX_Thread *thread, NX_Process *process)
     {
         /* thread exit need to free process in the last */
         thread->resource.process = process;
+
+        ProcessExitNotify(process);
     }
+}
+
+NX_PRIVATE NX_Error NX_ProcessWait(NX_Process * process, int *retCode)
+{
+    NX_Thread * self;
+    
+    if (process == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    self = NX_ThreadSelf();
+
+    /* wait on waiters sem */
+    NX_SemaphoreWait(&process->waiterSem);
+    if (retCode)
+    {
+        *retCode = self->resource.process->waitExitCode;
+    }
+
+    return NX_EOK;
 }

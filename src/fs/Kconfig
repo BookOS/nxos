@@ -7,10 +7,7 @@ config NX_ENABLE_EXECUTE_USER
     default n
 
     if NX_ENABLE_EXECUTE_USER
-        config NX_FIRST_USER_NAME
-            string "first user process name"
-            default "uinit"
-
+    
         config NX_FIRST_USER_PATH
             string "first user process file path"
             default "/uinit"

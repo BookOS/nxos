@@ -14,6 +14,7 @@
 #include <utils/memory.h>
 #include <utils/ctype.h>
 #include <utils/limits.h>
+#include <mm/alloc.h>
 
 char *NX_StrCopy(const char *dst, const char *src)
 {
@@ -222,4 +223,26 @@ unsigned long NX_StrToUL(const char * nptr, char ** endptr, int base)
 		*endptr = (char *) (any ? s - 1 : nptr);
 
 	return (acc);
+}
+
+char * NX_StrCat(char * strDest , const char * strSrc)
+{
+    char * address = strDest;
+    while (*strDest)
+    {
+        strDest++;
+    }
+    while ((*strDest++ = *strSrc++));
+    return (char* )address;
+}
+
+char * NX_StrDup(const char *s)
+{
+	NX_Size len = NX_StrLen(s) +1;
+	void *newStr = NX_MemAlloc(len);
+	if (newStr == NX_NULL)
+	{
+    	return NX_NULL;
+	}
+	return NX_MemCopy(newStr, s, len);
 }

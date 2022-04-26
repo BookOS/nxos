@@ -31,4 +31,7 @@ char *NX_StrChrReverse(const char *s, int c);
 
 unsigned long NX_StrToUL(const char * nptr, char ** endptr, int base);
 
+char * NX_StrCat(char * strDest , const char * strSrc);
+char * NX_StrDup(const char *s);
+
 #endif  /* __UTILS_STRING__ */
