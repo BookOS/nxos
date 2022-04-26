@@ -30,6 +30,7 @@
 #include <xbook/debug.h>
 #include <process/uaccess.h>
 #include <sched/sched.h>
+#include <process/env.h>
 
 NX_PRIVATE NX_Error NX_ProcessWait(NX_Process * process, int *retCode);
 
@@ -606,6 +607,55 @@ NX_PRIVATE NX_Error ProcessUnmapStack(NX_Process *process)
     return NX_VmspaceUnmap(space, space->stackBottom, space->stackEnd - space->stackBottom);
 }
 
+NX_PRIVATE NX_Error SearchInEnv(char * path, char * absPath, char *env)
+{
+    char * array[NX_PORCESS_ENV_ARGS + 1];
+    int argc;
+    int i;
+    char * p;
+    char * tmpEnv;
+
+    tmpEnv = NX_StrDup(env);
+    if (tmpEnv == NX_NULL)
+    {
+        return NX_ENOMEM;
+    }
+
+    argc = NX_EnvToArray(tmpEnv, array, NX_PORCESS_ENV_ARGS);
+    if (argc > 0)
+    {
+        for (i = 0; i < argc; i++)
+        {
+            p = array[i];
+            NX_ASSERT(*p);
+
+            if (*p != '/')
+            {
+                continue;
+            }
+
+            /* abs path = env + / + path */
+            NX_MemZero(absPath, NX_VFS_MAX_PATH);
+
+            NX_StrCat(absPath, p);
+            if (absPath[NX_StrLen(absPath) - 1] != '/')
+            {
+                NX_StrCat(absPath, "/");
+            }
+            NX_StrCat(absPath, path);
+
+            if (NX_VfsAccess(absPath, NX_VFS_R_OK) == NX_EOK)
+            {
+                NX_MemFree(tmpEnv);
+                return NX_EOK;
+            }
+        }
+    }
+
+    NX_MemFree(tmpEnv);
+    return NX_ENOSRCH;
+}
+
 /**
  * launch a process with image
  */
@@ -613,23 +663,34 @@ NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, int *retCode, char *cmd, cha
 {
     NX_Vmspace *space;
     char *name;
+    char absPath[NX_VFS_MAX_PATH] = {0,};
 
     if (path == NX_NULL)
     {
         return NX_EINVAL;
     }
 
+    NX_CopyFromUser(absPath, path, NX_StrLen(path));
+
     /* check path exist */
-    if (NX_VfsAccess(path, NX_VFS_R_OK) != NX_EOK)
+    if (NX_VfsAccess(absPath, NX_VFS_R_OK) != NX_EOK)
     {
-        return NX_EPERM;
+        if (*absPath == '/') /* abs path means no res */
+        {
+            return NX_ENOSRCH;
+        }
+
+        if (SearchInEnv(path, absPath, env) != NX_EOK)
+        {
+            return NX_ENOSRCH;
+        }
     }
 
     /* make name */
-    name = NX_StrChrReverse(path, '/');
+    name = NX_StrChrReverse(absPath, '/');
     if (name == NX_NULL) /* no '/' */
     {
-        name = path;
+        name = absPath;
     }
     else
     {
@@ -650,7 +711,7 @@ NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, int *retCode, char *cmd, cha
         return NX_ENOMEM;
     }
 
-    if (NX_ProcessLoadImage(process, path) != NX_EOK)
+    if (NX_ProcessLoadImage(process, absPath) != NX_EOK)
     {
         NX_ProcessDestroyObject(process);
         NX_ThreadDestroy(thread);

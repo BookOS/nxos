@@ -22,7 +22,7 @@ void *NX_MemSet(void *dst, NX_U8 value, NX_Size sz)
 	return dst;
 }
 
-void NX_MemCopy(void *dst, const void *src, NX_Size sz)
+void *NX_MemCopy(void *dst, const void *src, NX_Size sz)
 {
     NX_U8 *dstPtr = (NX_U8 *)dst;
     NX_U8 *srcPtr = (NX_U8 *)src;
@@ -30,6 +30,7 @@ void NX_MemCopy(void *dst, const void *src, NX_Size sz)
     {
         *dstPtr++ = *srcPtr++;
     }
+	return dst;
 }
 
 void *NX_MemZero(void *dst, NX_Size sz)
