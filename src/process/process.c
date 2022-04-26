@@ -105,7 +105,6 @@ NX_PRIVATE NX_Process *NX_ProcessCreateObject(NX_U32 flags)
     process->waitExitCode = 0;
 
     NX_SemaphoreInit(&process->waiterSem, 0);
-    NX_AtomicSet(&process->waiterNumber, 0);
 
     process->pid = 0;
     process->args = NX_NULL;
@@ -732,12 +731,7 @@ NX_PRIVATE void ProcessExitNotify(NX_Process * process)
     }
 
     /* wakeup waiter */
-    NX_IArch waiters = NX_AtomicGet(&process->waiterNumber);
-
-    while (waiters-- > 0)
-    {
-        NX_SemaphoreSignal(&process->waiterSem);
-    }
+    NX_SemaphoreSignalAll(&process->waiterSem);
 }
 
 void NX_ThreadExitProcess(NX_Thread *thread, NX_Process *process)
@@ -765,7 +759,6 @@ NX_PRIVATE NX_Error NX_ProcessWait(NX_Process * process, int *retCode)
 
     self = NX_ThreadSelf();
 
-    NX_AtomicInc(&process->waiterNumber);
     /* wait on waiters sem */
     NX_SemaphoreWait(&process->waiterSem);
     if (retCode)

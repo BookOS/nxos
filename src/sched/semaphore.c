@@ -165,7 +165,7 @@ NX_Error NX_SemaphoreSignalAll(NX_Semaphore *sem)
     {
         if (!NX_ListEmpty(&sem->semWaitList))
         {
-            /* wakeup first thread */
+            /* wakeup all thread */
             NX_ListForEachEntrySafe(thread, next, &sem->semWaitList, blockList)
             {
                 NX_ListDelInit(&thread->blockList);

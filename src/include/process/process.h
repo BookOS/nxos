@@ -42,7 +42,6 @@ struct NX_Process
     NX_VfsFileTable *fileTable; /* file table */
     
     NX_Semaphore waiterSem; /* The semaphore of the process waiting for this process to exit */
-    NX_Atomic waiterNumber; /* waiters */
 
     NX_I32 pid; /* process id */
 
