@@ -18,7 +18,7 @@
 char *NX_StrCopy(const char *dst, const char *src);
 int NX_StrCmp(const char *a, const char *b);
 int NX_StrLen(const char *str);
-char *NX_StrCopyN(char * dest, const char * src, NX_Size n);
+NX_Size NX_StrCopyN(char *dest, const char *src, NX_Size len);
 
 int NX_VSNPrintf(char *buf, int bufLen, const char *fmt, NX_VarList args);
 int NX_SNPrintf(char *buf, int buflen, const char *fmt, ...);
@@ -26,12 +26,13 @@ int NX_SNPrintf(char *buf, int buflen, const char *fmt, ...);
 int NX_StrCmpN(const char * s1, const char * s2, NX_Size n);
 
 char *NX_StrChr(const char *s, int c);
-NX_Size NX_StrCopySafe(char *dest, const char *src, NX_Size len);
 char *NX_StrChrReverse(const char *s, int c);
 
 unsigned long NX_StrToUL(const char * nptr, char ** endptr, int base);
 
 char * NX_StrCat(char * strDest , const char * strSrc);
 char * NX_StrDup(const char *s);
+
+NX_Size NX_StrCatN(char * dest, const char * src, NX_Size n);
 
 #endif  /* __UTILS_STRING__ */

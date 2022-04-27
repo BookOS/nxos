@@ -345,7 +345,7 @@ NX_PRIVATE NX_Error CpioReaddir(NX_VfsNode * dn, NX_I64 off, NX_VfsDirent * d)
 		d->type = NX_VFS_DIR_TYPE_REG;
 	}
 
-	NX_StrCopySafe(d->name, name, sizeof(d->name));
+	NX_StrCopyN(d->name, name, sizeof(d->name));
 	d->off = off;
 	d->reclen = 1;
 

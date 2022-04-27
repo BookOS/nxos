@@ -243,9 +243,10 @@ NX_Error NX_VfsRegisterFileSystem(NX_VfsFileSystem * fs);
 NX_Error NX_VfsUnregisterFileSystem(NX_VfsFileSystem * fs);
 NX_VfsMount * NX_VfsGetMount(int index);
 int NX_VfsGetMountCount(void);
+NX_Error NX_VfsBuildAbsPath(const char * path, char * absPath);
 
 /* user interface */
-NX_Error NX_VfsMountFileSystem(const char * dev, const char * dir, const char * fsname, NX_U32 flags);
+NX_Error NX_VfsMountFileSystem(const char * dev, const char * path, const char * fsname, NX_U32 flags);
 NX_Error NX_VfsUnmountFileSystem(const char * path);
 NX_Error NX_VfsSync(void);
 int NX_VfsOpen(const char * path, NX_U32 flags, NX_U32 mode, NX_Error *outErr);

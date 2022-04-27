@@ -21,6 +21,7 @@
 #include <mm/vmspace.h>
 #include <process/uaccess.h>
 #include <mm/page.h>
+#include <utils/string.h>
 
 NX_PRIVATE int SysInvalidCall(void)
 {
@@ -281,6 +282,46 @@ NX_PRIVATE void *SysMemHeap(void *addr, NX_Error *outErr)
     return heapAddr;
 }
 
+NX_Error SysProcessGetCwd(char * buf, NX_Size length)
+{
+    char * cwd;
+
+    if (!buf || !length)
+    {
+        return NX_EINVAL;
+    }
+
+    cwd = NX_ProcessGetCwd(NX_ThreadSelf()->resource.process);
+    if (!cwd)
+    {
+        return NX_ENORES;
+    }
+
+    NX_CopyToUser(buf, cwd, NX_MIN((int)length, NX_StrLen(cwd)));
+    return NX_EOK;
+}
+
+NX_Error SysProcessSetCwd(char * buf)
+{
+    char * cwd;
+    NX_Process * process;
+
+    if (!buf)
+    {
+        return NX_EINVAL;
+    }
+
+    process = NX_ThreadSelf()->resource.process;
+
+    cwd = NX_ProcessGetCwd(process);
+    if (!cwd)
+    {
+        return NX_ENORES;
+    }
+
+    return NX_ProcessSetCwd(process, buf);
+}
+
 /* xbook env syscall table  */
 NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] = 
 {
@@ -321,6 +362,8 @@ NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] =
     SysMemMap,
     SysMemUnmap,            /* 35 */
     SysMemHeap,
+    SysProcessGetCwd,
+    SysProcessSetCwd,
 };
 
 /* posix env syscall table */

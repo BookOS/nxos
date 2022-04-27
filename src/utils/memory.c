@@ -57,3 +57,31 @@ int NX_CompareN(const void *s1, const void *s2, NX_Size nBytes)
 	}
 	return 0;
 }
+
+void * NX_MemMove(void * dest, const void * src, NX_Size n)
+{
+	char * tmp;
+	const char * s;
+
+	if (dest <= src)
+	{
+		tmp = dest;
+		s = src;
+		while (n--)
+		{
+			*tmp++ = *s++;
+		}
+	}
+	else
+	{
+		tmp = dest;
+		tmp += n;
+		s = src;
+		s += n;
+		while (n--)
+		{
+			*--tmp = *--s;
+		}
+	}
+	return dest;
+}
