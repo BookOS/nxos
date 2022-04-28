@@ -5,9 +5,9 @@
 <p align="center">
 	<a href="https://gitee.com/BookOS/nxos/stargazers"><img src="https://gitee.com/BookOS/nxos/badge/star.svg"></a>
 	<a href="https://gitee.com/BookOS/nxos/members"><img src="https://gitee.com/BookOS/nxos/badge/fork.svg"></a>
-    <a href="https://github.com/hzcx998/nxos/stargazers"><img src="https://img.shields.io/github/stars/hzcx998/nxos?style=flat-square&logo=GitHub"></a>
-	<a href="https://github.com/hzcx998/nxos/network/members"><img src="https://img.shields.io/github/forks/hzcx998/nxos?style=flat-square&logo=GitHub"></a>
-    <a href="https://github.com/hzcx998/nxos/blob/master/LICENSE"><img src="https://img.shields.io/github/license/hzcx998/nxos.svg?style=flat-square"></a>
+    <a href="https://github.com/BookOS/nxos/stargazers"><img src="https://img.shields.io/github/stars/BookOS/nxos?style=flat-square&logo=GitHub"></a>
+	<a href="https://github.com/BookOS/nxos/network/members"><img src="https://img.shields.io/github/forks/BookOS/nxos?style=flat-square&logo=GitHub"></a>
+    <a href="https://github.com/BookOS/nxos/blob/master/LICENSE"><img src="https://img.shields.io/github/license/BookOS/nxos.svg?style=flat-square"></a>
 </p>
 
 ## 简介
