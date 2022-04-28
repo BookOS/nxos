@@ -108,15 +108,15 @@ struct NX_VfsFileSystem;
 
 typedef struct NX_VfsStatInfo
 {
-	NX_U64 ino;
-	NX_I64 size;
+	NX_U32 ino;
+	NX_Size size;
 	NX_U32 mode;
-	NX_U64 dev;
+	NX_U32 dev;
 	NX_U32 uid;
 	NX_U32 gid;
-	NX_U64 ctime;
-	NX_U64 atime;
-	NX_U64 mtime;
+	NX_U32 ctime;
+	NX_U32 atime;
+	NX_U32 mtime;
 } NX_VfsStatInfo;
 
 enum NX_VfsDirentTtpe
@@ -133,7 +133,7 @@ enum NX_VfsDirentTtpe
 
 typedef struct NX_VfsDirent
 {
-	NX_U64 off;
+	NX_Offset off;
 	NX_U32 reclen;
 	enum NX_VfsDirentTtpe type;
 	char name[NX_VFS_MAX_NAME];
@@ -166,11 +166,11 @@ typedef struct NX_VfsNode
 	enum NX_VfsNodeFlag flags;
 	enum NX_VfsNodeType type;
 	NX_Mutex lock;
-	NX_U64 ctime;
-	NX_U64 atime;
-	NX_U64 mtime;
+	NX_U32 ctime;
+	NX_U32 atime;
+	NX_U32 mtime;
 	NX_U32 mode;
-	NX_I64 size;
+	NX_Size size;
 	void * data;
 } NX_VfsNode;
 
@@ -178,7 +178,7 @@ typedef struct NX_VfsFile
 {
 	NX_Mutex lock;
 	struct NX_VfsNode * node;
-	NX_I64 offset;
+	NX_Offset offset;
 	NX_U32 flags;
 } NX_VfsFile;
 
