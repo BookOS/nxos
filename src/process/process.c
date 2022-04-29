@@ -93,6 +93,14 @@ NX_PRIVATE NX_Process *NX_ProcessCreateObject(NX_U32 flags)
         return NX_NULL;
     }
     
+    if (NX_ExposedObjectTableInit(&process->exobjTable, NX_EXOBJ_DEFAULT_NR) != NX_EOK)
+    {
+        NX_VmspaceExit(&process->vmspace);
+        NX_MemFree(ft);
+        NX_MemFree(process);
+        return NX_NULL;
+    }
+
     NX_VfsFileTableInit(ft);
     process->fileTable = ft;
     process->flags = flags;
@@ -108,6 +116,8 @@ NX_PRIVATE NX_Process *NX_ProcessCreateObject(NX_U32 flags)
     NX_SemaphoreInit(&process->waiterSem, 0);
 
     process->pid = 0;
+    process->parentPid = 0;
+    
     process->args = NX_NULL;
     NX_MemZero(process->cwd, sizeof(process->cwd));
     NX_StrCopy(process->cwd, NX_PROCESS_CWD_DEFAULT);
@@ -122,6 +132,8 @@ NX_Error NX_ProcessDestroyObject(NX_Process *process)
         return NX_EINVAL;
     }
     
+    NX_ExposedObjectTableExit(&process->exobjTable);
+
     /* exit vmspace */
     NX_ASSERT(NX_VmspaceExit(&process->vmspace) == NX_EOK);
     
@@ -663,6 +675,7 @@ NX_PRIVATE NX_Error SearchInEnv(char * path, char * absPath, char *env)
  */
 NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, int *retCode, char *cmd, char *env)
 {
+    NX_Thread * self;
     NX_Vmspace *space;
     char *name;
     char absPath[NX_VFS_MAX_PATH] = {0,};
@@ -735,6 +748,15 @@ NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, int *retCode, char *cmd, cha
     /* override default file table */
     NX_ThreadSetFileTable(thread, process->fileTable);
     process->pid = thread->tid;
+
+    self = NX_ThreadSelf();
+    if (self->resource.process)
+    {
+        process->parentPid = self->resource.process->pid; /* set current process as parent */
+    }
+
+    /* copy execute path */
+    NX_StrCopyN(process->exePath, absPath, sizeof(process->exePath));
 
     if (NX_ThreadStart(thread) != NX_EOK)
     {
