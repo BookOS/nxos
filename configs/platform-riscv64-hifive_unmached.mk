@@ -1,0 +1,1 @@
+ARCH_PLATFORM?=riscv64-hifive_unmached

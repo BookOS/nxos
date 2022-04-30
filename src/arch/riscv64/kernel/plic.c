@@ -107,7 +107,7 @@ void PLIC_Init(NX_Bool bootCore)
     if (bootCore == NX_True)
     {
         int hart;
-        for (hart = 0; hart < NX_MULTI_CORES_NR; hart++)
+        for (hart = NX_VALID_HARTID_OFFSET; hart < NX_MULTI_CORES_NR; hart++)
         {
             /* priority must be > threshold to trigger an interrupt */
             Write32(PLIC_THRESHOLD(hart), 0);

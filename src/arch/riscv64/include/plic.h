@@ -22,6 +22,7 @@
 #define PLIC_PRIORITY           (PLIC_ADDR + 0x0)
 /* interrupt pending */
 #define PLIC_PENDING            (PLIC_ADDR + 0x1000)
+#define PLIC_MEMSZ0             0x4000
 
 #ifdef CONFIG_NX_PLATFORM_K210
 
@@ -35,6 +36,26 @@
 #define PLIC_ENABLE(hart)       __PLIC_ENABLE(hart)
 #define PLIC_THRESHOLD(hart)    __PLIC_THRESHOLD(hart)
 #define PLIC_CLAIM(hart)        __PLIC_CLAIM(hart)
+#define PLIC_MEMSZ1             0x4000
+
+#elif defined(CONFIG_NX_PLATFORM_HIFIVE_UNMACHED)
+/* machine interrupt enable for each hart */
+#define __PLIC_MENABLE(hart)      (PLIC_ADDR + 0x2080 + ((hart) - 1) * 0x100)
+/* supervisor interrupt enable for each hart */
+#define __PLIC_SENABLE(hart)      (PLIC_ADDR + 0x2000 + (hart) * 0x100)
+/* machine priority threshold for each hart */
+#define __PLIC_MTHRESHOLD(hart)   (PLIC_ADDR + 0x201000 + ((hart) - 1) * 0x2000)
+/* supervisor priority threshold for each hart */
+#define __PLIC_STHRESHOLD(hart)   (PLIC_ADDR + 0x200000 + (hart) * 0x2000)
+/* machine claim for each hart */
+#define __PLIC_MCLAIM(hart)       (PLIC_ADDR + 0x201004 + ((hart) - 1) * 0x2000)
+/* supervisor claim for each hart */
+#define __PLIC_SCLAIM(hart)       (PLIC_ADDR + 0x200004 + (hart) * 0x2000)
+
+#define PLIC_ENABLE(hart)       __PLIC_SENABLE(hart)
+#define PLIC_THRESHOLD(hart)    __PLIC_STHRESHOLD(hart)
+#define PLIC_CLAIM(hart)        __PLIC_SCLAIM(hart)
+#define PLIC_MEMSZ1             (5 * 0x2000 + 0x1000)
 
 #else
 /* machine interrupt enable for each hart */
@@ -53,6 +74,8 @@
 #define PLIC_ENABLE(hart)       __PLIC_SENABLE(hart)
 #define PLIC_THRESHOLD(hart)    __PLIC_STHRESHOLD(hart)
 #define PLIC_CLAIM(hart)        __PLIC_SCLAIM(hart)
+#define PLIC_MEMSZ0             0x4000
+#define PLIC_MEMSZ1             (4 * 0x2000 + 0x2000)
 
 #endif
 

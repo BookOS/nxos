@@ -2,11 +2,11 @@
  * Copyright (c) 2018-2022, NXOS Development Team
  * SPDX-License-Identifier: Apache-2.0
  * 
- * Contains: Init Riscv64 Qemu platfrom 
+ * Contains: Init allwinner-d1 platfrom 
  * 
  * Change Logs:
  * Date           Author            Notes
- * 2021-10-1      JasonHu           Init
+ * 2022-4-17      JasonHu           Init
  */
 
 #include <xbook.h>
@@ -29,13 +29,13 @@ NX_INTERFACE NX_Error NX_HalPlatformInit(NX_UArch coreId)
 {
     /* NOTE: init trap first before do anything */
     CPU_InitTrap(coreId);
-    
+
     NX_HalDirectUartInit();
 
     sbi_init();
     sbi_print_version();
 
-    NX_LOG_I("Hello, QEMU Riscv64!");
+    NX_LOG_I("Hello, Hifve-Unmached! on core %d", coreId);
     
     PLIC_Init(NX_True);
     

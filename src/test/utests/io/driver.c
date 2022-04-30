@@ -294,14 +294,17 @@ NX_TEST(NX_DeviceOpen)
     err = NX_DeviceOpen(NX_NULL, 0, NX_NULL);
     NX_ASSERT_NE(err, NX_EOK);
     
+    device0 = NX_NULL;
     err = NX_DeviceOpen(DEV_NAME0, 0, &device0);
     NX_ASSERT_EQ(err, NX_EOK);
     NX_ASSERT_NOT_NULL(device0);
 
+    device1 = NX_NULL;
     err = NX_DeviceOpen(DEV_NAME1, 0, &device1);
     NX_ASSERT_EQ(err, NX_EOK);
     NX_ASSERT_NOT_NULL(device1);
     
+    device2 = NX_NULL;
     err = NX_DeviceOpen(DEV_NAME2, 0, &device2);
     NX_ASSERT_NE(err, NX_EOK);
     NX_ASSERT_NULL(device2);
