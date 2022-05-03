@@ -18,6 +18,7 @@
 #include <mm/vmspace.h>
 #include <fs/vfs.h>
 #include <sched/semaphore.h>
+#include <xbook/exobj.h>
 
 #define NX_PROCESS_USER_SATCK_SIZE (NX_PAGE_SIZE * 4)
 
@@ -46,9 +47,12 @@ struct NX_Process
     NX_Semaphore waiterSem; /* The semaphore of the process waiting for this process to exit */
 
     NX_I32 pid; /* process id */
+    NX_I32 parentPid; /* parent process id */
 
     void *args; /* process args */
     char cwd[NX_VFS_MAX_PATH]; /* current work diretory */
+    char exePath[NX_VFS_MAX_PATH]; /* execute path */
+    NX_ExposedObjectTable exobjTable;
 };
 typedef struct NX_Process NX_Process;
 
@@ -74,5 +78,12 @@ void NX_ProcessExit(int exitCode);
 
 char * NX_ProcessGetCwd(NX_Process * process);
 NX_Error NX_ProcessSetCwd(NX_Process * process, const char * path);
+
+#define NX_ProcessGetSolt(process, solt) NX_ExposedObjectGet(&(process)->exobjTable, solt)
+#define NX_ProcessInstallSolt(process, object, type, closeHandler, outSolt) NX_ExposedObjectInstall(&(process)->exobjTable,  object, type, closeHandler, outSolt)
+#define NX_ProcessUninstallSolt(process, solt) NX_ExposedObjectUninstalll(&(process)->exobjTable, solt)
+#define NX_ProcessCopySolt(dstProc, srcProc, solt) NX_ExposedObjectCopy(&(dstProc)->exobjTable, &(srcProc)->exobjTable, solt)
+
+#define NX_ProcessCurrent() NX_ThreadSelf()->resource.process
 
 #endif /* __PROCESS_PROCESS___ */

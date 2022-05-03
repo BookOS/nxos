@@ -26,3 +26,14 @@ void *memset(void *dst, NX_U8 value, NX_Size sz)
 	}
 	return dst;
 }
+
+void *memcpy(void *dst, const void *src, NX_Size sz)
+{
+    NX_U8 *dstPtr = (NX_U8 *)dst;
+    NX_U8 *srcPtr = (NX_U8 *)src;
+    while (sz-- > 0)
+    {
+        *dstPtr++ = *srcPtr++;
+    }
+	return dst;
+}

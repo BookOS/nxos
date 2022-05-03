@@ -122,6 +122,8 @@ struct NX_ThreadManager
 };
 typedef struct NX_ThreadManager NX_ThreadManager;
 
+typedef NX_Error (* NX_ThreadWalkHandler)(NX_Thread * thread, void * arg);
+
 #define NX_CurrentThread NX_ThreadSelf()
 
 #define NX_ThreadSetFileTable(thread, fileTable) ((thread)->resource.fileTable = fileTable)
@@ -148,6 +150,8 @@ NX_Error NX_ThreadBlockLockedIRQ(NX_Thread *thread, NX_Spin *lock, NX_UArch irqL
 NX_Error NX_ThreadUnblock(NX_Thread *thread);
 
 NX_Error NX_ThreadSleep(NX_UArch microseconds);
+
+NX_Error NX_ThreadWalk(NX_ThreadWalkHandler handler, void * arg);
 
 void NX_ThreadsInit(void);
 
