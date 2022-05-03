@@ -91,6 +91,9 @@ NX_PRIVATE NX_Error NX_HalCoreEnterApp(NX_UArch appCoreId)
     NX_LOG_I("core#%d enter application!", appCoreId);
     PLIC_Init(NX_False);
 
+    NX_MmuSetPageTable((NX_Addr)NX_HalGetKernelPageTable());
+    NX_MmuEnable();
+    
     return NX_EOK;
 }
 
