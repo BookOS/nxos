@@ -256,6 +256,11 @@ NX_Error NX_HubRegister(const char *name, NX_Size maxClient, NX_Hub **outHub)
         maxClient = NX_HUB_CLIENTS_MAX;
     }
 
+	if (SearchHub(name) != NX_NULL) /* hub has exist! */
+	{
+		return NX_EBUSY;
+	}
+
 	hub = CreateHub(name, maxClient);
 	if (hub == NX_NULL)
 	{

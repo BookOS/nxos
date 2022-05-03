@@ -562,6 +562,32 @@ NX_Thread *NX_ThreadFindById(NX_U32 tid)
     return find;
 }
 
+NX_Error NX_ThreadWalk(NX_ThreadWalkHandler handler, void * arg)
+{
+    NX_Thread *thread;
+    NX_UArch level;
+    NX_Error err = NX_EOK;
+
+    if (!handler)
+    {
+        return NX_EINVAL;
+    }
+
+    NX_SpinLockIRQ(&NX_ThreadManagerObject.lock, &level);
+
+    NX_ListForEachEntry (thread, &NX_ThreadManagerObject.globalList, globalList)
+    {
+        if ((err = handler(thread, arg)) != NX_EOK)
+        {
+            break;
+        }
+    }
+
+    NX_SpinUnlockIRQ(&NX_ThreadManagerObject.lock, level);
+
+    return err;
+}
+
 void NX_ThreadManagerInit(void)
 {
     NX_AtomicSet(&NX_ThreadManagerObject.averageThreadThreshold, 0);

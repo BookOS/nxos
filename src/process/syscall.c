@@ -22,6 +22,7 @@
 #include <process/uaccess.h>
 #include <mm/page.h>
 #include <utils/string.h>
+#include <process/snapshot.h>
 
 NX_PRIVATE int SysInvalidCall(void)
 {
@@ -322,6 +323,26 @@ NX_Error SysProcessSetCwd(char * buf)
     return NX_ProcessSetCwd(process, buf);
 }
 
+NX_Error SysSoltClose(NX_Solt solt)
+{
+    return NX_ProcessUninstallSolt(NX_ProcessCurrent(), solt);
+}
+
+NX_Solt SysSnapshotCreate(NX_U32 snapshotType, NX_U32 flags, NX_Error * outErr)
+{
+    return NX_SnapshotCreate(snapshotType, flags, outErr);
+}
+
+NX_Error SysSnapshotFirst(NX_Solt solt, void * object)
+{
+    return NX_SnapshotFirst(solt, object);
+}
+
+NX_Error SysSnapshotNext(NX_Solt solt, void * object)
+{
+    return NX_SnapshotNext(solt, object);
+}
+
 /* xbook env syscall table  */
 NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] = 
 {
@@ -364,6 +385,10 @@ NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] =
     SysMemHeap,
     SysProcessGetCwd,
     SysProcessSetCwd,
+    SysSoltClose,
+    SysSnapshotCreate,      /* 40 */
+    SysSnapshotFirst,
+    SysSnapshotNext,
 };
 
 /* posix env syscall table */
