@@ -11,7 +11,7 @@
 
 # modify compiler here
 ifeq ($(HOSTOS), windows)
-CROSS_COMPILE	?= riscv-none-embed-
+CROSS_COMPILE	:= riscv-none-embed-
 else
-CROSS_COMPILE	?= riscv64-linux-gnu-
+CROSS_COMPILE	:= riscv64-linux-gnu-
 endif
