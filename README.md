@@ -30,6 +30,7 @@
 | riscv64 | qemu       | DONE       |
 | riscv64 | k210       | DONE       |
 | riscv64 | d1         | DONE       |
+| riscv64 | hifive unmached| DONE       |
 | x86-64  | amd64      | TODO       |
 | arm64   | qemu       | TODO       |
 | arm32   | qemu       | TODO       |
