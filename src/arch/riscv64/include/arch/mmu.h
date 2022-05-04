@@ -46,7 +46,6 @@
 
 /**
  * u740 must set bit Accessed and Dirty
- * `amo` inst need cacheable
  */
 #define NX_PAGE_ATTR_U740   (PTE_A | PTE_D)
 #define NX_PAGE_ATTR_EXT NX_PAGE_ATTR_U740

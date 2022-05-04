@@ -29,7 +29,7 @@ NX_INTERFACE NX_Error NX_HalPlatformInit(NX_UArch coreId)
 {
     /* NOTE: init trap first before do anything */
     CPU_InitTrap(coreId);
-    
+
     NX_HalDirectUartInit();
 
     sbi_init();

@@ -46,6 +46,7 @@ clean:
 # prepare tools
 # 
 prepare:
+	sudo apt-get install lynx
 	echo "parpare done."
 
 # 

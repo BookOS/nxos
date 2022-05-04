@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2022, NXOS Development Team
  * SPDX-License-Identifier: Apache-2.0
  * 
- * Contains: Init allwinner-d1 platfrom 
+ * Contains: Init platfrom 
  * 
  * Change Logs:
  * Date           Author            Notes
