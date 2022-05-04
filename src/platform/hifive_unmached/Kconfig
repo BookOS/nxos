@@ -1,0 +1,8 @@
+config NX_PLATFORM_HIFIVE_UNMACHED
+    bool
+    default y
+    select NX_CPU_64BITS
+
+config NX_UART0_FROM_SBI
+    bool "Uart0 get/set from SBI"
+    default n

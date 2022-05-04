@@ -29,6 +29,7 @@
 .globl TrapEntry1
 .globl TrapEntry2
 .globl TrapEntry3
+.globl TrapEntry4
 
 .align 2 # TrapEntry must aligin with 4 byte
 TrapEntry0:
@@ -54,6 +55,12 @@ TrapEntry2:
 TrapEntry3:
     csrrw sp, sscratch, sp    
     la sp, CPU_StackTop3
+    j TrapEntry
+
+.align 2
+TrapEntry4:
+    csrrw sp, sscratch, sp    
+    la sp, CPU_StackTop4
     j TrapEntry
 
 TrapEntry:

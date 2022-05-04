@@ -18,6 +18,7 @@
 #include <mm/page.h>
 #include <arch/mmu.h>
 #include <riscv.h>
+#include <plic.h>
 
 #define NX_LOG_LEVEL NX_LOG_INFO
 #define NX_LOG_NAME "Page"
@@ -45,9 +46,9 @@ NX_PRIVATE void NX_HalEarlyMap(NX_Mmu *mmu, NX_Addr virStart, NX_Size size)
     NX_MmuMapPageWithPhy(mmu, RISCV_CLINT_PADDR, RISCV_CLINT_PADDR, 0x10000,
                          NX_PAGE_ATTR_KERNEL);
     /* PLIC */
-    NX_MmuMapPageWithPhy(mmu, RISCV_PLIC_PADDR, RISCV_PLIC_PADDR, 0x4000,
+    NX_MmuMapPageWithPhy(mmu, RISCV_PLIC_PADDR, RISCV_PLIC_PADDR, PLIC_MEMSZ0,
                          NX_PAGE_ATTR_KERNEL);
-    NX_MmuMapPageWithPhy(mmu, RISCV_PLIC_PADDR + 0x200000, RISCV_PLIC_PADDR + 0x200000, 0x4000,
+    NX_MmuMapPageWithPhy(mmu, RISCV_PLIC_PADDR + 0x200000, RISCV_PLIC_PADDR + 0x200000, PLIC_MEMSZ1,
                          NX_PAGE_ATTR_KERNEL);
 
     NX_LOG_I("OS map early on [%p~%p]", virStart, virStart + size);
@@ -115,30 +116,4 @@ void NX_HalPageZoneInit(void)
 void *NX_HalGetKernelPageTable(void)
 {
     return KernelMMU.table;
-}
-
-NX_IMPORT NX_Addr __NX_BssStart;
-NX_IMPORT NX_Addr __NX_BssEnd;
-
-void NX_HalClearBSS(void)
-{
-    NX_UArch *dst;
-
-    dst = &__NX_BssStart;
-    while (dst < &__NX_BssEnd)
-    {
-        *dst++ = 0x00UL;
-    }
-}
-
-NX_IMPORT int NX_Main(NX_UArch coreId);
-NX_PRIVATE NX_Size BootMagic = 0x5a5af0f0;
-void __NX_EarlyMain(NX_UArch coreId)
-{
-    if (BootMagic == 0x5a5af0f0)
-    {
-        NX_HalClearBSS();
-        BootMagic = 0;
-    }
-    NX_Main(coreId);
 }

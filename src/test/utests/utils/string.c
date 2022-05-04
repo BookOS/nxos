@@ -18,9 +18,6 @@
 NX_TEST(NX_StrCmp)
 {
     const char *str = "abc";
-    NX_EXPECT_EQ(NX_StrCmp(NX_NULL, NX_NULL), 0);
-    NX_EXPECT_EQ(NX_StrCmp(str, NX_NULL), 0);
-    NX_EXPECT_EQ(NX_StrCmp(NX_NULL, str), 0);
     
     NX_EXPECT_EQ(NX_StrCmp(str, "abc"), 0);
     NX_EXPECT_NE(NX_StrCmp(str, "cba"), 0);
@@ -32,9 +29,6 @@ NX_TEST(NX_StrCmp)
 NX_TEST(NX_StrCopy)
 {
     const char *str = "hello!";
-    NX_EXPECT_NULL(NX_StrCopy(NX_NULL, NX_NULL));
-    NX_EXPECT_NULL(NX_StrCopy(str, NX_NULL));
-    NX_EXPECT_NULL(NX_StrCopy(NX_NULL, str));
     char buf[10] = {0};
     NX_EXPECT_NOT_NULL(NX_StrCopy(buf, str));
     NX_EXPECT_STREQ(buf, str);
@@ -43,7 +37,6 @@ NX_TEST(NX_StrCopy)
 NX_TEST(NX_StrLen)
 {
     const char *str = "hello!";
-    NX_EXPECT_EQ(NX_StrLen(NX_NULL), 0);
     NX_EXPECT_NE(NX_StrLen(str), 0);
     NX_EXPECT_EQ(NX_StrLen(str), 6);
 }

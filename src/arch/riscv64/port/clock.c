@@ -26,8 +26,11 @@
 
 #elif defined(CONFIG_NX_PLATFORM_RISCV64_QEMU) || \
       defined(CONFIG_NX_PLATFORM_K210)
-
 #define NX_TIMER_CLK_FREQ (10000000) /* 10MHZ*/
+
+#elif defined(CONFIG_NX_PLATFORM_HIFIVE_UNMACHED)
+
+#define NX_TIMER_CLK_FREQ (1000000) /* 1MHZ*/
 
 #else
 #error "no clock frequency"

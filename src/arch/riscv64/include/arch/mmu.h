@@ -41,6 +41,14 @@
  */
 #define NX_PAGE_ATTR_C906   (PTE_SHARE | PTE_BUF | PTE_CACHE | PTE_A | PTE_D)
 #define NX_PAGE_ATTR_EXT NX_PAGE_ATTR_C906
+
+#elif defined(CONFIG_NX_PLATFORM_HIFIVE_UNMACHED)
+
+/**
+ * u740 must set bit Accessed and Dirty
+ */
+#define NX_PAGE_ATTR_U740   (PTE_A | PTE_D)
+#define NX_PAGE_ATTR_EXT NX_PAGE_ATTR_U740
 #else
 #define NX_PAGE_ATTR_EXT 0x00000000UL
 #endif

@@ -146,6 +146,7 @@ NX_IMPORT NX_Addr TrapEntry0;
 NX_IMPORT NX_Addr TrapEntry1;
 NX_IMPORT NX_Addr TrapEntry2;
 NX_IMPORT NX_Addr TrapEntry3;
+NX_IMPORT NX_Addr TrapEntry4;
 
 void CPU_InitTrap(NX_UArch coreId)
 {
@@ -163,6 +164,9 @@ void CPU_InitTrap(NX_UArch coreId)
         break;
     case 3:
         trapEntry = &TrapEntry3;
+        break;
+    case 4:
+        trapEntry = &TrapEntry4;
         break;
     default:
         return;

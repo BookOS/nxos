@@ -13,7 +13,7 @@
 #include <sched/smp.h>
 #include <mm/barrier.h>
 #include <platform.h>
-#define NX_LOG_NAME "Multi Core"
+#define NX_LOG_NAME "smp-riscv64"
 #include <utils/log.h>
 
 #include <sbi.h>
@@ -21,11 +21,13 @@
 #include <clock.h>
 #include <plic.h>
 #include <regs.h>
+#include <mm/mmu.h>
 
 NX_IMPORT NX_Addr TrapEntry0;
 NX_IMPORT NX_Addr TrapEntry1;
 NX_IMPORT NX_Addr TrapEntry2;
 NX_IMPORT NX_Addr TrapEntry3;
+NX_IMPORT NX_Addr TrapEntry4;
 
 /**
  * Within SBI, we can't read mhartid, so I try to use `trap entry` to see who am I.
@@ -50,6 +52,10 @@ NX_PRIVATE NX_UArch NX_HalCoreGetIndex(void)
     {
         return 3;
     }
+    else if (trapEntry == (NX_Addr)&TrapEntry4)
+    {
+        return 4;
+    }
     /* should never be here */
     while (1);
 }
@@ -59,7 +65,7 @@ NX_PRIVATE NX_Error NX_HalCoreBootApp(NX_UArch bootCoreId)
 
     NX_LOG_I("boot core is:%d", bootCoreId);
     NX_UArch coreId;
-    for (coreId = 0; coreId < NX_MULTI_CORES_NR; coreId++)
+    for (coreId = NX_VALID_HARTID_OFFSET; coreId < NX_MULTI_CORES_NR; coreId++)
     {
 #ifndef CONFIG_NX_PLATFORM_K210
         NX_LOG_I("core#%d state:%d", coreId, sbi_hsm_hart_status(coreId));
@@ -91,9 +97,10 @@ NX_PRIVATE NX_Error NX_HalCoreEnterApp(NX_UArch appCoreId)
     NX_LOG_I("core#%d enter application!", appCoreId);
     PLIC_Init(NX_False);
 
+    /* enable mmu on this core */
     NX_MmuSetPageTable((NX_Addr)NX_HalGetKernelPageTable());
     NX_MmuEnable();
-    
+
     return NX_EOK;
 }
 
