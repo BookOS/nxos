@@ -30,10 +30,10 @@
 | riscv64 | qemu       | DONE       |
 | riscv64 | k210       | DONE       |
 | riscv64 | d1         | DONE       |
-| x86_64  | amd64      | TODO       |
+| x86-64  | amd64      | TODO       |
 | arm64   | qemu       | TODO       |
 | arm32   | qemu       | TODO       |
-| longarch| qemu       | TODO       |
+|loongArch| qemu       | TODO       |
 
 ## 文档中心
 
