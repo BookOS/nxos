@@ -343,6 +343,11 @@ NX_Error SysSnapshotNext(NX_Solt solt, void * object)
     return NX_SnapshotNext(solt, object);
 }
 
+NX_Error SysThreadSleep(NX_UArch microseconds)
+{
+    return NX_ThreadSleep(microseconds);
+}
+
 /* xbook env syscall table  */
 NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] = 
 {
@@ -389,6 +394,7 @@ NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] =
     SysSnapshotCreate,      /* 40 */
     SysSnapshotFirst,
     SysSnapshotNext,
+    SysThreadSleep,
 };
 
 /* posix env syscall table */

@@ -55,6 +55,7 @@ NX_PRIVATE NX_Error ThreadInit(NX_Thread *thread,
     thread->handler = handler;
     thread->threadArg = arg;
     thread->timeslice = 3;
+    thread->elapsedTicks = 0;
     thread->ticks = thread->timeslice;
     thread->fixedPriority = priority;
     thread->priority = priority;

@@ -100,12 +100,15 @@ NX_PRIVATE NX_BuddySystem* BuddyCreateFromMemory(void *mem)
 
 NX_BuddySystem* NX_BuddyCreate(void *mem, NX_Size size)
 {
+    NX_Size oldSize;
     NX_ASSERT(mem && size);
     NX_LOG_I("mem: 0x%p size: 0x%p", mem, size);
     if (!(mem && size))
     {
         return NX_NULL;
     }
+
+    oldSize = size;
 
     // Alloc NX_BuddySystem
     NX_BuddySystem* system = BuddyCreateFromMemory(mem);
@@ -128,7 +131,7 @@ NX_BuddySystem* NX_BuddyCreate(void *mem, NX_Size size)
 
     system->pageStart = mem;
     system->maxPFN = page_count - 1;
-    system->usedPage = 0;
+    system->usedPage = (oldSize - size) >> NX_PAGE_SHIFT;
 
     BUDDY_ASSERT(((NX_Size)mem & NX_PAGE_MASK) == 0, "must align to PAGE_SIZE");
 

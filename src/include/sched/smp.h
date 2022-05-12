@@ -22,6 +22,9 @@ struct NX_Cpu
 {
     NX_List threadReadyList[NX_THREAD_MAX_PRIORITY_NR];   /* list for thread ready to run */
     NX_Thread *threadRunning;  /* the thread running on core */
+    NX_Thread *idleThread;  /* the idle thread on core */
+    NX_ClockTick idleElapsedTicks;
+    NX_U32 idleTime;
 
     NX_Spin lock;     /* lock for CPU */
     NX_Atomic threadCount;    /* ready thread count on this core */
@@ -69,5 +72,8 @@ NX_INLINE NX_Cpu *NX_CpuGetPtr(void)
 }
 
 NX_Thread *NX_SMP_GetRunning(void);
+NX_Error NX_SMP_SetIdle(NX_UArch coreId, NX_Thread *thread);
+NX_Thread * NX_SMP_GetIdle(NX_UArch coreId);
+NX_U32 NX_SMP_GetUsage(NX_UArch coreId);
 
 #endif /* __SCHED_SMP__ */

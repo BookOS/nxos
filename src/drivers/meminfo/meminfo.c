@@ -42,7 +42,7 @@ NX_PRIVATE NX_Error MemInfoRead(struct NX_Device *device, void *buf, NX_Size len
     meminfo.totalPage = NX_PageGetTotal();
     meminfo.usedPage = NX_PageGetUsed();
 
-    NX_CopyToUser(buf, &meminfo, len);
+    NX_CopyToUser(buf, (char *)&meminfo, len);
 
     if (outLen)
     {

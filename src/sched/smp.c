@@ -49,6 +49,9 @@ void NX_SMP_Init(NX_UArch coreId)
     for (i = 0; i < NX_MULTI_CORES_NR; i++)
     {
         CpuArray[i].threadRunning = NX_NULL;
+        CpuArray[i].idleThread = NX_NULL;
+        CpuArray[i].idleElapsedTicks = 0;
+        CpuArray[i].idleTime = 0;
         for (j = 0; j < NX_THREAD_MAX_PRIORITY_NR; j++)
         {
             NX_ListInit(&CpuArray[i].threadReadyList[j]);
@@ -242,6 +245,38 @@ NX_Error NX_SMP_SetRunning(NX_UArch coreId, NX_Thread *thread)
     return NX_EOK;
 }
 
+NX_Error NX_SMP_SetIdle(NX_UArch coreId, NX_Thread *thread)
+{
+    if (coreId >= NX_MULTI_CORES_NR || thread == NX_NULL)
+    {
+        return NX_EINVAL;
+    }
+
+    NX_Cpu *cpu = NX_CpuGetIndex(coreId);
+    NX_UArch level;
+    NX_SpinLockIRQ(&cpu->lock, &level);
+    cpu->idleThread = thread;
+    NX_SpinUnlockIRQ(&cpu->lock, level);
+    return NX_EOK;
+}
+
+NX_Thread * NX_SMP_GetIdle(NX_UArch coreId)
+{
+    NX_Thread *thread;
+
+    if (coreId >= NX_MULTI_CORES_NR)
+    {
+        return NX_NULL;
+    }
+
+    NX_Cpu *cpu = NX_CpuGetIndex(coreId);
+    NX_UArch level;
+    NX_SpinLockIRQ(&cpu->lock, &level);
+    thread = cpu->idleThread;
+    NX_SpinUnlockIRQ(&cpu->lock, level);
+    return thread;
+}
+
 /**
  * get running thread
  */
@@ -255,4 +290,24 @@ NX_Thread *NX_SMP_GetRunning(void)
     thread = cpu->threadRunning;
     NX_SpinUnlockIRQ(&cpu->lock, level);
     return thread;
+}
+
+/**
+ * get cpu usage
+ */
+NX_U32 NX_SMP_GetUsage(NX_UArch coreId)
+{
+    NX_U32 usage;
+
+    if (coreId >= NX_MULTI_CORES_NR)
+    {
+        return 0;
+    }
+
+    NX_Cpu *cpu = NX_CpuGetIndex(coreId);
+    NX_UArch level;
+    NX_SpinLockIRQ(&cpu->lock, &level);
+    usage = (1000UL - cpu->idleTime) / 10;
+    NX_SpinUnlockIRQ(&cpu->lock, level);
+    return usage;
 }
