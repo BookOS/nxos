@@ -12,3 +12,11 @@ config NX_DRIVER_NULL
 config NX_DRIVER_ZERO
     bool "Enable zero device"
     default y
+
+config NX_DRIVER_MEMINFO
+    bool "Enable memory info device"
+    default y
+
+config NX_DRIVER_CPUINFO
+    bool "Enable cpu info device"
+    default y

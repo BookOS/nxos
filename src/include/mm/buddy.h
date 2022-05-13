@@ -43,6 +43,7 @@ struct NX_BuddySystem
     NX_Size bitmap;    /* map order has free page */
     void *pageStart;    /* page start addr */
     NX_Size maxPFN;
+    NX_Size usedPage;
     NX_Page map[0];    /* pages array */
 };
 typedef struct NX_BuddySystem NX_BuddySystem;

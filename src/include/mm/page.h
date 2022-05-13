@@ -46,4 +46,7 @@ void *NX_PageZoneGetBuddySystem(NX_PageZone zone);
 #define NX_Phy2Virt(addr) ((addr) + NX_KVADDR_OFFSET)
 #define NX_Virt2Phy(addr) ((addr) - NX_KVADDR_OFFSET)
 
+NX_Size NX_PageGetTotal(void);
+NX_Size NX_PageGetUsed(void);
+
 #endif /* __MM_PAGE__ */

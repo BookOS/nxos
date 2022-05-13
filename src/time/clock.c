@@ -89,6 +89,7 @@ NX_PRIVATE void NX_SchedIrqHandler(void *arg)
     }
 
     thread->ticks--;
+    thread->elapsedTicks++;
     if (thread->ticks == 0)
     {
         // NX_LOG_I("thread:%s need sched", thread->name);

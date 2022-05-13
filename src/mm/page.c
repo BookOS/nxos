@@ -95,3 +95,25 @@ void *NX_PageZoneGetBuddySystem(NX_PageZone zone)
     NX_SpinUnlockIRQ(&buddyLock[zone], level);
     return addr;
 }
+
+NX_Size NX_PageGetTotal(void)
+{
+    NX_Size count;
+    NX_UArch level;
+
+    NX_SpinLockIRQ(&buddyLock[NX_PAGE_ZONE_NORMAL], &level);
+    count = BuddySystemArray[NX_PAGE_ZONE_NORMAL]->maxPFN + 1;
+    NX_SpinUnlockIRQ(&buddyLock[NX_PAGE_ZONE_NORMAL], level);
+    return count;
+}
+
+NX_Size NX_PageGetUsed(void)
+{
+    NX_Size count;
+    NX_UArch level;
+
+    NX_SpinLockIRQ(&buddyLock[NX_PAGE_ZONE_NORMAL], &level);
+    count = BuddySystemArray[NX_PAGE_ZONE_NORMAL]->usedPage;
+    NX_SpinUnlockIRQ(&buddyLock[NX_PAGE_ZONE_NORMAL], level);
+    return count;
+}

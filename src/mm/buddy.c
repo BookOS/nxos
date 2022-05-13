@@ -11,6 +11,7 @@
 
 #include "buddy_common.h"
 #include <mm/buddy.h>
+#include <utils/math.h>
 
 #define NX_PAGE_INVALID_ORDER (-1)
 
@@ -99,12 +100,15 @@ NX_PRIVATE NX_BuddySystem* BuddyCreateFromMemory(void *mem)
 
 NX_BuddySystem* NX_BuddyCreate(void *mem, NX_Size size)
 {
+    NX_Size oldSize;
     NX_ASSERT(mem && size);
     NX_LOG_I("mem: 0x%p size: 0x%p", mem, size);
     if (!(mem && size))
     {
         return NX_NULL;
     }
+
+    oldSize = size;
 
     // Alloc NX_BuddySystem
     NX_BuddySystem* system = BuddyCreateFromMemory(mem);
@@ -127,6 +131,7 @@ NX_BuddySystem* NX_BuddyCreate(void *mem, NX_Size size)
 
     system->pageStart = mem;
     system->maxPFN = page_count - 1;
+    system->usedPage = (oldSize - size) >> NX_PAGE_SHIFT;
 
     BUDDY_ASSERT(((NX_Size)mem & NX_PAGE_MASK) == 0, "must align to PAGE_SIZE");
 
@@ -238,6 +243,7 @@ NX_PRIVATE void *PagePrepareUsed(NX_BuddySystem* system, NX_Page* page, int orde
         PageSplit(system, page, order);
     }
     NX_AtomicSet(&page->reference, 1);
+    system->usedPage += NX_PowInt(2, order);
     return PageToPtr(system, page);
 }
 
@@ -313,6 +319,8 @@ NX_Error NX_BuddyFreePage(NX_BuddySystem* system, void *ptr)
             return NX_EAGAIN;   /* need free again, but free success */
         }
 
+        system->usedPage -= NX_PowInt(2, page->order);
+        NX_ASSERT(system->usedPage >= 0);
         /* do real page free when ref zero */
         page = PageMerge(system, page);
         BuddyAddPage(system, page);        

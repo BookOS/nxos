@@ -96,6 +96,7 @@ struct NX_Thread
     /* thread sched */
     NX_U32 timeslice;
     NX_U32 ticks;
+    NX_ClockTick elapsedTicks; /* thread runs ticks */
     NX_U32 fixedPriority;  /* fixed priority, does not change dynamically  */
     NX_U32 priority;    /* dynamic priority, or in the case of time-sharing scheduling priority will change dynamically */
     NX_U32 needSched;

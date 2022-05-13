@@ -283,7 +283,7 @@ NX_PRIVATE void *SysMemHeap(void *addr, NX_Error *outErr)
     return heapAddr;
 }
 
-NX_Error SysProcessGetCwd(char * buf, NX_Size length)
+NX_PRIVATE NX_Error SysProcessGetCwd(char * buf, NX_Size length)
 {
     char * cwd;
 
@@ -302,7 +302,7 @@ NX_Error SysProcessGetCwd(char * buf, NX_Size length)
     return NX_EOK;
 }
 
-NX_Error SysProcessSetCwd(char * buf)
+NX_PRIVATE NX_Error SysProcessSetCwd(char * buf)
 {
     char * cwd;
     NX_Process * process;
@@ -323,24 +323,34 @@ NX_Error SysProcessSetCwd(char * buf)
     return NX_ProcessSetCwd(process, buf);
 }
 
-NX_Error SysSoltClose(NX_Solt solt)
+NX_PRIVATE NX_Error SysSoltClose(NX_Solt solt)
 {
     return NX_ProcessUninstallSolt(NX_ProcessCurrent(), solt);
 }
 
-NX_Solt SysSnapshotCreate(NX_U32 snapshotType, NX_U32 flags, NX_Error * outErr)
+NX_PRIVATE NX_Solt SysSnapshotCreate(NX_U32 snapshotType, NX_U32 flags, NX_Error * outErr)
 {
     return NX_SnapshotCreate(snapshotType, flags, outErr);
 }
 
-NX_Error SysSnapshotFirst(NX_Solt solt, void * object)
+NX_PRIVATE NX_Error SysSnapshotFirst(NX_Solt solt, void * object)
 {
     return NX_SnapshotFirst(solt, object);
 }
 
-NX_Error SysSnapshotNext(NX_Solt solt, void * object)
+NX_PRIVATE NX_Error SysSnapshotNext(NX_Solt solt, void * object)
 {
     return NX_SnapshotNext(solt, object);
+}
+
+NX_PRIVATE NX_Error SysThreadSleep(NX_UArch microseconds)
+{
+    return NX_ThreadSleep(microseconds);
+}
+
+NX_PRIVATE NX_TimeVal SysClockGetMillisecond(void)
+{
+    return NX_ClockTickGetMillisecond();
 }
 
 /* xbook env syscall table  */
@@ -389,6 +399,8 @@ NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] =
     SysSnapshotCreate,      /* 40 */
     SysSnapshotFirst,
     SysSnapshotNext,
+    SysThreadSleep,
+    SysClockGetMillisecond,
 };
 
 /* posix env syscall table */
