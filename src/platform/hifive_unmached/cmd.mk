@@ -19,7 +19,7 @@ SSH_PORT	?= 8122
 HTTP_PORT	?= 8182
 
 ACTION		?= reboot # poweron, powerff, reboot
-MACHINE_ID	?= 2 # 1, 2
+MACHINE_ID	?= 1 # 1, 2
 
 #
 # Args for make
