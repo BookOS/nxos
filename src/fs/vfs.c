@@ -2052,4 +2052,4 @@ NX_PRIVATE void NX_VfsInit(void)
     NX_VfsFileTableInit(&DefaultFileTable);
 }
 
-NX_MODS_CALL(NX_VfsInit);
+NX_MODS_INIT(NX_VfsInit);

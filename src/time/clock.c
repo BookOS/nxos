@@ -20,6 +20,7 @@
 #include <sched/smp.h>
 
 #include <io/delay_irq.h>
+#include <time/time.h>
 
 #define NX_LOG_NAME "Clock"
 #include <utils/log.h>
@@ -48,6 +49,10 @@ void NX_ClockTickGo(void)
     if (NX_SMP_GetBootCore() == NX_SMP_GetIdx())
     {
         SystemClockTicks++;
+        if (SystemClockTicks % NX_TICKS_PER_SECOND == 0)
+        {
+            NX_TimeGo();
+        }
 
         NX_IRQ_DelayWorkHandle(&TimerWork);
     }
