@@ -90,7 +90,7 @@ NX_PRIVATE void NX_SchedIrqHandler(void *arg)
     NX_Thread *thread = NX_ThreadSelf();
     if (thread->isTerminated != 0) /* check exit */
     {
-        NX_ThreadExit();
+        NX_ThreadExit(1);
     }
 
     thread->ticks--;

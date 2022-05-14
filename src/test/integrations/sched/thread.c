@@ -31,7 +31,7 @@ NX_PRIVATE void TestThread1(void *arg)
         if (i > 100)
         {
             threadTick++;
-            NX_ThreadExit();
+            NX_ThreadExit(0);
         }
     }
 }
@@ -79,7 +79,7 @@ NX_PRIVATE void TestThread4(void *arg)
         if (i == 100)
         {
             NX_LOG_D("terminate thread: %d", target->tid);
-            NX_ThreadTerminate(target);
+            NX_ThreadTerminate(target, 0);
         }
         if (i == 1000)
         {

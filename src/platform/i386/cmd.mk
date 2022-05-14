@@ -87,6 +87,6 @@ gdb:
 # dump kernel
 #
 dump:
-	@echo gdb load file from $(ARCH)/$(PLATFORM)/$(NXOS_NAME).elf
+	@echo dump kernel $(ARCH)/$(PLATFORM)/$(NXOS_NAME).elf
 	$(DUMP) -D -S $(NXOS_NAME).elf > $(NXOS_NAME).dump.S
 	

@@ -39,10 +39,19 @@ NX_Error NX_ExposedObjectTableInit(NX_ExposedObjectTable * table, NX_Size count)
 
 NX_Error NX_ExposedObjectTableExit(NX_ExposedObjectTable * table)
 {
+    NX_Solt solt;
+
     if (!table)
     {
         return NX_EINVAL;
     }
+
+    /* uninstall all objects */
+    for (solt = 0; solt < table->objectCount; solt++)
+    {
+        NX_ExposedObjectUninstalll(table, solt);
+    }
+
     NX_MemFree(table);
     return NX_EOK;
 }
@@ -79,6 +88,31 @@ NX_ExposedObject * NX_ExposedObjectGet(NX_ExposedObjectTable * table, NX_Solt so
     }
 
     return NX_NULL;
+}
+
+NX_Solt NX_ExposedObjectLocate(NX_ExposedObjectTable * table, void * object, NX_ExposedObjectType type)
+{
+    NX_Solt solt;
+    NX_UArch level;
+
+    if (!table || !object)
+    {
+        return NX_SOLT_INVALID_VALUE;
+    }
+
+    NX_ExposedObject * objects = table->objects;
+
+    NX_SpinLockIRQ(&table->lock, &level);
+    for (solt = 0; solt < table->objectCount; solt++)
+    {
+        if (objects[solt].object == object && objects[solt].type == type)
+        {
+            NX_SpinUnlockIRQ(&table->lock, level);
+            return solt;
+        }
+    }
+    NX_SpinUnlockIRQ(&table->lock, level);
+    return NX_SOLT_INVALID_VALUE;
 }
 
 NX_Error NX_ExposedObjectInstall(NX_ExposedObjectTable * table, void * object, NX_ExposedObjectType type, NX_SoltCloseHandler handler, NX_Solt * outSolt)

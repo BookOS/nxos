@@ -193,7 +193,7 @@ void NX_ReSchedCheck(void)
     {
         NX_LOG_D("call terminate: %d", thread->tid);
         thread->isTerminated = 0;
-        NX_ThreadExit();
+        NX_ThreadExit(1);
     }
     if (thread->needSched)
     {

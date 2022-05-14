@@ -574,7 +574,7 @@ NX_Error NX_VmspaceUnmap(NX_Vmspace *space, NX_Addr addr, NX_Size size)
     }
 
     /* split node */
-    err = VmspaceSplitNode(space, node, addr , size);
+    err = VmspaceSplitNode(space, node, addr, size);
     if (err != NX_EOK)
     {
         NX_LOG_E("unmap: addr %p size %p node %p split error with %d !", addr, size, node, err);
@@ -582,7 +582,7 @@ NX_Error NX_VmspaceUnmap(NX_Vmspace *space, NX_Addr addr, NX_Size size)
     }
 
     /* remove node from space */
-    err = VmspaceRemoveNode(space, node, !VMNODE_REMOVE_WITH_DESTORY);
+    err = VmspaceRemoveNode(space, node, 0);
     if (err != NX_EOK)
     {
         NX_LOG_E("unmap: addr %p size %p node %p remove error with %d !", addr, size, node, err);
