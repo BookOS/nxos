@@ -52,7 +52,7 @@ NX_INTERFACE NX_WEAK_SYM NX_Error NX_HalPlatformStage2(void)
 
 NX_PRIVATE void ShowLogVersion(void)
 {
-    NX_Printf("%s", LogString);
+    NX_Printf("%s\n", LogString);
     NX_Printf("Kernel    : %s\n", NX_SYSTEM_NAME);
     NX_Printf("Version   : %d.%d.%d\n", NX_VERSION_MAJOR, NX_VERSION_MINOR, NX_VERSION_REVISE);
     NX_Printf("Build     : %s\n", __DATE__);
