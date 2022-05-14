@@ -23,6 +23,7 @@
 #include <mm/page.h>
 #include <utils/string.h>
 #include <process/snapshot.h>
+#include <time/time.h>
 
 NX_PRIVATE int SysInvalidCall(void)
 {
@@ -353,6 +354,16 @@ NX_PRIVATE NX_TimeVal SysClockGetMillisecond(void)
     return NX_ClockTickGetMillisecond();
 }
 
+NX_PRIVATE NX_Error SysTimeSet(NX_Time * time)
+{
+    return NX_TimeSet(time);
+}
+
+NX_PRIVATE NX_Error SysTimeGet(NX_Time * time)
+{
+    return NX_TimeGet(time);
+}
+
 /* xbook env syscall table  */
 NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] = 
 {
@@ -401,6 +412,8 @@ NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] =
     SysSnapshotNext,
     SysThreadSleep,
     SysClockGetMillisecond,
+    SysTimeSet,
+    SysTimeGet
 };
 
 /* posix env syscall table */
