@@ -37,6 +37,9 @@ NX_Error NX_ExposedObjectTableInit(NX_ExposedObjectTable * table, NX_Size count)
     return NX_EOK;
 }
 
+/**
+ * exit object table no need free table, because just exit table, not destroy table
+ */
 NX_Error NX_ExposedObjectTableExit(NX_ExposedObjectTable * table)
 {
     NX_Solt solt;
@@ -52,7 +55,7 @@ NX_Error NX_ExposedObjectTableExit(NX_ExposedObjectTable * table)
         NX_ExposedObjectUninstalll(table, solt);
     }
 
-    NX_MemFree(table);
+    NX_MemFree(table->objects);
     return NX_EOK;
 }
 
