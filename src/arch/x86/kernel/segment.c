@@ -32,6 +32,23 @@ NX_PRIVATE void SetSegment(struct CPU_Segment *seg, NX_UArch limit,
     seg->baseHigh    = (base >> 24) & 0xff;
 }
 
+/**
+ * in x86, we can use fs/gs segment to save tls
+ */
+void CPU_TlsSet(NX_Addr base)
+{
+    struct CPU_Segment * seg = GDT_OFF2PTR(((struct CPU_Segment *) GDT_VADDR), INDEX_USER_TLS);
+    seg->baseLow     = base & 0xffff;
+    seg->baseMid     = (base >> 16) & 0xff;
+    seg->baseHigh    = (base >> 24) & 0xff;
+}
+
+NX_Addr CPU_TlsGet(void)
+{
+    struct CPU_Segment * seg = GDT_OFF2PTR(((struct CPU_Segment *) GDT_VADDR), INDEX_USER_TLS);
+    return (seg->baseLow & 0xffff) | ((seg->baseMid & 0xff) << 16) | ((seg->baseHigh & 0xff) << 24);
+}
+
 void CPU_InitSegment(void)
 {
     /* Global segment table */

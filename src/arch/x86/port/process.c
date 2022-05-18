@@ -159,6 +159,16 @@ NX_PRIVATE void NX_HalProcessExecuteUserThread(const void *text, void *userStack
     NX_PANIC("should never return after into user");
 }
 
+NX_PRIVATE void NX_HalProcessSetTls(void *tls)
+{
+    CPU_TlsSet((NX_Addr)tls);
+}
+
+NX_PRIVATE void * NX_HalProcessGetTls(void)
+{
+    return (void *)CPU_TlsGet();
+}
+
 NX_INTERFACE struct NX_ProcessOps NX_ProcessOpsInterface = 
 {
     .initUserSpace      = NX_HalProcessInitUserSpace,
@@ -167,4 +177,6 @@ NX_INTERFACE struct NX_ProcessOps NX_ProcessOpsInterface =
     .executeUser        = NX_HalProcessExecuteUser,
     .executeUserThread  = NX_HalProcessExecuteUserThread,
     .freePageTable      = NX_HalProcessFreePageTable,
+    .setTls             = NX_HalProcessSetTls,
+    .getTls             = NX_HalProcessGetTls,
 };

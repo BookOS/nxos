@@ -74,6 +74,7 @@ struct NX_ThreadResource
     NX_U32 exitCode;       /* exit code for thread */
     NX_U32 waitExitCode;   /* exit code for this thread wait another thread */
     NX_Semaphore waiterSem; /* The semaphore of the thread waiting for this thread to exit */
+    void * tls; /* thread local storage */
 };
 typedef struct NX_ThreadResource NX_ThreadResource;
 

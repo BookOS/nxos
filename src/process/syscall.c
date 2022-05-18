@@ -25,6 +25,8 @@
 #include <process/snapshot.h>
 #include <time/time.h>
 
+#include "process_impl.h"
+
 NX_PRIVATE int SysInvalidCall(void)
 {
     NX_Thread *cur = NX_ThreadSelf();
@@ -435,12 +437,22 @@ NX_PRIVATE NX_Error SysThreadCreate(NX_ThreadAttr * attr, NX_ThreadHandler handl
     thread->userHandler = handler;
     thread->userStackSize = threadAttr.stackSize;
     thread->userStackBase = stackBase;
-    
+
+    /* map tls */
+    if (NX_ProcessMapTls(process, thread) != NX_EOK)
+    {
+        NX_LOG_E("map thread tls error!");
+        NX_ThreadDestroy(thread);
+        NX_VmspaceUnmap(&process->vmspace, (NX_Addr)stackBase, threadAttr.stackSize);
+        return NX_ENOMEM;
+    }
+
     /* install thread solt */
     solt = NX_SOLT_INVALID_VALUE;
-    if (NX_ProcessInstallSolt(process, thread, NX_EXOBJ_THREAD, NX_NULL, &solt))
+    if (NX_ProcessInstallSolt(process, thread, NX_EXOBJ_THREAD, NX_NULL, &solt) != NX_EOK)
     {
         NX_LOG_E("install thread object failed!");
+        NX_ProcessUnmapTls(process, thread);
         NX_ThreadDestroy(thread);
         NX_VmspaceUnmap(&process->vmspace, (NX_Addr)stackBase, threadAttr.stackSize);
         return NX_ENORES;

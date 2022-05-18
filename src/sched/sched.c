@@ -39,6 +39,16 @@ NX_INLINE void SchedSwithProcess(NX_Thread *thread)
 
     NX_ASSERT(pageTable != NX_NULL);
     NX_ASSERT(NX_ProcessSwitchPageTable(pageTable) == NX_EOK);
+    
+    /* update tls */
+    if (thread->resource.tls)
+    {
+        NX_ProcessSetTls(thread->resource.tls);
+    }
+    else
+    {
+        NX_ProcessSetTls(NX_NULL);
+    }
 }
 
 NX_INLINE void SchedToNext(NX_Thread *next)

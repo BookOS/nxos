@@ -80,6 +80,8 @@
 
 #ifndef __ASSEMBLY__
 void CPU_InitSegment(void);
+void CPU_TlsSet(NX_Addr base);
+NX_Addr CPU_TlsGet(void);
 #endif
 
 #endif  /*__I386_SEGMENT__*/

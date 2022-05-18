@@ -21,6 +21,7 @@
 #include <xbook/exobj.h>
 
 #define NX_PROCESS_USER_SATCK_SIZE (NX_PAGE_SIZE * 4)
+#define NX_PROCESS_TLS_SIZE NX_PAGE_SIZE
 
 #define NX_PROC_FLAG_NOWAIT 0x00
 #define NX_PROC_FLAG_WAIT   0x01
@@ -56,6 +57,13 @@ struct NX_Process
 };
 typedef struct NX_Process NX_Process;
 
+typedef struct NX_TlsArea
+{
+    struct NX_TlsArea * tlsAreaSelf;    /* tls area self */
+    NX_Error error; /* error in tls, save current thread error number */
+    /* tls data area */
+} NX_TlsArea;
+
 struct NX_ProcessOps
 {
     NX_Error (*initUserSpace)(NX_Process *process, NX_Addr virStart, NX_Size size);
@@ -64,6 +72,8 @@ struct NX_ProcessOps
     void (*executeUser)(const void *text, void *userStack, void *kernelStack, void *args);
     void (*executeUserThread)(const void *text, void *userStack, void *kernelStack, void *arg);
     NX_Error (*freePageTable)(NX_Vmspace *vmspace);
+    void (*setTls)(void *tls);
+    void *(*getTls)(void);
 };
 
 NX_INTERFACE NX_IMPORT struct NX_ProcessOps NX_ProcessOpsInterface; 
@@ -75,6 +85,9 @@ NX_INTERFACE NX_IMPORT struct NX_ProcessOps NX_ProcessOpsInterface;
 #define NX_ProcessExecuteUserThread(text, userStack, kernelStack, arg) \
         NX_ProcessOpsInterface.executeUserThread(text, userStack, kernelStack, arg)
 #define NX_ProcessFreePageTable         NX_ProcessOpsInterface.freePageTable
+
+#define NX_ProcessSetTls(tls)           NX_ProcessOpsInterface.setTls(tls)
+#define NX_ProcessGetTls()              NX_ProcessOpsInterface.getTls()
 
 NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, NX_U32 *exitCode, char *cmd, char *env);
 void NX_ProcessExit(NX_U32 exitCode);

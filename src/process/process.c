@@ -618,6 +618,52 @@ copyFailed:
     return NX_EFAULT;
 }
 
+NX_Error NX_ProcessMapTls(NX_Process * process, NX_Thread * thread)
+{
+    NX_Vmspace * space = NX_NULL;
+    void * tlsAddr = NX_NULL;
+    NX_TlsArea tlsArea = {NX_NULL, NX_EOK};
+
+    space = &process->vmspace;
+    if (NX_VmspaceMap(space, 0, NX_PROCESS_TLS_SIZE, NX_PAGE_ATTR_USER, 0, &tlsAddr) != NX_EOK)
+    {
+        return NX_ENOMEM;
+    }
+
+    tlsArea.tlsAreaSelf = tlsAddr;
+
+    /* copy tls addr to tls area */
+    if (NX_VmspaceWrite(space, (char *)tlsAddr, (char *)&tlsArea, sizeof(tlsArea)) != NX_EOK)
+    {
+        NX_VmspaceUnmap(space, (NX_Addr)tlsAddr, NX_PROCESS_TLS_SIZE);
+        return NX_EFAULT;
+    }
+
+    thread->resource.tls = tlsAddr;
+
+    return NX_EOK;
+}
+
+NX_Error NX_ProcessUnmapTls(NX_Process * process, NX_Thread * thread)
+{
+    NX_Vmspace * space = NX_NULL;
+
+    if (thread->resource.tls == NX_NULL)
+    {
+        return NX_ENORES;
+    }
+
+    space = &process->vmspace;
+    if (NX_VmspaceUnmap(space, (NX_Addr)thread->resource.tls, NX_PROCESS_TLS_SIZE) != NX_EOK)
+    {
+        return NX_ENOMEM;
+    }
+
+    thread->resource.tls = NX_NULL;
+
+    return NX_EOK;
+}
+
 NX_PRIVATE NX_Error ProcessUnmapStack(NX_Process *process)
 {
     NX_Vmspace *space;
@@ -749,6 +795,16 @@ NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, NX_U32 *exitCode, char *cmd,
         return NX_ENOMEM;
     }
 
+    /* map tls */
+    if (NX_ProcessMapTls(process, thread) != NX_EOK)
+    {
+        ProcessUnmapStack(process);
+        NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
+        NX_ProcessDestroyObject(process);
+        NX_ThreadDestroy(thread);
+        return NX_ENOMEM;
+    }
+
     NX_ProcessAppendThread(process, thread);
 
     /* override default file table */
@@ -769,6 +825,7 @@ NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, NX_U32 *exitCode, char *cmd,
     if (NX_ThreadStart(thread) != NX_EOK)
     {
         NX_ProcessUninstallSolt(process, threadSolt);
+        NX_ProcessUnmapTls(process, thread);
         ProcessUnmapStack(process);
         NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
         NX_ProcessDestroyObject(process);
@@ -851,6 +908,9 @@ void NX_ThreadExitProcess(NX_Thread *thread, NX_Process *process)
     {
         NX_VmspaceUnmap(&process->vmspace, (NX_Addr)thread->userStackBase, thread->userStackSize);
     }
+
+    /* unmap tls */
+    NX_ProcessUnmapTls(process, thread);
 
     if (NX_AtomicGet(&process->threadCount) == 0)
     {
