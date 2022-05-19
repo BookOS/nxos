@@ -98,20 +98,3 @@ TrapReturn:
     RESTORE_CONTEXT
     /* return from supervisor call */
     sret
-
-/*
- * void NX_HalProcessEnterUserMode(args, text, userStack);
- */
-.global NX_HalProcessEnterUserMode
-NX_HalProcessEnterUserMode:
-    /* set as user mode, close interrupt */
-    li t0, SSTATUS_SPP | SSTATUS_SIE
-    csrc sstatus, t0
-
-    /* enable interrupt when return to user mode */
-    li t0, SSTATUS_SPIE
-    csrs sstatus, t0
-
-    csrw sepc, a1   /* set text */
-    mv sp, a2       /* set sp */
-    sret            /* enter user mode */
