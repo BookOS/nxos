@@ -34,7 +34,7 @@
 
 NX_PRIVATE NX_Error NX_ProcessWait(NX_Process * process, NX_U32 *exitCode);
 
-NX_PRIVATE void ProcessAppendThread(NX_Process *process, NX_Thread *thread)
+void NX_ProcessAppendThread(NX_Process *process, NX_Thread *thread)
 {
     NX_UArch level;
     NX_SpinLockIRQ(&process->lock, &level);
@@ -44,12 +44,7 @@ NX_PRIVATE void ProcessAppendThread(NX_Process *process, NX_Thread *thread)
     NX_SpinUnlockIRQ(&process->lock, level);
 }
 
-void NX_ProcessAppendThread(NX_Process *process, void *thread)
-{
-    return ProcessAppendThread(process, thread);
-}
-
-NX_PRIVATE void ProcessDeleteThread(NX_Process *process, NX_Thread *thread)
+void NX_ProcessDeleteThread(NX_Process *process, NX_Thread *thread)
 {
     NX_UArch level;
     NX_SpinLockIRQ(&process->lock, &level);
@@ -894,7 +889,7 @@ void NX_ThreadExitProcess(NX_Thread *thread, NX_Process *process)
     NX_Solt solt;
 
     NX_ASSERT(process != NX_NULL && thread != NX_NULL);
-    ProcessDeleteThread(process, thread);
+    NX_ProcessDeleteThread(process, thread);
 
     /* uninstall thread solt in process */
     solt = NX_ProcessLocateSolt(process, thread, NX_EXOBJ_THREAD);

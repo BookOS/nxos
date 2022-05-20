@@ -95,8 +95,6 @@ void NX_ProcessExit(NX_U32 exitCode);
 char * NX_ProcessGetCwd(NX_Process * process);
 NX_Error NX_ProcessSetCwd(NX_Process * process, const char * path);
 
-void NX_ProcessAppendThread(NX_Process *process, void *thread);
-
 #define NX_ProcessGetSolt(process, solt) NX_ExposedObjectGet(&(process)->exobjTable, solt)
 #define NX_ProcessLocateSolt(process, object, type) NX_ExposedObjectLocate(&(process)->exobjTable, object, type)
 #define NX_ProcessInstallSolt(process, object, type, closeHandler, outSolt) NX_ExposedObjectInstall(&(process)->exobjTable,  object, type, closeHandler, outSolt)

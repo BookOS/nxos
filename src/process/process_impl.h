@@ -18,4 +18,7 @@
 NX_Error NX_ProcessUnmapTls(NX_Process * process, NX_Thread * thread);
 NX_Error NX_ProcessMapTls(NX_Process * process, NX_Thread * thread);
 
+void NX_ProcessAppendThread(NX_Process *process, void *thread);
+void NX_ProcessDeleteThread(NX_Process *process, NX_Thread *thread);
+
 #endif /* __PROCESS_IMPL_H__ */

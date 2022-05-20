@@ -12,6 +12,21 @@
 .code32
 .text
 
+/*
+ * void NX_HalProcessEnterUserMode(frame);
+ */
+.global NX_HalProcessEnterUserMode
+NX_HalProcessEnterUserMode:
+    movl 0x4(%esp), %esp
+    addl $4,%esp    // skip intr no
+    popal
+    popl %gs
+    popl %fs
+    popl %es
+    popl %ds
+    addl $4, %esp   // skip error code
+    iret    // enter to user mode
+
 .align 4
 .global __UserThreadReturnCodeBegin
 __UserThreadReturnCodeBegin:
