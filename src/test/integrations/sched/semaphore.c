@@ -145,9 +145,9 @@ NX_PRIVATE void ProducerAndConsumer(void)
         sleepCount++;
         if (sleepCount == PC_TEST_TIME)
         {
-            err = NX_ThreadTerminate(producer);
+            err = NX_ThreadTerminate(producer, 0);
             NX_LOG_I("terminate thread %s state: %d, err state: %s", producer->name, producer->state, NX_ErrorToString(err));
-            err = NX_ThreadTerminate(consumer);
+            err = NX_ThreadTerminate(consumer, 0);
             NX_LOG_I("terminate thread %s state: %d, err state: %s", consumer->name, consumer->state, NX_ErrorToString(err));
         }
         if (sleepCount == PC_TEST_TIME + 1)

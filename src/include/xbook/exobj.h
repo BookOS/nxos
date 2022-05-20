@@ -52,6 +52,7 @@ NX_Error NX_ExposedObjectTableInit(NX_ExposedObjectTable * table, NX_Size count)
 NX_Error NX_ExposedObjectTableExit(NX_ExposedObjectTable * table);
 
 NX_ExposedObject * NX_ExposedObjectGet(NX_ExposedObjectTable * table, NX_Solt solt);
+NX_Solt NX_ExposedObjectLocate(NX_ExposedObjectTable * table, void * object, NX_ExposedObjectType type);
 
 NX_Error NX_ExposedObjectInstall(NX_ExposedObjectTable * table, void * object, NX_ExposedObjectType type, NX_SoltCloseHandler handler, NX_Solt * outSolt);
 NX_Error NX_ExposedObjectUninstalll(NX_ExposedObjectTable * table, NX_Solt solt);

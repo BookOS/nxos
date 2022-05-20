@@ -32,9 +32,9 @@
 #include <sched/sched.h>
 #include <process/env.h>
 
-NX_PRIVATE NX_Error NX_ProcessWait(NX_Process * process, int *retCode);
+NX_PRIVATE NX_Error NX_ProcessWait(NX_Process * process, NX_U32 *exitCode);
 
-NX_PRIVATE void ProcessAppendThread(NX_Process *process, NX_Thread *thread)
+void NX_ProcessAppendThread(NX_Process *process, NX_Thread *thread)
 {
     NX_UArch level;
     NX_SpinLockIRQ(&process->lock, &level);
@@ -44,7 +44,7 @@ NX_PRIVATE void ProcessAppendThread(NX_Process *process, NX_Thread *thread)
     NX_SpinUnlockIRQ(&process->lock, level);
 }
 
-NX_PRIVATE void ProcessDeleteThread(NX_Process *process, NX_Thread *thread)
+void NX_ProcessDeleteThread(NX_Process *process, NX_Thread *thread)
 {
     NX_UArch level;
     NX_SpinLockIRQ(&process->lock, &level);
@@ -613,6 +613,52 @@ copyFailed:
     return NX_EFAULT;
 }
 
+NX_Error NX_ProcessMapTls(NX_Process * process, NX_Thread * thread)
+{
+    NX_Vmspace * space = NX_NULL;
+    void * tlsAddr = NX_NULL;
+    NX_TlsArea tlsArea = {NX_NULL, NX_EOK};
+
+    space = &process->vmspace;
+    if (NX_VmspaceMap(space, 0, NX_PROCESS_TLS_SIZE, NX_PAGE_ATTR_USER, 0, &tlsAddr) != NX_EOK)
+    {
+        return NX_ENOMEM;
+    }
+
+    tlsArea.tlsAreaSelf = tlsAddr;
+
+    /* copy tls addr to tls area */
+    if (NX_VmspaceWrite(space, (char *)tlsAddr, (char *)&tlsArea, sizeof(tlsArea)) != NX_EOK)
+    {
+        NX_VmspaceUnmap(space, (NX_Addr)tlsAddr, NX_PROCESS_TLS_SIZE);
+        return NX_EFAULT;
+    }
+
+    thread->resource.tls = tlsAddr;
+
+    return NX_EOK;
+}
+
+NX_Error NX_ProcessUnmapTls(NX_Process * process, NX_Thread * thread)
+{
+    NX_Vmspace * space = NX_NULL;
+
+    if (thread->resource.tls == NX_NULL)
+    {
+        return NX_ENORES;
+    }
+
+    space = &process->vmspace;
+    if (NX_VmspaceUnmap(space, (NX_Addr)thread->resource.tls, NX_PROCESS_TLS_SIZE) != NX_EOK)
+    {
+        return NX_ENOMEM;
+    }
+
+    thread->resource.tls = NX_NULL;
+
+    return NX_EOK;
+}
+
 NX_PRIVATE NX_Error ProcessUnmapStack(NX_Process *process)
 {
     NX_Vmspace *space;
@@ -673,11 +719,12 @@ NX_PRIVATE NX_Error SearchInEnv(char * path, char * absPath, char *env)
 /**
  * launch a process with image
  */
-NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, int *retCode, char *cmd, char *env)
+NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, NX_U32 *exitCode, char *cmd, char *env)
 {
     NX_Thread * self;
     NX_Vmspace *space;
     char *name;
+    NX_Solt threadSolt = NX_SOLT_INVALID_VALUE;
     char absPath[NX_VFS_MAX_PATH] = {0,};
 
     if (path == NX_NULL)
@@ -743,7 +790,17 @@ NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, int *retCode, char *cmd, cha
         return NX_ENOMEM;
     }
 
-    ProcessAppendThread(process, thread);
+    /* map tls */
+    if (NX_ProcessMapTls(process, thread) != NX_EOK)
+    {
+        ProcessUnmapStack(process);
+        NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
+        NX_ProcessDestroyObject(process);
+        NX_ThreadDestroy(thread);
+        return NX_ENOMEM;
+    }
+
+    NX_ProcessAppendThread(process, thread);
 
     /* override default file table */
     NX_ThreadSetFileTable(thread, process->fileTable);
@@ -758,8 +815,12 @@ NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, int *retCode, char *cmd, cha
     /* copy execute path */
     NX_StrCopyN(process->exePath, absPath, sizeof(process->exePath));
 
+    NX_ASSERT(NX_ProcessInstallSolt(process, thread, NX_EXOBJ_THREAD, NX_NULL, &threadSolt) == NX_EOK);
+
     if (NX_ThreadStart(thread) != NX_EOK)
     {
+        NX_ProcessUninstallSolt(process, threadSolt);
+        NX_ProcessUnmapTls(process, thread);
         ProcessUnmapStack(process);
         NX_ASSERT(NX_VmspaceUnmap(space, space->imageStart, space->imageEnd - space->imageStart) == NX_EOK);
         NX_ProcessDestroyObject(process);
@@ -769,14 +830,15 @@ NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, int *retCode, char *cmd, cha
     
     if (process->flags & NX_PROC_FLAG_WAIT)
     {
-        return NX_ProcessWait(process, retCode);
+        return NX_ProcessWait(process, exitCode);
     }
 
     return NX_EOK;
 }
 
-void NX_ProcessExit(int exitCode)
+void NX_ProcessExit(NX_U32 exitCode)
 {
+    NX_UArch level;
     NX_Thread *thread, *next;
     NX_Thread *cur = NX_ThreadSelf();
     NX_Process *process = cur->resource.process;
@@ -784,15 +846,18 @@ void NX_ProcessExit(int exitCode)
     
     process->exitCode = exitCode;
 
+    NX_SpinLockIRQ(&process->lock, &level);
     /* terminate all thread on list */
     NX_ListForEachEntrySafe(thread, next, &process->threadPoolListHead, processList)
     {
         if (thread != cur)
         {
-            NX_ThreadTerminate(thread);
+            NX_ThreadTerminate(thread, exitCode);
         }
     }
 
+    NX_SpinUnlockIRQ(&process->lock, level);
+    
     /* wait other threads exit done */
     while (NX_AtomicGet(&process->threadCount) > 1)
     {
@@ -800,7 +865,7 @@ void NX_ProcessExit(int exitCode)
     }
 
     /* exit this thread */
-    NX_ThreadExit();
+    NX_ThreadExit(exitCode);
     NX_PANIC("NX_ProcessExit should never be here!");
 }
 
@@ -821,8 +886,26 @@ NX_PRIVATE void ProcessExitNotify(NX_Process * process)
 
 void NX_ThreadExitProcess(NX_Thread *thread, NX_Process *process)
 {
+    NX_Solt solt;
+
     NX_ASSERT(process != NX_NULL && thread != NX_NULL);
-    ProcessDeleteThread(process, thread);
+    NX_ProcessDeleteThread(process, thread);
+
+    /* uninstall thread solt in process */
+    solt = NX_ProcessLocateSolt(process, thread, NX_EXOBJ_THREAD);
+    if (solt != NX_SOLT_INVALID_VALUE)
+    {
+        NX_ProcessUninstallSolt(process, solt);
+    }
+
+    /* unmap user stack */
+    if (thread->userStackBase)
+    {
+        NX_VmspaceUnmap(&process->vmspace, (NX_Addr)thread->userStackBase, thread->userStackSize);
+    }
+
+    /* unmap tls */
+    NX_ProcessUnmapTls(process, thread);
 
     if (NX_AtomicGet(&process->threadCount) == 0)
     {
@@ -833,7 +916,7 @@ void NX_ThreadExitProcess(NX_Thread *thread, NX_Process *process)
     }
 }
 
-NX_PRIVATE NX_Error NX_ProcessWait(NX_Process * process, int *retCode)
+NX_PRIVATE NX_Error NX_ProcessWait(NX_Process * process, NX_U32 *exitCode)
 {
     NX_Thread * self;
     
@@ -844,11 +927,17 @@ NX_PRIVATE NX_Error NX_ProcessWait(NX_Process * process, int *retCode)
 
     self = NX_ThreadSelf();
 
+    if (self->resource.process == process)
+    {
+        NX_LOG_E("process %d wait self!", process->pid);
+        return NX_EINVAL;
+    }
+
     /* wait on waiters sem */
     NX_SemaphoreWait(&process->waiterSem);
-    if (retCode)
+    if (exitCode)
     {
-        *retCode = self->resource.process->waitExitCode;
+        *exitCode = self->resource.process->waitExitCode;
     }
 
     return NX_EOK;

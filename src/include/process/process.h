@@ -21,6 +21,7 @@
 #include <xbook/exobj.h>
 
 #define NX_PROCESS_USER_SATCK_SIZE (NX_PAGE_SIZE * 4)
+#define NX_PROCESS_TLS_SIZE NX_PAGE_SIZE
 
 #define NX_PROC_FLAG_NOWAIT 0x00
 #define NX_PROC_FLAG_WAIT   0x01
@@ -39,8 +40,8 @@ struct NX_Process
 
     NX_Spin lock;   /* lock for process */
 
-    int exitCode;   /* exit code for process */
-    int waitExitCode;   /* exit code for this process wait another process */
+    NX_U32 exitCode;   /* exit code for process */
+    NX_U32 waitExitCode;   /* exit code for this process wait another process */
 
     NX_VfsFileTable *fileTable; /* file table */
     
@@ -56,13 +57,23 @@ struct NX_Process
 };
 typedef struct NX_Process NX_Process;
 
+typedef struct NX_TlsArea
+{
+    struct NX_TlsArea * tlsAreaSelf;    /* tls area self */
+    NX_Error error; /* error in tls, save current thread error number */
+    /* tls data area */
+} NX_TlsArea;
+
 struct NX_ProcessOps
 {
     NX_Error (*initUserSpace)(NX_Process *process, NX_Addr virStart, NX_Size size);
     NX_Error (*switchPageTable)(void *pageTable);
     void *(*getKernelPageTable)(void);
     void (*executeUser)(const void *text, void *userStack, void *kernelStack, void *args);
+    void (*executeUserThread)(const void *text, void *userStack, void *kernelStack, void *arg);
     NX_Error (*freePageTable)(NX_Vmspace *vmspace);
+    void (*setTls)(void *tls);
+    void *(*getTls)(void);
 };
 
 NX_INTERFACE NX_IMPORT struct NX_ProcessOps NX_ProcessOpsInterface; 
@@ -71,15 +82,21 @@ NX_INTERFACE NX_IMPORT struct NX_ProcessOps NX_ProcessOpsInterface;
 #define NX_ProcessSwitchPageTable       NX_ProcessOpsInterface.switchPageTable
 #define NX_ProcessGetKernelPageTable    NX_ProcessOpsInterface.getKernelPageTable
 #define NX_ProcessExecuteUser           NX_ProcessOpsInterface.executeUser
+#define NX_ProcessExecuteUserThread(text, userStack, kernelStack, arg) \
+        NX_ProcessOpsInterface.executeUserThread(text, userStack, kernelStack, arg)
 #define NX_ProcessFreePageTable         NX_ProcessOpsInterface.freePageTable
 
-NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, int *retCode, char *cmd, char *env);
-void NX_ProcessExit(int exitCode);
+#define NX_ProcessSetTls(tls)           NX_ProcessOpsInterface.setTls(tls)
+#define NX_ProcessGetTls()              NX_ProcessOpsInterface.getTls()
+
+NX_Error NX_ProcessLaunch(char *path, NX_U32 flags, NX_U32 *exitCode, char *cmd, char *env);
+void NX_ProcessExit(NX_U32 exitCode);
 
 char * NX_ProcessGetCwd(NX_Process * process);
 NX_Error NX_ProcessSetCwd(NX_Process * process, const char * path);
 
 #define NX_ProcessGetSolt(process, solt) NX_ExposedObjectGet(&(process)->exobjTable, solt)
+#define NX_ProcessLocateSolt(process, object, type) NX_ExposedObjectLocate(&(process)->exobjTable, object, type)
 #define NX_ProcessInstallSolt(process, object, type, closeHandler, outSolt) NX_ExposedObjectInstall(&(process)->exobjTable,  object, type, closeHandler, outSolt)
 #define NX_ProcessUninstallSolt(process, solt) NX_ExposedObjectUninstalll(&(process)->exobjTable, solt)
 #define NX_ProcessCopySolt(dstProc, srcProc, solt) NX_ExposedObjectCopy(&(dstProc)->exobjTable, &(srcProc)->exobjTable, solt)

@@ -60,7 +60,7 @@ NX_TEST(NX_ThreadSleepIntr)
     NX_EXPECT_EQ(NX_ThreadSleep(100), NX_EOK);
 
     /* term thread */
-    NX_EXPECT_EQ(NX_ThreadTerminate(thread), NX_EOK);
+    NX_EXPECT_EQ(NX_ThreadTerminate(thread, 0), NX_EOK);
 
     /* sleep until thread exit */
     NX_EXPECT_EQ(NX_ThreadSleep(1000), NX_EOK);

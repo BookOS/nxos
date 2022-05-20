@@ -15,6 +15,7 @@
 #include <utils/list.h>
 #include <time/timer.h>
 #include <sched/spin.h>
+#include <sched/semaphore.h>
 #include <process/process.h>
 #include <fs/vfs.h>
 
@@ -46,6 +47,8 @@
 #define NX_THREAD_PRIORITY_RT_MIN (NX_THREAD_PRIORITY_HIGH + 1)     /* real time min priority */
 #define NX_THREAD_PRIORITY_RT_MAX (NX_THREAD_MAX_PRIORITY_NR - 1)   /* real time max priority */
 
+#define NX_THREAD_CREATE_SUSPEND 0x01 /* thread create with suspend flag */
+
 typedef void (*NX_ThreadHandler)(void *arg);
 
 enum NX_ThreadState
@@ -67,6 +70,11 @@ struct NX_ThreadResource
     NX_VfsFileTable *fileTable;
     struct NX_Hub *hub; /* hub for each thread */
     struct NX_HubChannel *activeChannel; /* channel for this thread */
+    
+    NX_U32 exitCode;       /* exit code for thread */
+    NX_U32 waitExitCode;   /* exit code for this thread wait another thread */
+    NX_Semaphore waiterSem; /* The semaphore of the thread waiting for this thread to exit */
+    void * tls; /* thread local storage */
 };
 typedef struct NX_ThreadResource NX_ThreadResource;
 
@@ -85,6 +93,7 @@ struct NX_Thread
     NX_ThreadState state;
     NX_I32 tid;     /* thread id, -1 means no alloc failed */
     NX_ThreadHandler handler;
+    NX_ThreadHandler userHandler; /* user mode handler */
     void *threadArg;
     char name[NX_THREAD_NAME_LEN];
     
@@ -92,7 +101,9 @@ struct NX_Thread
     NX_U8 *stackBase;  /* stack base */
     NX_Size stackSize; 
     NX_U8 *stack;      /* stack top */
-    
+    NX_U8 *userStackBase;  /* user thread stack base */
+    NX_Size userStackSize; /* user thread stack size */
+
     /* thread sched */
     NX_U32 timeslice;
     NX_U32 ticks;
@@ -125,6 +136,12 @@ typedef struct NX_ThreadManager NX_ThreadManager;
 
 typedef NX_Error (* NX_ThreadWalkHandler)(NX_Thread * thread, void * arg);
 
+typedef struct
+{
+    NX_Size stackSize;
+    NX_U32 schedPriority;
+} NX_ThreadAttr;
+
 #define NX_CurrentThread NX_ThreadSelf()
 
 #define NX_ThreadSetFileTable(thread, fileTable) ((thread)->resource.fileTable = fileTable)
@@ -133,8 +150,8 @@ typedef NX_Error (* NX_ThreadWalkHandler)(NX_Thread * thread, void * arg);
 NX_Thread *NX_ThreadCreate(const char *name, NX_ThreadHandler handler, void *arg, NX_U32 priority);
 NX_Error NX_ThreadDestroy(NX_Thread *thread);
 
-NX_Error NX_ThreadTerminate(NX_Thread *thread);
-void NX_ThreadExit(void);
+NX_Error NX_ThreadTerminate(NX_Thread *thread, NX_U32 exitCode);
+void NX_ThreadExit(NX_U32 exitCode);
 NX_Thread *NX_ThreadSelf(void);
 NX_Thread *NX_ThreadFindById(NX_U32 tid);
 
@@ -151,6 +168,7 @@ NX_Error NX_ThreadBlockLockedIRQ(NX_Thread *thread, NX_Spin *lock, NX_UArch irqL
 NX_Error NX_ThreadUnblock(NX_Thread *thread);
 
 NX_Error NX_ThreadSleep(NX_UArch microseconds);
+NX_Error NX_ThreadWait(NX_Thread * thread, NX_U32 *exitCode);
 
 NX_Error NX_ThreadWalk(NX_ThreadWalkHandler handler, void * arg);
 

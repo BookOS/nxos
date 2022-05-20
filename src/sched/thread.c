@@ -53,6 +53,7 @@ NX_PRIVATE NX_Error ThreadInit(NX_Thread *thread,
     }
     thread->state = NX_THREAD_INIT;
     thread->handler = handler;
+    thread->userHandler = NX_NULL;
     thread->threadArg = arg;
     thread->timeslice = 3;
     thread->elapsedTicks = 0;
@@ -65,7 +66,9 @@ NX_PRIVATE NX_Error ThreadInit(NX_Thread *thread,
     thread->stackSize = stackSize;
     thread->stack = thread->stackBase + stackSize - sizeof(NX_UArch);
     thread->stack = NX_ContextInit(handler, (void *)NX_ThreadExit, arg, thread->stack);
-    
+    thread->userStackBase = NX_NULL;
+    thread->userStackSize = 0;
+
     thread->onCore = NX_MULTI_CORES_NR; /* not on any core */
     thread->coreAffinity = NX_MULTI_CORES_NR; /* no core affinity */
 
@@ -74,6 +77,10 @@ NX_PRIVATE NX_Error ThreadInit(NX_Thread *thread,
     thread->resource.fileTable = NX_VfsGetDefaultFileTable();
     thread->resource.hub = NX_NULL;
     thread->resource.activeChannel = NX_NULL;
+    thread->resource.exitCode = 0;
+    thread->resource.waitExitCode = 0;
+    NX_SemaphoreInit(&thread->resource.waiterSem, 0);
+    thread->resource.tls = NX_NULL;
 
     NX_SpinInit(&thread->lock);
     return NX_EOK;
@@ -264,7 +271,7 @@ void NX_ThreadYield(void)
     NX_SchedYield();
 }
 
-NX_Error NX_ThreadTerminate(NX_Thread *thread)
+NX_Error NX_ThreadTerminate(NX_Thread *thread, NX_U32 exitCode)
 {
     if (thread == NX_NULL)
     {
@@ -277,9 +284,23 @@ NX_Error NX_ThreadTerminate(NX_Thread *thread)
 
     NX_UArch level = NX_IRQ_SaveLevel();
     thread->isTerminated = 1;
+    thread->resource.exitCode = exitCode;
     NX_ThreadUnblock(thread);
     NX_IRQ_RestoreLevel(level);
     return NX_EOK;
+}
+
+NX_PRIVATE void ThreadExitNotify(NX_Thread * thread)
+{
+    NX_Thread * waiterThread;
+
+    NX_ListForEachEntry(waiterThread, &thread->resource.waiterSem.semWaitList, blockList)
+    {
+        waiterThread->resource.waitExitCode = thread->resource.exitCode;
+    }
+
+    /* wakeup waiter */
+    NX_SemaphoreSignalAll(&thread->resource.waiterSem);
 }
 
 /**
@@ -294,18 +315,22 @@ NX_PRIVATE void ThreadReleaseResouce(NX_Thread *thread)
         thread->resource.sleepTimer = NX_NULL;
     }
 
+    /* thread exit notify */
+    ThreadExitNotify(thread);
+
     /* thread had bind on process */
     if (thread->resource.process != NX_NULL)
     {
         NX_ThreadExitProcess(thread, thread->resource.process);
     }
-
 }
 
-void NX_ThreadExit(void)
+void NX_ThreadExit(NX_U32 exitCode)
 {
     /* free thread resource */
     NX_Thread *thread = NX_ThreadSelf();
+
+    thread->resource.exitCode = exitCode;
 
     /* release the resource here that not the must for a thread! */
     ThreadReleaseResouce(thread);
@@ -359,7 +384,7 @@ NX_Error NX_ThreadBlockLockedIRQ(NX_Thread *thread, NX_Spin *lock, NX_UArch irqL
         
         if (thread->isTerminated != 0) /* check exit */
         {
-            NX_ThreadExit();
+            NX_ThreadExit(1);
         }
     }
     
@@ -404,8 +429,6 @@ NX_PRIVATE NX_Bool TimerThreadSleepTimeout(NX_Timer *timer, void *arg)
 {
     NX_Thread *thread = (NX_Thread *)arg; /* the thread wait for timeout  */
 
-    NX_ASSERT(thread->state == NX_THREAD_BLOCKED);
-
     thread->resource.sleepTimer = NX_NULL; /* cleanup sleep timer */
 
     if (NX_ThreadUnblock(thread) != NX_EOK)
@@ -439,7 +462,7 @@ NX_Error NX_ThreadSleep(NX_UArch microseconds)
     /* must exit if terminated */
     if (self->isTerminated != 0)
     {
-        NX_ThreadExit();
+        NX_ThreadExit(1);
         NX_PANIC("thread sleep was terminate but exit failed");
     }
 
@@ -467,7 +490,7 @@ NX_Error NX_ThreadSleep(NX_UArch microseconds)
         /* must exit if terminated */
         if (self->isTerminated != 0)
         {
-            NX_ThreadExit();
+            NX_ThreadExit(1);
             NX_PANIC("thread sleep was terminate but exit failed");
         }
         return NX_EINTR;
@@ -587,6 +610,33 @@ NX_Error NX_ThreadWalk(NX_ThreadWalkHandler handler, void * arg)
     NX_SpinUnlockIRQ(&NX_ThreadManagerObject.lock, level);
 
     return err;
+}
+
+NX_Error NX_ThreadWait(NX_Thread * thread, NX_U32 *exitCode)
+{
+    NX_Thread * self;
+    
+    if (thread == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    self = NX_ThreadSelf();
+
+    if (thread == self)
+    {
+        NX_LOG_E("thread %s/%d wait self!", thread->tid, thread->name);
+        return NX_EINVAL;
+    }
+
+    /* wait on waiters sem */
+    NX_SemaphoreWait(&thread->resource.waiterSem);
+    if (exitCode)
+    {
+        *exitCode = self->resource.waitExitCode;
+    }
+
+    return NX_EOK;
 }
 
 void NX_ThreadManagerInit(void)

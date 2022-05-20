@@ -20,7 +20,11 @@
 #include <xbook/debug.h>
 #include <platform.h>
 #include <mm/mmu.h>
+#include <sched/thread.h>
 #include <interrupt.h>
+#include <regs.h>
+
+NX_PRIVATE void NX_HalProcessSetTls(void *tls);
 
 NX_PRIVATE NX_Error NX_HalProcessInitUserSpace(NX_Process *process, NX_Addr virStart, NX_Size size)
 {
@@ -72,11 +76,45 @@ void NX_HalProcessSyscallDispatch(NX_HalTrapFrame *frame)
     NX_LOG_D("riscv64 syscall return: %x", frame->a0);
 }
 
-NX_IMPORT void NX_HalProcessEnterUserMode(void *args, const void *text, void *userStack);
+NX_IMPORT void NX_HalProcessEnterUserMode(void *args, const void *text, void *userStack, void * returnAddr);
 NX_PRIVATE void NX_HalProcessExecuteUser(const void *text, void *userStack, void *kernelStack, void *args)
 {
+    NX_Thread * self;
+
+    self = NX_ThreadSelf();
+
+    /* update tls before enter user */
+    NX_HalProcessSetTls(self->resource.tls);
+
     NX_LOG_D("riscv64 process enter user: %p, user stack %p", text, userStack);
-    NX_HalProcessEnterUserMode(args, text, userStack);
+    NX_HalProcessEnterUserMode(args, text, userStack, NX_NULL);
+    NX_PANIC("should never return after into user");
+}
+
+NX_IMPORT void __UserThreadReturnCodeBegin();
+NX_IMPORT void __UserThreadReturnCodeEnd();
+
+NX_PRIVATE void NX_HalProcessExecuteUserThread(const void *text, void *userStack, void *kernelStack, void *arg)
+{
+    NX_Size retCodeSz;
+    NX_U8 * retCode;
+    NX_Addr * retStack;
+    NX_Thread * self;
+
+    self = NX_ThreadSelf();
+
+    /* update tls before enter user */
+    NX_HalProcessSetTls(self->resource.tls);
+
+    /* copy return code */
+    retCodeSz = (NX_Size)__UserThreadReturnCodeEnd - (NX_Size)__UserThreadReturnCodeBegin;
+    retCode = userStack - retCodeSz;
+    NX_MemCopy(retCode, (void *)(NX_Addr)__UserThreadReturnCodeBegin, retCodeSz);
+    
+    retStack = (NX_Addr *)NX_ALIGN_DOWN((NX_Addr)retCode, sizeof(NX_Addr));
+
+    NX_LOG_D("riscv64 process enter user thread: %p, user stack %p", text, retStack);
+    NX_HalProcessEnterUserMode(arg, text, retStack, retCode);
     NX_PANIC("should never return after into user");
 }
 
@@ -85,11 +123,24 @@ NX_PRIVATE void *NX_HalProcessGetKernelPageTable(void)
     return NX_HalGetKernelPageTable();
 }
 
+NX_PRIVATE void NX_HalProcessSetTls(void *tls)
+{
+    WriteReg(tp, (NX_Addr)tls);
+}
+
+NX_PRIVATE void * NX_HalProcessGetTls(void)
+{
+    return (void *)ReadReg(tp);
+}
+
 NX_INTERFACE struct NX_ProcessOps NX_ProcessOpsInterface = 
 {
     .initUserSpace      = NX_HalProcessInitUserSpace,
     .switchPageTable    = NX_HalProcessSwitchPageTable,
     .getKernelPageTable = NX_HalProcessGetKernelPageTable,
     .executeUser        = NX_HalProcessExecuteUser,
+    .executeUserThread  = NX_HalProcessExecuteUserThread,
     .freePageTable      = NX_HalProcessFreePageTable,
+    .setTls             = NX_HalProcessSetTls,
+    .getTls             = NX_HalProcessGetTls,
 };

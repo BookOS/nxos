@@ -153,6 +153,8 @@ void NX_HalInterruptDispatch(void *stackFrame)
         NX_LOG_E("unhandled exception vector %x/%s", vector, ExceptionName[vector]);
         NX_Thread *cur = NX_ThreadSelf();
         NX_LOG_E("thread:%s/%d", cur->name, cur->tid);
+        NX_LOG_E("thread: tls:%p", cur->resource.tls);
+        NX_LOG_E("thread: tls:%p", NX_ProcessGetTls());
         
         NX_Process *process = cur->resource.process;
         if (process)

@@ -25,6 +25,8 @@
 #include <process/snapshot.h>
 #include <time/time.h>
 
+#include "process_impl.h"
+
 NX_PRIVATE int SysInvalidCall(void)
 {
     NX_Thread *cur = NX_ThreadSelf();
@@ -39,20 +41,20 @@ NX_PRIVATE int SysDebugLog(const char *buf, int size)
     return 0;
 }
 
-NX_PRIVATE void SysProcessExit(NX_Error errCode)
+NX_PRIVATE void SysProcessExit(NX_U32 exitCode)
 {
-    NX_ProcessExit(errCode);
+    NX_ProcessExit(exitCode);
     NX_PANIC("process exit syscall failed !");
 }
 
-NX_PRIVATE NX_Error SysProcessLaunch(char *path, NX_U32 flags, int *outRetCode, char *cmd, char *env)
+NX_PRIVATE NX_Error SysProcessLaunch(char *path, NX_U32 flags, NX_U32 *outExitCode, char *cmd, char *env)
 {
-    int retCode = 0;
+    NX_U32 exitCode = 0;
     NX_Error err = NX_EOK;
-    err = NX_ProcessLaunch(path, flags, &retCode, cmd, env);
-    if (outRetCode)
+    err = NX_ProcessLaunch(path, flags, &exitCode, cmd, env);
+    if (outExitCode)
     {
-        NX_CopyToUser((char *)outRetCode, (char *)&retCode, sizeof(retCode));
+        NX_CopyToUser((char *)outExitCode, (char *)&exitCode, sizeof(exitCode));
     }
     return err;
 }
@@ -364,11 +366,332 @@ NX_PRIVATE NX_Error SysTimeGet(NX_Time * time)
     return NX_TimeGet(time);
 }
 
+NX_PRIVATE void UserThreadEntry(void * arg)
+{
+    NX_Size userStackTop;
+    NX_Thread * self = NX_ThreadSelf();
+    
+    userStackTop = NX_ALIGN_DOWN((NX_Size)(self->userStackBase + self->userStackSize), 8);
+    
+    NX_ProcessExecuteUserThread((void *)self->userHandler, (void *)userStackTop, (void *)(self->stackBase + self->stackSize), arg);
+    NX_PANIC("user thread exit!");
+}
+
+NX_PRIVATE NX_Error SysThreadCreate(NX_ThreadAttr * attr, NX_ThreadHandler handler, void * arg, NX_U32 flags, NX_Solt * outSolt)
+{
+    NX_ThreadAttr threadAttr;
+    void * stackBase = NX_NULL;
+    NX_Process * process;
+    NX_Error err;
+    NX_Thread * thread;
+    NX_Solt solt;
+
+    if (!attr || !handler)
+    {
+        return NX_EINVAL;
+    }
+
+    NX_CopyFromUser((char *)&threadAttr, (char *)attr, sizeof(threadAttr));
+
+    if (!threadAttr.stackSize)
+    {
+        return NX_EINVAL;
+    }
+
+    /* check priority */
+    if (threadAttr.schedPriority < NX_THREAD_PRIORITY_LOW)
+    {
+        threadAttr.schedPriority = NX_THREAD_PRIORITY_LOW;
+    }
+
+    if (threadAttr.schedPriority > NX_THREAD_PRIORITY_HIGH)
+    {
+        threadAttr.schedPriority = NX_THREAD_PRIORITY_HIGH;
+    }
+
+    process = NX_ProcessCurrent();
+    if (!process)
+    {
+        NX_LOG_E("create thread no process!");
+        return NX_EFAULT;
+    }
+
+    /* map stack */
+    err = NX_VmspaceMap(&process->vmspace, 0, threadAttr.stackSize, NX_PAGE_ATTR_USER, 0, &stackBase);
+    if (err != NX_EOK)
+    {
+        NX_LOG_E("map user stack error!");
+        return err;
+    }
+    NX_ASSERT(stackBase);
+
+    /* create thread */
+    thread = NX_ThreadCreate("uthread", UserThreadEntry, arg, threadAttr.schedPriority);
+    if (thread == NX_NULL)
+    {
+        NX_LOG_E("create thread error!");
+        NX_VmspaceUnmap(&process->vmspace, (NX_Addr)stackBase, threadAttr.stackSize);
+        return NX_ENORES;
+    }
+
+    thread->userHandler = handler;
+    thread->userStackSize = threadAttr.stackSize;
+    thread->userStackBase = stackBase;
+
+    /* map tls */
+    if (NX_ProcessMapTls(process, thread) != NX_EOK)
+    {
+        NX_LOG_E("map thread tls error!");
+        NX_ThreadDestroy(thread);
+        NX_VmspaceUnmap(&process->vmspace, (NX_Addr)stackBase, threadAttr.stackSize);
+        return NX_ENOMEM;
+    }
+
+    /* install thread solt */
+    solt = NX_SOLT_INVALID_VALUE;
+    if (NX_ProcessInstallSolt(process, thread, NX_EXOBJ_THREAD, NX_NULL, &solt) != NX_EOK)
+    {
+        NX_LOG_E("install thread object failed!");
+        NX_ProcessUnmapTls(process, thread);
+        NX_ThreadDestroy(thread);
+        NX_VmspaceUnmap(&process->vmspace, (NX_Addr)stackBase, threadAttr.stackSize);
+        return NX_ENORES;
+    }
+
+    if (outSolt)
+    {
+        NX_CopyToUser((char *)outSolt, (char *)&solt, sizeof(solt));
+    }
+
+    /* process attach thread */
+    NX_ProcessAppendThread(process, thread);
+
+    /* start thread */
+    NX_ThreadStart(thread);
+    
+    if (flags & NX_THREAD_CREATE_SUSPEND)
+    {
+        NX_ThreadBlock(thread);
+    }
+
+    return NX_EOK;
+}
+
+NX_PRIVATE void SysThreadExit(NX_U32 exitCode)
+{
+    NX_ThreadExit(exitCode);
+}
+
+NX_PRIVATE NX_Error SysThreadSuspend(NX_Solt solt)
+{
+    NX_ExposedObject * exobj;
+
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_EINVAL;
+    }
+
+    exobj = NX_ProcessGetSolt(NX_ProcessCurrent(), solt);
+    if (exobj == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_THREAD)
+    {
+        return NX_ENORES;
+    }
+    return NX_ThreadBlock(exobj->object);
+}
+
+NX_PRIVATE NX_Error SysThreadResume(NX_Solt solt)
+{
+    NX_ExposedObject * exobj;
+
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_EINVAL;
+    }
+
+    exobj = NX_ProcessGetSolt(NX_ProcessCurrent(), solt);
+    if (exobj == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_THREAD)
+    {
+        return NX_ENORES;
+    }
+    return NX_ThreadUnblock(exobj->object);
+}
+
+NX_PRIVATE NX_Error SysThreadWait(NX_Solt solt, NX_U32 * outExitCode)
+{
+    NX_ExposedObject * exobj;
+    NX_Error err;
+    NX_U32 exitCode;
+
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_EINVAL;
+    }
+
+    exobj = NX_ProcessGetSolt(NX_ProcessCurrent(), solt);
+    if (exobj == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_THREAD)
+    {
+        return NX_ENORES;
+    }
+
+    err = NX_ThreadWait(exobj->object, &exitCode);
+    if (err != NX_EOK)
+    {
+        return err;
+    }
+
+    if (outExitCode)
+    {
+        NX_CopyToUser((char *)outExitCode, (char *)&exitCode, sizeof(exitCode));
+    }
+    
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error SysThreadTerminate(NX_Solt solt, NX_U32 exitCode)
+{
+    NX_ExposedObject * exobj;
+    NX_Error err;
+
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_EINVAL;
+    }
+
+    exobj = NX_ProcessGetSolt(NX_ProcessCurrent(), solt);
+    if (exobj == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_THREAD)
+    {
+        return NX_ENORES;
+    }
+
+    err = NX_ThreadTerminate(exobj->object, exitCode);
+    if (err != NX_EOK)
+    {
+        return err;
+    }
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error NX_ThreadGetId(NX_Solt solt, NX_U32 * outId)
+{
+    NX_ExposedObject * exobj;
+    NX_Thread * thread;
+
+    if (solt == NX_SOLT_INVALID_VALUE || !outId)
+    {
+        return NX_EINVAL;
+    }
+
+    exobj = NX_ProcessGetSolt(NX_ProcessCurrent(), solt);
+    if (exobj == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_THREAD)
+    {
+        return NX_ENORES;
+    }
+
+    thread = (NX_Thread *)exobj->object;
+
+    NX_CopyToUser((char *)outId, (char *)&thread->tid, sizeof(thread->tid));
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_U32 NX_ThreadGetCurrentId(void)
+{
+    NX_Thread * self;
+
+    self = NX_ThreadSelf();
+    return (NX_U32)self->tid;
+}
+
+NX_PRIVATE NX_Error NX_ThreadGetCurrent(NX_Solt * outSolt)
+{
+    NX_Solt solt;
+    NX_Process * process;
+    NX_Thread * self;
+    
+    if (!outSolt)
+    {
+        return NX_EINVAL;
+    }
+
+    self = NX_ThreadSelf();
+    process = NX_ProcessCurrent();
+    if (!process)
+    {
+        return NX_EFAULT;
+    }
+
+    solt = NX_ProcessLocateSolt(process, self, NX_EXOBJ_THREAD);
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_ENORES;
+    }
+
+    NX_CopyToUser((char *)outSolt, (char *)&solt, sizeof(solt));
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error NX_ThreadGetProcessId(NX_Solt solt, NX_U32 * outId)
+{
+    NX_ExposedObject * exobj;
+    NX_Thread * thread;
+    NX_Process * process;
+
+    if (solt == NX_SOLT_INVALID_VALUE || !outId)
+    {
+        return NX_EINVAL;
+    }
+
+    exobj = NX_ProcessGetSolt(NX_ProcessCurrent(), solt);
+    if (exobj == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_THREAD)
+    {
+        return NX_ENORES;
+    }
+
+    thread = (NX_Thread *)exobj->object;
+    
+    process = thread->resource.process;
+
+    NX_CopyToUser((char *)outId, (char *)&process->pid, sizeof(process->pid));
+
+    return NX_EOK;
+}
+
 /* xbook env syscall table  */
 NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] = 
 {
-    SysInvalidCall,      /* 0 */
-    SysDebugLog,         /* 1 */
+    SysInvalidCall,         /* 0 */
+    SysDebugLog,            /* 1 */
     SysProcessExit,
     SysProcessLaunch,
     SysVfsMount,
@@ -412,8 +735,18 @@ NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] =
     SysSnapshotNext,
     SysThreadSleep,
     SysClockGetMillisecond,
-    SysTimeSet,
-    SysTimeGet
+    SysTimeSet,             /* 45 */
+    SysTimeGet,
+    SysThreadCreate,
+    SysThreadExit,
+    SysThreadSuspend,
+    SysThreadResume,        /* 50 */
+    SysThreadWait,
+    SysThreadTerminate,
+    NX_ThreadGetId,
+    NX_ThreadGetCurrentId,
+    NX_ThreadGetCurrent,    /* 55 */
+    NX_ThreadGetProcessId,
 };
 
 /* posix env syscall table */
