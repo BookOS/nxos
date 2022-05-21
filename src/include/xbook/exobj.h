@@ -29,6 +29,8 @@ typedef enum NX_ExposedObjectType
     NX_EXOBJ_PORCESS,
     NX_EXOBJ_THREAD,
     NX_EXOBJ_SNAPSHOT,
+    NX_EXOBJ_MUTEX,
+    NX_EXOBJ_SEMAPHORE,
     NX_EXOBJ_TYPE_NR,
 } NX_ExposedObjectType;
 

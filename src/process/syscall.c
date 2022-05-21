@@ -24,6 +24,7 @@
 #include <utils/string.h>
 #include <process/snapshot.h>
 #include <time/time.h>
+#include <mm/alloc.h>
 
 #include "process_impl.h"
 
@@ -687,6 +688,528 @@ NX_PRIVATE NX_Error SysThreadGetProcessId(NX_Solt solt, NX_U32 * outId)
     return NX_EOK;
 }
 
+NX_PRIVATE NX_Error SemaphoreCloseSolt(void * object, NX_ExposedObjectType type)
+{
+    NX_Semaphore * sem;
+    NX_Error err;
+
+    if (type != NX_EXOBJ_SEMAPHORE)
+    {
+        return NX_ENORES;
+    }
+
+    sem = (NX_Semaphore *) object;
+    NX_ASSERT(sem);
+
+    if ((err = NX_SemaphoreState(sem)) != NX_EOK)
+    {
+        return err;
+    }
+
+    NX_MemZero(sem, sizeof(sem));
+    NX_MemFree(sem);
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error SysSemaphoreCreate(NX_IArch value, NX_Solt * outSolt)
+{
+    NX_Semaphore * sem;
+    NX_Error err;
+    NX_Solt solt = NX_SOLT_INVALID_VALUE;
+    NX_Process * process;
+    
+    if (!outSolt)
+    {
+        return NX_EINVAL;
+    }
+
+    sem = NX_MemAlloc(sizeof(NX_Semaphore));
+    if (sem == NX_NULL)
+    {
+        return NX_ENOMEM;
+    }
+
+    if ((err = NX_SemaphoreInit(sem, value)) != NX_EOK)
+    {
+        NX_MemFree(sem);
+        return err;
+    }
+
+    process = NX_ProcessCurrent();
+    if ((err = NX_ProcessInstallSolt(process, sem, NX_EXOBJ_SEMAPHORE, SemaphoreCloseSolt, &solt)) != NX_EOK)
+    {
+        NX_MemFree(sem);
+        return err;
+    }
+
+    NX_CopyToUser((char *)outSolt, (char *)&solt, sizeof(solt));
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error SysSemaphoreDestroy(NX_Solt solt)
+{
+    NX_Semaphore * sem;
+    NX_Error err;
+    NX_Process * process;
+    NX_ExposedObject * exobj;
+    
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_EINVAL;
+    }
+
+    process = NX_ProcessCurrent();
+    if ((exobj = NX_ProcessGetSolt(process, solt)) == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_SEMAPHORE)
+    {
+        return NX_ENORES;
+    }
+
+    sem = (NX_Semaphore *)exobj->object;
+    NX_ASSERT(sem);
+
+    if ((err = NX_SemaphoreState(sem)) != NX_EOK)
+    {
+        return err;
+    }
+
+    if ((err = NX_ProcessUninstallSolt(process, solt)) != NX_EOK)
+    {
+        return err;
+    }
+
+    NX_MemZero(sem, sizeof(sem));
+    NX_MemFree(sem);
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error SysSemaphoreWait(NX_Solt solt)
+{
+    NX_Semaphore * sem;
+    NX_Error err;
+    NX_Process * process;
+    NX_ExposedObject * exobj;
+    
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_EINVAL;
+    }
+
+    process = NX_ProcessCurrent();
+    if ((exobj = NX_ProcessGetSolt(process, solt)) == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_SEMAPHORE)
+    {
+        return NX_ENORES;
+    }
+
+    sem = (NX_Semaphore *)exobj->object;
+    NX_ASSERT(sem);
+
+    if ((err = NX_SemaphoreWait(sem)) != NX_EOK)
+    {
+        return err;
+    }
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error SysSemaphoreTryWait(NX_Solt solt)
+{
+    NX_Semaphore * sem;
+    NX_Error err;
+    NX_Process * process;
+    NX_ExposedObject * exobj;
+    
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_EINVAL;
+    }
+
+    process = NX_ProcessCurrent();
+    if ((exobj = NX_ProcessGetSolt(process, solt)) == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_SEMAPHORE)
+    {
+        return NX_ENORES;
+    }
+
+    sem = (NX_Semaphore *)exobj->object;
+    NX_ASSERT(sem);
+
+    if ((err = NX_SemaphoreTryWait(sem)) != NX_EOK)
+    {
+        return err;
+    }
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error SysSemaphoreSignal(NX_Solt solt)
+{
+    NX_Semaphore * sem;
+    NX_Error err;
+    NX_Process * process;
+    NX_ExposedObject * exobj;
+    
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_EINVAL;
+    }
+
+    process = NX_ProcessCurrent();
+    if ((exobj = NX_ProcessGetSolt(process, solt)) == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_SEMAPHORE)
+    {
+        return NX_ENORES;
+    }
+
+    sem = (NX_Semaphore *)exobj->object;
+    NX_ASSERT(sem);
+
+    if ((err = NX_SemaphoreSignal(sem)) != NX_EOK)
+    {
+        return err;
+    }
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error SysSemaphoreSignalAll(NX_Solt solt)
+{
+    NX_Semaphore * sem;
+    NX_Error err;
+    NX_Process * process;
+    NX_ExposedObject * exobj;
+    
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_EINVAL;
+    }
+
+    process = NX_ProcessCurrent();
+    if ((exobj = NX_ProcessGetSolt(process, solt)) == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_SEMAPHORE)
+    {
+        return NX_ENORES;
+    }
+
+    sem = (NX_Semaphore *)exobj->object;
+    NX_ASSERT(sem);
+
+    if ((err = NX_SemaphoreSignalAll(sem)) != NX_EOK)
+    {
+        return err;
+    }
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error SysSemaphoreGetValue(NX_Solt solt, NX_IArch * outValue)
+{
+    NX_Semaphore * sem;
+    NX_Process * process;
+    NX_ExposedObject * exobj;
+    NX_IArch value;
+    
+    if (solt == NX_SOLT_INVALID_VALUE || !outValue)
+    {
+        return NX_EINVAL;
+    }
+
+    process = NX_ProcessCurrent();
+    if ((exobj = NX_ProcessGetSolt(process, solt)) == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_SEMAPHORE)
+    {
+        return NX_ENORES;
+    }
+
+    sem = (NX_Semaphore *)exobj->object;
+    NX_ASSERT(sem);
+
+    value = NX_SemaphoreGetValue(sem);
+
+    NX_CopyToUser((char *)outValue, (char *)&value, sizeof(value));
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error MutexCloseSolt(void * object, NX_ExposedObjectType type)
+{
+    NX_Mutex * mutex;
+    NX_Error err;
+
+    if (type != NX_EXOBJ_MUTEX)
+    {
+        return NX_ENORES;
+    }
+
+    mutex = (NX_Mutex *) object;
+    NX_ASSERT(mutex);
+
+    if ((err = NX_MutexState(mutex)) != NX_EOK)
+    {
+        return err;
+    }
+
+    NX_MemZero(mutex, sizeof(mutex));
+    NX_MemFree(mutex);
+
+    return NX_EOK;
+}
+
+#define NX_MUTEX_ATTR_LOCKED 0x01
+
+NX_PRIVATE NX_Error SysMutexCreate(NX_U32 attr, NX_Solt * outSolt)
+{
+    NX_Mutex * mutex;
+    NX_Error err;
+    NX_Solt solt = NX_SOLT_INVALID_VALUE;
+    NX_Process * process;
+    
+    if (!outSolt)
+    {
+        return NX_EINVAL;
+    }
+
+    mutex = NX_MemAlloc(sizeof(NX_Mutex));
+    if (mutex == NX_NULL)
+    {
+        return NX_ENOMEM;
+    }
+
+    if (attr & NX_MUTEX_ATTR_LOCKED)
+    {
+        if ((err = NX_MutexInitLocked(mutex)) != NX_EOK)
+        {
+            NX_MemFree(mutex);
+            return err;
+        }
+    }
+    else
+    {
+        if ((err = NX_MutexInit(mutex)) != NX_EOK)
+        {
+            NX_MemFree(mutex);
+            return err;
+        }
+    }
+
+    process = NX_ProcessCurrent();
+    if ((err = NX_ProcessInstallSolt(process, mutex, NX_EXOBJ_MUTEX, MutexCloseSolt, &solt)) != NX_EOK)
+    {
+        NX_MemFree(mutex);
+        return err;
+    }
+
+    NX_CopyToUser((char *)outSolt, (char *)&solt, sizeof(solt));
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error SysMutexDestroy(NX_Solt solt)
+{
+    NX_Mutex * mutex;
+    NX_Error err;
+    NX_Process * process;
+    NX_ExposedObject * exobj;
+    
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_EINVAL;
+    }
+
+    process = NX_ProcessCurrent();
+    if ((exobj = NX_ProcessGetSolt(process, solt)) == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_MUTEX)
+    {
+        return NX_ENORES;
+    }
+
+    mutex = (NX_Mutex *)exobj->object;
+    NX_ASSERT(mutex);
+
+    if ((err = NX_MutexState(mutex)) != NX_EOK)
+    {
+        return err;
+    }
+
+    if ((err = NX_ProcessUninstallSolt(process, solt)) != NX_EOK)
+    {
+        return err;
+    }
+
+    NX_MemZero(mutex, sizeof(mutex));
+    NX_MemFree(mutex);
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error SysMutexAcquire(NX_Solt solt)
+{
+    NX_Mutex * mutex;
+    NX_Error err;
+    NX_Process * process;
+    NX_ExposedObject * exobj;
+    
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_EINVAL;
+    }
+
+    process = NX_ProcessCurrent();
+    if ((exobj = NX_ProcessGetSolt(process, solt)) == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_MUTEX)
+    {
+        return NX_ENORES;
+    }
+
+    mutex = (NX_Mutex *)exobj->object;
+    NX_ASSERT(mutex);
+
+    if ((err = NX_MutexLock(mutex)) != NX_EOK)
+    {
+        return err;
+    }
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error SysMutexTryAcquire(NX_Solt solt)
+{
+    NX_Mutex * mutex;
+    NX_Error err;
+    NX_Process * process;
+    NX_ExposedObject * exobj;
+    
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_EINVAL;
+    }
+
+    process = NX_ProcessCurrent();
+    if ((exobj = NX_ProcessGetSolt(process, solt)) == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_MUTEX)
+    {
+        return NX_ENORES;
+    }
+
+    mutex = (NX_Mutex *)exobj->object;
+    NX_ASSERT(mutex);
+
+    if ((err = NX_MutexTryLock(mutex)) != NX_EOK)
+    {
+        return err;
+    }
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error SysMutexRelease(NX_Solt solt)
+{
+    NX_Mutex * mutex;
+    NX_Error err;
+    NX_Process * process;
+    NX_ExposedObject * exobj;
+    
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_EINVAL;
+    }
+
+    process = NX_ProcessCurrent();
+    if ((exobj = NX_ProcessGetSolt(process, solt)) == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_MUTEX)
+    {
+        return NX_ENORES;
+    }
+
+    mutex = (NX_Mutex *)exobj->object;
+    NX_ASSERT(mutex);
+
+    if ((err = NX_MutexUnlock(mutex)) != NX_EOK)
+    {
+        return err;
+    }
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error SysMutexAcquirable(NX_Solt solt)
+{
+    NX_Mutex * mutex;
+    NX_Error err;
+    NX_Process * process;
+    NX_ExposedObject * exobj;
+    
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_EINVAL;
+    }
+
+    process = NX_ProcessCurrent();
+    if ((exobj = NX_ProcessGetSolt(process, solt)) == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_MUTEX)
+    {
+        return NX_ENORES;
+    }
+
+    mutex = (NX_Mutex *)exobj->object;
+    NX_ASSERT(mutex);
+
+    if ((err = NX_MutexState(mutex)) != NX_EOK)
+    {
+        return err;
+    }
+
+    return NX_EOK;
+}
+
 /* xbook env syscall table  */
 NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] = 
 {
@@ -747,6 +1270,19 @@ NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] =
     SysThreadGetCurrentId,
     SysThreadGetCurrent,    /* 55 */
     SysThreadGetProcessId,
+    SysSemaphoreCreate,
+    SysSemaphoreDestroy,
+    SysSemaphoreWait,
+    SysSemaphoreTryWait,    /* 60 */
+    SysSemaphoreSignal,
+    SysSemaphoreSignalAll,
+    SysSemaphoreGetValue,
+    SysMutexCreate,
+    SysMutexDestroy,        /* 65 */
+    SysMutexAcquire,
+    SysMutexTryAcquire,
+    SysMutexRelease,
+    SysMutexAcquirable,
 };
 
 /* posix env syscall table */
