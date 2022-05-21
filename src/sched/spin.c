@@ -96,3 +96,17 @@ NX_Error NX_SpinUnlockIRQ(NX_Spin *lock, NX_UArch level)
     NX_IRQ_RestoreLevel(level);
     return NX_EOK;
 }
+
+NX_Error NX_SpinState(NX_Spin *lock)
+{
+    if (lock == NX_NULL || lock->magic != NX_SPIN_MAGIC)
+    {
+        return NX_EFAULT;
+    }
+
+    if (NX_AtomicGet(&lock->value) != 0)
+    {
+        return NX_EBUSY;
+    }
+    return NX_EOK;
+}

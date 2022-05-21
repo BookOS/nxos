@@ -36,5 +36,6 @@ NX_Error NX_SpinUnlock(NX_Spin *lock);
 NX_Error NX_SpinLockIRQ(NX_Spin *lock, NX_UArch *level);
 NX_Error NX_SpinTryLockIRQ(NX_Spin *lock, NX_UArch *level);
 NX_Error NX_SpinUnlockIRQ(NX_Spin *lock, NX_UArch level);
+NX_Error NX_SpinState(NX_Spin *lock);
 
 #endif /* __SCHED_SPIN___ */

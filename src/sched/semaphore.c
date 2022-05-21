@@ -178,3 +178,22 @@ NX_Error NX_SemaphoreSignalAll(NX_Semaphore *sem)
     NX_SpinUnlockIRQ(&sem->lock, level);
     return NX_EOK;
 }
+
+NX_Error NX_SemaphoreState(NX_Semaphore *sem)
+{
+    if (!sem)
+    {
+        return NX_EINVAL;
+    }
+
+    if (sem->magic != SEMPAHORE_MAGIC)
+    {
+        return NX_EFAULT;
+    }
+
+    if (NX_AtomicGet(&sem->value) == 0) /* has waiters */
+    {
+        return NX_EBUSY;
+    }
+    return NX_EOK;
+}
