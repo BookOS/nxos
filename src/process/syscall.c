@@ -591,7 +591,7 @@ NX_PRIVATE NX_Error SysThreadTerminate(NX_Solt solt, NX_U32 exitCode)
     return NX_EOK;
 }
 
-NX_PRIVATE NX_Error NX_ThreadGetId(NX_Solt solt, NX_U32 * outId)
+NX_PRIVATE NX_Error SysThreadGetId(NX_Solt solt, NX_U32 * outId)
 {
     NX_ExposedObject * exobj;
     NX_Thread * thread;
@@ -619,7 +619,7 @@ NX_PRIVATE NX_Error NX_ThreadGetId(NX_Solt solt, NX_U32 * outId)
     return NX_EOK;
 }
 
-NX_PRIVATE NX_U32 NX_ThreadGetCurrentId(void)
+NX_PRIVATE NX_U32 SysThreadGetCurrentId(void)
 {
     NX_Thread * self;
 
@@ -627,7 +627,7 @@ NX_PRIVATE NX_U32 NX_ThreadGetCurrentId(void)
     return (NX_U32)self->tid;
 }
 
-NX_PRIVATE NX_Error NX_ThreadGetCurrent(NX_Solt * outSolt)
+NX_PRIVATE NX_Error SysThreadGetCurrent(NX_Solt * outSolt)
 {
     NX_Solt solt;
     NX_Process * process;
@@ -656,7 +656,7 @@ NX_PRIVATE NX_Error NX_ThreadGetCurrent(NX_Solt * outSolt)
     return NX_EOK;
 }
 
-NX_PRIVATE NX_Error NX_ThreadGetProcessId(NX_Solt solt, NX_U32 * outId)
+NX_PRIVATE NX_Error SysThreadGetProcessId(NX_Solt solt, NX_U32 * outId)
 {
     NX_ExposedObject * exobj;
     NX_Thread * thread;
@@ -743,10 +743,10 @@ NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] =
     SysThreadResume,        /* 50 */
     SysThreadWait,
     SysThreadTerminate,
-    NX_ThreadGetId,
-    NX_ThreadGetCurrentId,
-    NX_ThreadGetCurrent,    /* 55 */
-    NX_ThreadGetProcessId,
+    SysThreadGetId,
+    SysThreadGetCurrentId,
+    SysThreadGetCurrent,    /* 55 */
+    SysThreadGetProcessId,
 };
 
 /* posix env syscall table */
