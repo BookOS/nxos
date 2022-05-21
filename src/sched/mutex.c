@@ -30,6 +30,21 @@ NX_Error NX_MutexInit(NX_Mutex *mutex)
     return NX_EOK;
 }
 
+NX_Error NX_MutexInitLocked(NX_Mutex *mutex)
+{
+    if (mutex == NX_NULL)
+    {
+        return NX_EINVAL;
+    }
+    if (NX_SpinInit(&mutex->lock) != NX_EOK)
+    {
+        return NX_EPERM;
+    }
+    mutex->magic = MUTEX_MAGIC;
+    NX_SpinLock(&mutex->lock);
+    return NX_EOK;
+}
+
 NX_Error NX_MutexTryLock(NX_Mutex *mutex)
 {
     if (mutex == NX_NULL || mutex->magic != MUTEX_MAGIC)
@@ -77,4 +92,13 @@ NX_Error NX_MutexUnlock(NX_Mutex *mutex)
     }
     NX_SpinUnlock(&mutex->lock);
     return NX_EOK;
+}
+
+NX_Error NX_MutexState(NX_Mutex *mutex)
+{
+    if (mutex == NX_NULL || mutex->magic != MUTEX_MAGIC)
+    {
+        return NX_EFAULT;
+    }
+    return NX_SpinState(&mutex->lock);
 }

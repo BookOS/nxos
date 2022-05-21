@@ -24,8 +24,10 @@ struct NX_Mutex
 typedef struct NX_Mutex NX_Mutex;
 
 NX_Error NX_MutexInit(NX_Mutex *mutex);
+NX_Error NX_MutexInitLocked(NX_Mutex *mutex);
 NX_Error NX_MutexLock(NX_Mutex *mutex);
 NX_Error NX_MutexTryLock(NX_Mutex *mutex);
 NX_Error NX_MutexUnlock(NX_Mutex *mutex);
+NX_Error NX_MutexState(NX_Mutex *mutex);
 
 #endif /* __SCHED_MUTEX___ */
