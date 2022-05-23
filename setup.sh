@@ -9,16 +9,17 @@
 # Change Logs:
 # Date           Author            Notes
 # 2022-1-24      JasonHu           Init
+# 2022-05-24     JasonHu           remove arch name arg
 ##
 
 # usage:
 # source setup.sh [arch-platform]
-# example: source setup.sh                       # x86-i386
+# example: source setup.sh                       # i386
 # example: source setup.sh riscv64-qemu_riscv64  # riscv64-qemu_riscv64
 
 if [ -z $1 ]
 then
-    def_target="x86-i386" # default target is x86-i386
+    def_target="i386" # default target is i386
 else
     def_target=$1
 fi
