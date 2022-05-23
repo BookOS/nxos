@@ -9,19 +9,19 @@
  * 2021-12-9      JasonHu           Init
  */
 
-#include <xbook.h>
-#include <sched/smp.h>
-#include <mm/barrier.h>
+#include <nxos.h>
+#include <base/smp.h>
+#include <base/barrier.h>
 #include <platform.h>
 #define NX_LOG_NAME "smp-riscv64"
-#include <utils/log.h>
+#include <base/log.h>
 
 #include <sbi.h>
 #include <trap.h>
 #include <clock.h>
 #include <plic.h>
 #include <regs.h>
-#include <mm/mmu.h>
+#include <base/mmu.h>
 
 NX_IMPORT NX_Addr gTrapEntry0;
 NX_IMPORT NX_Addr gTrapEntry1;

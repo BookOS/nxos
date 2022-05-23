@@ -9,13 +9,13 @@
  * 2022-3-16      JasonHu           Init
  */
 
-#include <io/driver.h>
+#include <base/driver.h>
 
 #ifdef CONFIG_NX_DRIVER_ZERO
 
 #define NX_LOG_NAME "zero driver"
-#include <utils/log.h>
-#include <utils/memory.h>
+#include <base/log.h>
+#include <base/memory.h>
 
 #define DRV_NAME "zero device"
 #define DEV_NAME "zero"

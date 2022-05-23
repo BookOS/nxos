@@ -9,8 +9,8 @@
  * 2022-3-20      JasonHu           Init
  */
 
-#include <io/block.h>
-#include <utils/log.h>
+#include <base/block.h>
+#include <base/log.h>
 
 NX_Error NX_IoBlockSearch(const char *name)
 {

@@ -9,15 +9,15 @@
  * 2021-12-10     JasonHu           Init
  */
 
-#include <sched/smp.h>
-#include <sched/thread.h>
-#include <sched/sched.h>
-#include <io/irq.h>
+#include <base/smp.h>
+#include <base/thread.h>
+#include <base/sched.h>
+#include <base/irq.h>
 #define NX_LOG_NAME "smp"
 #define NX_LOG_LEVEL NX_LOG_INFO
-#include <utils/log.h>
+#include <base/log.h>
 
-#include <xbook/debug.h>
+#include <base/debug.h>
 
 NX_IMPORT NX_Error NX_HalInitClock(void);
 

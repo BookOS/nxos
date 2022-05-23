@@ -12,7 +12,7 @@
 #ifndef __PLATFORM_REGS__
 #define __PLATFORM_REGS__
 
-#include <xbook.h>
+#include <nxos.h>
 
 #define SSTATUS_SPP     (1L << 8)  // Previous mode, 1=Supervisor, 0=User
 #define SSTATUS_SPIE    (1L << 5) // Supervisor Previous Interrupt Enable

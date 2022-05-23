@@ -12,8 +12,8 @@
 #ifndef __PROCESS_IMPL_H__
 #define __PROCESS_IMPL_H__
 
-#include <process/process.h>
-#include <sched/thread.h>
+#include <base/process.h>
+#include <base/thread.h>
 
 NX_Error NX_ProcessUnmapTls(NX_Process * process, NX_Thread * thread);
 NX_Error NX_ProcessMapTls(NX_Process * process, NX_Thread * thread);

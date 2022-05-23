@@ -10,7 +10,7 @@
  */
 
 #include <test/utest.h>
-#include <sched/thread.h>
+#include <base/thread.h>
 
 #ifdef CONFIG_NX_UTEST_SCHED_THREAD
 

@@ -11,17 +11,17 @@
 
 #include <gate.h>
 #include <interrupt.h>
-#include <utils/string.h>
-#include <utils/memory.h>
+#include <base/string.h>
+#include <base/memory.h>
 #include <pic.h>
-#include <io/irq.h>
+#include <base/irq.h>
 #include <regs.h>
 
 #define NX_LOG_LEVEL NX_LOG_DBG
 #define NX_LOG_NAME "Interrupt"
-#include <utils/log.h>
+#include <base/log.h>
 
-#include <sched/thread.h>
+#include <base/thread.h>
 
 NX_PRIVATE char *exceptionName[] = {
     "#DE Divide Error",

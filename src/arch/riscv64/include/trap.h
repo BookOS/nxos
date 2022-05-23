@@ -12,7 +12,7 @@
 #ifndef __RISCV_TRAP__
 #define __RISCV_TRAP__
 
-#include <xbook.h>
+#include <nxos.h>
 #include <interrupt.h>
 
 void CPU_InitTrap(NX_UArch coreId);

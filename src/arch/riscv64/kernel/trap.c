@@ -18,12 +18,12 @@
 
 #define NX_LOG_NAME "Trap"
 #define NX_LOG_LEVEL NX_LOG_INFO
-#include <utils/log.h>
-#include <xbook/debug.h>
+#include <base/log.h>
+#include <base/debug.h>
 
-#include <sched/thread.h>
-#include <sched/smp.h>
-#include <utils/memory.h>
+#include <base/thread.h>
+#include <base/smp.h>
+#include <base/memory.h>
 
  /* (syscall) Environment call from U-mode */
 #define RISCV_SYSCALL_EXCEPTION 8

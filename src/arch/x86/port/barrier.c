@@ -9,7 +9,7 @@
  * 2021-12-9      JasonHu           Init
  */
 
-#include <mm/barrier.h>
+#include <base/barrier.h>
 
 NX_PRIVATE void NX_HalMemBarrier(void)
 {

@@ -10,10 +10,10 @@
  */
 
 #define NX_LOG_NAME "Thread"
-#include <utils/log.h>
+#include <base/log.h>
 
-#include <xbook/debug.h>
-#include <sched/thread.h>
+#include <base/debug.h>
+#include <base/thread.h>
 #include <test/integration.h>
 
 #ifdef CONFIG_NX_TEST_INTEGRATION_THREAD
@@ -89,7 +89,7 @@ NX_PRIVATE void TestThread4(void *arg)
     }
 }
 
-#include <sched/mutex.h>
+#include <base/mutex.h>
 
 NX_PRIVATE NX_Mutex mutexLock;
 

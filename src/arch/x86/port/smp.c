@@ -9,9 +9,9 @@
  * 2021-12-9      JasonHu           Init
  */
 
-#include <sched/smp.h>
+#include <base/smp.h>
 #define NX_LOG_NAME "Multi Core"
-#include <utils/log.h>
+#include <base/log.h>
 
 NX_UArch NX_HalCoreGetIndex(void)
 {

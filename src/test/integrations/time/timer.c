@@ -10,10 +10,10 @@
  */
 
 #include <test/integration.h>
-#include <time/timer.h>
+#include <base/timer.h>
 #define NX_LOG_NAME "Timer"
-#include <utils/log.h>
-#include <sched/thread.h>
+#include <base/log.h>
+#include <base/thread.h>
 
 #ifdef CONFIG_NX_TEST_INTEGRATION_TIMER
 

@@ -9,10 +9,10 @@
  * 2022-2-2       JasonHu           Init
  */
 
-#include <mm/mmu.h>
-#include <mm/page.h>
-#include <utils/memory.h>
-#include <xbook/debug.h>
+#include <base/mmu.h>
+#include <base/page.h>
+#include <base/memory.h>
+#include <base/debug.h>
 
 void NX_MmuInit(NX_Mmu *mmu, void *pageTable, NX_Addr virStart, NX_Size size, NX_Addr earlyEnd)
 {

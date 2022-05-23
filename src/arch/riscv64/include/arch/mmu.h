@@ -13,7 +13,7 @@
 #ifndef __ARCH_MMU__
 #define __ARCH_MMU__
 
-#include <xbook.h>
+#include <nxos.h>
 
 // page table entry (PTE) fields
 #define PTE_V     0x001 // Valid

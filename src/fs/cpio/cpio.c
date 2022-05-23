@@ -14,15 +14,15 @@
  * 2022-3-26      JasonHu           Port from xboot
  */
 
-#include <xbook.h>
+#include <nxos.h>
 
 #ifdef CONFIG_NX_FS_CPIO
 
-#include <fs/vfs.h>
-#include <utils/string.h>
-#include <utils/memory.h>
-#include <utils/log.h>
-#include <io/block.h>
+#include <base/vfs.h>
+#include <base/string.h>
+#include <base/memory.h>
+#include <base/log.h>
+#include <base/block.h>
 
 struct CpioNewcHeader
 {

@@ -12,7 +12,7 @@
 #include <tss.h>
 #include <segment.h>
 #include <regs.h>
-#include <utils/memory.h>
+#include <base/memory.h>
 
 NX_PRIVATE struct CPU_TSS tss;
 

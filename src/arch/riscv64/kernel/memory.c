@@ -9,22 +9,22 @@
  * 2021-11-28     JasonHu           Init
  */
 
-#include <utils/memory.h>
+#include <base/memory.h>
 
 #include <platform.h>
 #include <page_zone.h>
-#include <mm/page.h>
-#include <mm/mmu.h>
-#include <mm/page.h>
+#include <base/page.h>
+#include <base/mmu.h>
+#include <base/page.h>
 #include <arch/mmu.h>
 #include <riscv.h>
 #include <plic.h>
 
 #define NX_LOG_LEVEL NX_LOG_INFO
 #define NX_LOG_NAME "Page"
-#include <utils/log.h>
+#include <base/log.h>
 
-#include <xbook/debug.h>
+#include <base/debug.h>
 #include <drivers/direct_uart.h>
 
 NX_Mmu KernelMMU;

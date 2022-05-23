@@ -9,8 +9,8 @@
  * 2021-11-21     JasonHu           Init
  */
 
-#include <sched/spin.h>
-#include <io/irq.h>
+#include <base/spin.h>
+#include <base/irq.h>
 
 NX_Error NX_SpinInit(NX_Spin *lock)
 {

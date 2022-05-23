@@ -9,14 +9,14 @@
  * 2022-3-21      JasonHu           Init
  */
 
-#include <io/driver.h>
-#include <io/block.h>
-#include <utils/memory.h>
+#include <base/driver.h>
+#include <base/block.h>
+#include <base/memory.h>
 
 #ifdef CONFIG_NX_DRIVER_ROMDISK
 
 #define NX_LOG_NAME "romdisk driver"
-#include <utils/log.h>
+#include <base/log.h>
 
 #define DRV_NAME "romdisk device"
 #define DEV0_NAME "romdisk0"

@@ -9,14 +9,14 @@
  * 2022-4-19      JasonHu           Init
  */
 
-#include <xbook.h>
+#include <nxos.h>
 
 #ifdef CONFIG_NX_FS_DEVFS
-#include <fs/vfs.h>
-#include <utils/string.h>
+#include <base/vfs.h>
+#include <base/string.h>
 #define NX_LOG_NAME "devfs"
-#include <utils/log.h>
-#include <io/driver.h>
+#include <base/log.h>
+#include <base/driver.h>
 
 NX_PRIVATE NX_Error DevMount(NX_VfsMount * m, const char * dev)
 {

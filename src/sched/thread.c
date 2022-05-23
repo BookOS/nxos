@@ -10,20 +10,20 @@
  */
 
 #define NX_LOG_NAME "Thread"
-#include <utils/log.h>
-#include <xbook/debug.h>
-#include <io/irq.h>
+#include <base/log.h>
+#include <base/debug.h>
+#include <base/irq.h>
 
-#include <sched/thread.h>
-#include <sched/thread_id.h>
-#include <sched/sched.h>
-#include <sched/mutex.h>
-#include <sched/smp.h>
-#include <sched/context.h>
-#include <mm/alloc.h>
-#include <mm/page.h>
-#include <utils/string.h>
-#include <time/timer.h>
+#include <base/thread.h>
+#include <base/thread_id.h>
+#include <base/sched.h>
+#include <base/mutex.h>
+#include <base/smp.h>
+#include <base/context.h>
+#include <base/malloc.h>
+#include <base/page.h>
+#include <base/string.h>
+#include <base/timer.h>
 
 NX_ThreadManager gThreadManagerObject;
 

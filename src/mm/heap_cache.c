@@ -10,17 +10,17 @@
  * 2022-3-29      JasonHu           fix bug on heap alloc
  */
 
-#include <mm/heap_cache.h>
-#include <utils/math.h>
-#include <utils/memory.h>
-#include <mm/buddy.h>
-#include <mm/page.h>
-#include <sched/mutex.h>
+#include <base/heap_cache.h>
+#include <base/math.h>
+#include <base/memory.h>
+#include <base/buddy.h>
+#include <base/page.h>
+#include <base/mutex.h>
 
 #define NX_LOG_LEVEL NX_LOG_INFO
 #define NX_LOG_NAME "HeapCache"
-#include <utils/log.h>
-#include <xbook/debug.h>
+#include <base/log.h>
+#include <base/debug.h>
 
 /**
  * size class -> span pages

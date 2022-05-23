@@ -9,7 +9,7 @@
  * 2021-11-13     JasonHu           Init
  */
 
-#include <sched/mutex.h>
+#include <base/mutex.h>
 #include <test/utest.h>
 
 #ifdef CONFIG_NX_UTEST_SCHED_MUTEX

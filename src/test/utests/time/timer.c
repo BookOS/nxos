@@ -11,7 +11,7 @@
 
 #include <test/utest.h>
 
-#include <time/timer.h>
+#include <base/timer.h>
 
 #ifdef CONFIG_NX_UTEST_MODS_TIMER
 

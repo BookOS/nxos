@@ -9,12 +9,12 @@
  * 2021-10-1     JasonHu       first version
  */
 
-#include <xbook.h>
-#include <io/delay_irq.h>
+#include <nxos.h>
+#include <base/delay_irq.h>
 #include <drivers/direct_uart.h>
-#include <drivers/console.h>
-#include <utils/log.h>
-#include <xbook/debug.h>
+#include <base/console.h>
+#include <base/log.h>
+#include <base/debug.h>
 
 #include <io.h>
 #include <interrupt.h>

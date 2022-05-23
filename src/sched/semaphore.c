@@ -9,10 +9,10 @@
  * 2022-4-9       JasonHu           Init
  */
 
-#include <sched/semaphore.h>
-#include <sched/thread.h>
-#include <xbook/debug.h>
-#include <utils/log.h>
+#include <base/semaphore.h>
+#include <base/thread.h>
+#include <base/debug.h>
+#include <base/log.h>
 
 #define SEMPAHORE_MAGIC 0x10000003
 

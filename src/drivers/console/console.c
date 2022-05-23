@@ -9,13 +9,13 @@
  * 2022-4-20      JasonHu           Init
  */
 
-#include <io/driver.h>
+#include <base/driver.h>
 
 #define NX_LOG_NAME "console driver"
-#include <utils/log.h>
-#include <utils/memory.h>
-#include <utils/string.h>
-#include <io/ioqueue.h>
+#include <base/log.h>
+#include <base/memory.h>
+#include <base/string.h>
+#include <base/ioqueue.h>
 
 /* Conosle weak function */
 NX_INTERFACE NX_WEAK_SYM void NX_ConsoleSendData(char ch) {}

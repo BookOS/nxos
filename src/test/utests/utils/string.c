@@ -10,7 +10,7 @@
  * 2021-11-5      JasonHu           Add NX_StrCopy,NX_StrLen test
  */
 
-#include <utils/string.h>
+#include <base/string.h>
 #include <test/utest.h>
 
 #ifdef CONFIG_NX_UTEST_UTILS_STRING

@@ -10,18 +10,18 @@
  * 2022-4-18      JasonHu           Add thead-c906 mmu support
  */
 
-#include <mm/mmu.h>
+#include <base/mmu.h>
 #include <arch/mmu.h>
-#include <mm/page.h>
+#include <base/page.h>
 #include <regs.h>
 
-#include <xbook/debug.h>
-#include <io/irq.h>
-#include <utils/memory.h>
+#include <base/debug.h>
+#include <base/irq.h>
+#include <base/memory.h>
 
 #define NX_LOG_LEVEL NX_LOG_INFO
 #define NX_LOG_NAME "MMU"
-#include <utils/log.h>
+#include <base/log.h>
 
 #define PAGE_IS_LEAF(pte) ((pte) & NX_PAGE_ATTR_RWX)
 #define PTE_USED(pte) ((pte) & PTE_V)

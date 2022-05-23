@@ -9,28 +9,28 @@
  * 2022-1-8       JasonHu           Init
  */
 
-#include <process/process.h>
+#include <base/process.h>
 #include <arch/process.h>
-#include <sched/thread.h>
-#include <mm/alloc.h>
-#include <xbook/debug.h>
-#include <utils/memory.h>
-#include <utils/string.h>
-#include <mm/mmu.h>
-#include <mm/page.h>
+#include <base/thread.h>
+#include <base/malloc.h>
+#include <base/debug.h>
+#include <base/memory.h>
+#include <base/string.h>
+#include <base/mmu.h>
+#include <base/page.h>
 #include <arch/mmu.h>
 
 #define NX_LOG_NAME "process"
 #define NX_LOG_LEVEL NX_LOG_WARNING
-#include <utils/log.h>
+#include <base/log.h>
 
-#include <xbook/debug.h>
-#include <process/elf.h>
-#include <fs/vfs.h>
-#include <xbook/debug.h>
-#include <process/uaccess.h>
-#include <sched/sched.h>
-#include <process/env.h>
+#include <base/debug.h>
+#include <base/elf.h>
+#include <base/vfs.h>
+#include <base/debug.h>
+#include <base/uaccess.h>
+#include <base/sched.h>
+#include <base/env.h>
 
 NX_PRIVATE NX_Error NX_ProcessWait(NX_Process * process, NX_U32 *exitCode);
 

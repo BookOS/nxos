@@ -12,8 +12,8 @@
 #ifndef __MODS_UTEST__
 #define __MODS_UTEST__
 
-#include <xbook/init_call.h>
-#include <utils/log.h>
+#include <base/initcall.h>
+#include <base/log.h>
 
 #ifdef CONFIG_NX_ENABLE_TEST_UTEST
 

@@ -9,16 +9,16 @@
  * 2021-10-16     JasonHu           Init
  */
 
-#include <time/clock.h>
-#include <io/irq.h>
-#include <io/delay_irq.h>
+#include <base/clock.h>
+#include <base/irq.h>
+#include <base/delay_irq.h>
 
 #include <clock.h>
 #include <regs.h>
 #include <sbi.h>
 
 #define NX_LOG_NAME "Clock"
-#include <utils/log.h>
+#include <base/log.h>
 
 #if defined(CONFIG_NX_PLATFORM_D1)
 

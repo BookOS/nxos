@@ -9,21 +9,21 @@
  * 2021-10-31     JasonHu           Init
  */
 
-#include <time/clock.h>
-#include <time/timer.h>
+#include <base/clock.h>
+#include <base/timer.h>
 #define NX_LOG_LEVEL NX_LOG_INFO 
-#include <utils/log.h>
-#include <xbook/debug.h>
+#include <base/log.h>
+#include <base/debug.h>
 
-#include <sched/thread.h>
-#include <sched/sched.h>
-#include <sched/smp.h>
+#include <base/thread.h>
+#include <base/sched.h>
+#include <base/smp.h>
 
-#include <io/delay_irq.h>
-#include <time/time.h>
+#include <base/delay_irq.h>
+#include <base/time.h>
 
 #define NX_LOG_NAME "Clock"
-#include <utils/log.h>
+#include <base/log.h>
 
 NX_IMPORT NX_Error NX_HalInitClock(void);
 

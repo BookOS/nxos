@@ -12,8 +12,8 @@
 #ifndef __PLATFORM_IO__
 #define __PLATFORM_IO__
 
-#include <xbook/types.h>
-#include <xbook/defines.h>
+#include <base/types.h>
+#include <base/defines.h>
 
 NX_INLINE NX_U8 IO_In8(NX_U16 port)
 {

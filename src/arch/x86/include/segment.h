@@ -12,7 +12,7 @@
 #ifndef __I386_SEGMENT__
 #define __I386_SEGMENT__
 
-#include <xbook.h>
+#include <nxos.h>
 
 /* DA: Descriptor Attribute */
 #define DA_32           0x4000  /* 32 bits segment */

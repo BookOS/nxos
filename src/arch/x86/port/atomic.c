@@ -9,7 +9,7 @@
  * 2021-11-11     JasonHu           Init
  */
 
-#include <xbook/atomic.h>
+#include <base/atomic.h>
 
 #define LOCK_PREFIX "lock "
 

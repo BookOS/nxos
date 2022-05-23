@@ -9,16 +9,16 @@
  * 2021-10-24     JasonHu           Init
  */
 
-#include <mm/page.h>
-#include <mm/page_cache.h>
-#include <mm/buddy.h>
-#include <utils/memory.h>
-#include <sched/mutex.h>
+#include <base/page.h>
+#include <base/page_cache.h>
+#include <base/buddy.h>
+#include <base/memory.h>
+#include <base/mutex.h>
 
 #define NX_LOG_LEVEL NX_LOG_INFO
 #define NX_LOG_NAME "PageCache"
-#include <utils/log.h>
-#include <xbook/debug.h>
+#include <base/log.h>
+#include <base/debug.h>
 
 /**
  * Maximum number of pages in small span

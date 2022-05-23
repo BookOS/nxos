@@ -9,11 +9,11 @@
  * 2021-11-28     JasonHu           Init
  */
 
-#include <io/irq.h>
-#include <io/delay_irq.h>
-#include <utils/memory.h>
-#include <utils/string.h>
-#include <mm/alloc.h>
+#include <base/irq.h>
+#include <base/delay_irq.h>
+#include <base/memory.h>
+#include <base/string.h>
+#include <base/malloc.h>
 
 NX_PRIVATE NX_IRQ_Node irqNodeTable[NX_NR_IRQS];
 

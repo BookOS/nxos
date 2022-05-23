@@ -10,10 +10,10 @@
  */
 
 #include <context.h>
-#include <sched/context.h>
+#include <base/context.h>
 #include <interrupt.h>
-#include <xbook/debug.h>
-#include <io/irq.h>
+#include <base/debug.h>
+#include <base/irq.h>
 
 NX_IMPORT void NX_HalContextSwitchNext(NX_Addr nextSP);
 NX_IMPORT void NX_HalContextSwitchPrevNext(NX_Addr prevSP, NX_Addr nextSP);

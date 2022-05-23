@@ -10,8 +10,8 @@
  */
 
 #include "buddy_common.h"
-#include <mm/buddy.h>
-#include <utils/math.h>
+#include <base/buddy.h>
+#include <base/math.h>
 
 #define NX_PAGE_INVALID_ORDER (-1)
 

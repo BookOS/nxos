@@ -9,12 +9,12 @@
  * 2021-11-20     JasonHu           Init
  */
 
-#include <time/timer.h>
-#include <mm/alloc.h>
+#include <base/timer.h>
+#include <base/malloc.h>
 
-#include <utils/log.h>
-#include <xbook/debug.h>
-#include <sched/spin.h>
+#include <base/log.h>
+#include <base/debug.h>
+#include <base/spin.h>
 
 #define NX_IDLE_TIMER_TIMEOUT  NX_MAX_TIMER_TIMEOUT
 #define NX_IDLE_TIMER_TIMEOUT_TICKS  (NX_IDLE_TIMER_TIMEOUT / (1000 / NX_TICKS_PER_SECOND))

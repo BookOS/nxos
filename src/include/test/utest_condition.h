@@ -12,7 +12,7 @@
 #ifndef __MODS_UTEST_CONDITION__
 #define __MODS_UTEST_CONDITION__
 
-#include <xbook.h>
+#include <nxos.h>
 
 #ifdef CONFIG_NX_ENABLE_TEST_UTEST
 

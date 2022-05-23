@@ -10,15 +10,15 @@
  */
 
 #define NX_LOG_LEVEL NX_LOG_INFO
-#include <utils/log.h>
-#include <xbook/debug.h>
-#include <io/irq.h>
+#include <base/log.h>
+#include <base/debug.h>
+#include <base/irq.h>
 
-#include <sched/sched.h>
-#include <sched/thread.h>
-#include <sched/smp.h>
-#include <sched/context.h>
-#include <process/process.h>
+#include <base/sched.h>
+#include <base/thread.h>
+#include <base/smp.h>
+#include <base/context.h>
+#include <base/process.h>
 
 NX_IMPORT NX_ThreadManager gThreadManagerObject;
 NX_IMPORT NX_Atomic gActivedCoreCount;

@@ -9,15 +9,15 @@
  * 2022-05-12     JasonHu           Init
  */
 
-#include <io/driver.h>
+#include <base/driver.h>
 
 #ifdef CONFIG_NX_DRIVER_MEMINFO
 
 #define NX_LOG_NAME "mem info driver"
-#include <utils/log.h>
-#include <utils/memory.h>
-#include <mm/page.h>
-#include <process/uaccess.h>
+#include <base/log.h>
+#include <base/memory.h>
+#include <base/page.h>
+#include <base/uaccess.h>
 
 #define DRV_NAME "mem info device"
 #define DEV_NAME "meminfo"

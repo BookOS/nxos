@@ -9,14 +9,14 @@
  * 2022-2-18      JasonHu           Init
  */
 
-#include <sched/thread.h>
-#include <xbook/debug.h>
+#include <base/thread.h>
+#include <base/debug.h>
 
 #define NX_LOG_NAME "idle"
-#include <utils/log.h>
-#include <utils/string.h>
-#include <time/timer.h>
-#include <sched/smp.h>
+#include <base/log.h>
+#include <base/string.h>
+#include <base/timer.h>
+#include <base/smp.h>
 
 #define IDLE_TIME_S 1000 /* 1s */
 

@@ -9,17 +9,17 @@
  * 2022-2-2       JasonHu           Init
  */
 
-#include <mm/mmu.h>
+#include <base/mmu.h>
 #include <arch/mmu.h>
-#include <mm/page.h>
+#include <base/page.h>
 #include <regs.h>
-#include <xbook/debug.h>
-#include <io/irq.h>
-#include <utils/memory.h>
+#include <base/debug.h>
+#include <base/irq.h>
+#include <base/memory.h>
 
 #define NX_LOG_LEVEL NX_LOG_INFO
 #define NX_LOG_NAME "NX_Mmu"
-#include <utils/log.h>
+#include <base/log.h>
 
 typedef NX_U32 MMU_PDE; /* page dir entry */
 typedef NX_U32 MMU_PTE; /* page table entry */

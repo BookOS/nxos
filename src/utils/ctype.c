@@ -9,7 +9,7 @@
  * 2021-10-3      JasonHu           Init
  */
 
-#include <utils/ctype.h>
+#include <base/ctype.h>
 
 int NX_IsDigit(int c)
 {

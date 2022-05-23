@@ -9,7 +9,7 @@
  * 2022-4-12      JasonHu           Init
  */
 
-#include <sched/semaphore.h>
+#include <base/semaphore.h>
 #include <test/utest.h>
 
 #ifdef CONFIG_NX_UTEST_SCHED_SEMAPHORE

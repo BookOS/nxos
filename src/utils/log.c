@@ -9,8 +9,8 @@
  * 2021-12-12     JasonHu           Init
  */
 
-#include <utils/log.h>
-#include <sched/spin.h>
+#include <base/log.h>
+#include <base/spin.h>
 
 /* spin lock for log output */
 NX_PRIVATE NX_SPIN_DEFINE_UNLOCKED(logOutputLock);

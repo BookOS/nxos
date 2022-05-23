@@ -14,16 +14,16 @@
  * 2022-3-26      JasonHu           Port from xboot
  */
 
-#include <xbook.h>
-#include <fs/vfs.h>
-#include <utils/string.h>
-#include <utils/memory.h>
-#include <mm/alloc.h>
-#include <xbook/init_call.h>
-#include <utils/log.h>
-#include <io/block.h>
-#include <sched/thread.h>
-#include <process/process.h>
+#include <nxos.h>
+#include <base/vfs.h>
+#include <base/string.h>
+#include <base/memory.h>
+#include <base/malloc.h>
+#include <base/initcall.h>
+#include <base/log.h>
+#include <base/block.h>
+#include <base/thread.h>
+#include <base/process.h>
 
 #define VFS_GET_FILE_TABLE() NX_ThreadGetFileTable(NX_ThreadSelf())
 

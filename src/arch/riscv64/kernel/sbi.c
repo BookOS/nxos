@@ -40,8 +40,8 @@
 
 #ifndef CONFIG_NX_PLATFORM_K210
 
-#include <utils/log.h>
-#include <xbook/debug.h>
+#include <base/log.h>
+#include <base/debug.h>
 
 /* SBI Implementation-Specific Definitions */
 #define OPENSBI_VERSION_MAJOR_OFFSET    16

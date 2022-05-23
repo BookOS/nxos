@@ -9,13 +9,13 @@
  * 2022-4-17      JasonHu           Init
  */
 
-#include <xbook.h>
+#include <nxos.h>
 #include <drivers/direct_uart.h>
-#include <drivers/console.h>
-#include <utils/log.h>
-#include <xbook/debug.h>
-#include <sched/thread.h>
-#include <io/delay_irq.h>
+#include <base/console.h>
+#include <base/log.h>
+#include <base/debug.h>
+#include <base/thread.h>
+#include <base/delay_irq.h>
 
 #include <sbi.h>
 #include <regs.h>

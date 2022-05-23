@@ -9,10 +9,10 @@
  * 2021-11-7      JasonHu           Init
  */
 
-#include <sched/thread_id.h>
-#include <mm/alloc.h>
-#include <xbook/debug.h>
-#include <utils/memory.h>
+#include <base/thread_id.h>
+#include <base/malloc.h>
+#include <base/debug.h>
+#include <base/memory.h>
 
 NX_PRIVATE struct NX_ThreadID threadIdObject;
 

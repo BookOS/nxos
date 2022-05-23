@@ -10,17 +10,17 @@
  */
 
 #define NX_LOG_NAME "OS Main"
-#include <utils/log.h>
-#include <xbook/debug.h>
+#include <base/log.h>
+#include <base/debug.h>
 
 #include <test/utest.h>
-#include <sched/thread.h>
-#include <sched/sched.h>
-#include <sched/smp.h>
-#include <mm/heap_cache.h>
-#include <mm/page_cache.h>
-#include <io/irq.h>
-#include <time/timer.h>
+#include <base/thread.h>
+#include <base/sched.h>
+#include <base/smp.h>
+#include <base/heap_cache.h>
+#include <base/page_cache.h>
+#include <base/irq.h>
+#include <base/timer.h>
 
 /**
  * see http://asciiarts.net

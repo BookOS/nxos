@@ -9,11 +9,11 @@
  * 2021-10-18     JasonHu           Init
  */
 
-#include <mm/buddy.h>
-#include <mm/page.h>
-#include <utils/log.h>
-#include <xbook/debug.h>
-#include <sched/spin.h>
+#include <base/buddy.h>
+#include <base/page.h>
+#include <base/log.h>
+#include <base/debug.h>
+#include <base/spin.h>
 
 NX_PRIVATE NX_BuddySystem *buddySystemArray[NX_PAGE_ZONE_NR]; 
 

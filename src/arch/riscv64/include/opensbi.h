@@ -49,7 +49,7 @@
 #ifndef __RISCV_OPEN_SBI__
 #define __RISCV_OPEN_SBI__
 
-#include <xbook.h>
+#include <nxos.h>
 
 /* SBI Specification Version */
 #define SBI_SPEC_VERS_MAJOR_OFFSET  24

@@ -10,12 +10,12 @@
  */
 
 #include <test/integration.h>
-#include <mm/page_cache.h>
-#include <mm/page.h>
+#include <base/page_cache.h>
+#include <base/page.h>
 #define NX_LOG_NAME "PageCache"
-#include <utils/log.h>
-#include <xbook/debug.h>
-#include <utils/memory.h>
+#include <base/log.h>
+#include <base/debug.h>
+#include <base/memory.h>
 
 #ifdef CONFIG_NX_TEST_INTEGRATION_PAGE_CACHE
 

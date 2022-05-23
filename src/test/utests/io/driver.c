@@ -10,7 +10,7 @@
  */
 
 #include <test/utest.h>
-#include <io/driver.h>
+#include <base/driver.h>
 
 #ifdef CONFIG_NX_UTEST_IO_DRIVER
 

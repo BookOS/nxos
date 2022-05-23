@@ -9,16 +9,16 @@
  * 2022-2-14      JasonHu           Init
  */
 
-#include <mm/vmspace.h>
-#include <mm/page.h>
-#include <mm/alloc.h>
-#include <mm/mmu.h>
-#include <process/process.h>
-#include <xbook/debug.h>
+#include <base/vmspace.h>
+#include <base/page.h>
+#include <base/malloc.h>
+#include <base/mmu.h>
+#include <base/process.h>
+#include <base/debug.h>
 
 #define NX_LOG_NAME "vmspace"
-#include <utils/log.h>
-#include <utils/memory.h>
+#include <base/log.h>
+#include <base/memory.h>
 
 /* remove node with destroy node */
 #define VMNODE_REMOVE_WITH_DESTORY 0x01

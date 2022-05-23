@@ -9,8 +9,8 @@
  * 2021-11-29     JasonHu           Init
  */
 
-#include <io/delay_irq.h>
-#include <mm/alloc.h>
+#include <base/delay_irq.h>
+#include <base/malloc.h>
 
 /* protect flags */
 #define NX_IRQ_WORK_PENDING        0x80000000    /* work is pending */
