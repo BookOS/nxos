@@ -40,9 +40,9 @@ struct NX_SMP_Ops
 
 NX_INTERFACE NX_IMPORT struct NX_SMP_Ops NX_SMP_OpsInterface; 
 
-#define NX_SMP_BootApp    NX_SMP_OpsInterface.bootApp
-#define NX_SMP_EnterApp   NX_SMP_OpsInterface.enterApp
-#define NX_SMP_GetIdx     NX_SMP_OpsInterface.getIdx
+#define NX_SMP_BootApp(bootCoreId)    NX_SMP_OpsInterface.bootApp(bootCoreId)
+#define NX_SMP_EnterApp(appCoreId)   NX_SMP_OpsInterface.enterApp(appCoreId)
+#define NX_SMP_GetIdx()     NX_SMP_OpsInterface.getIdx()
 
 void NX_SMP_Preload(NX_UArch coreId);
 void NX_SMP_Init(NX_UArch coreId);

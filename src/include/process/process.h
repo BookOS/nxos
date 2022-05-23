@@ -78,13 +78,13 @@ struct NX_ProcessOps
 
 NX_INTERFACE NX_IMPORT struct NX_ProcessOps NX_ProcessOpsInterface; 
 
-#define NX_ProcessInitUserSpace         NX_ProcessOpsInterface.initUserSpace
-#define NX_ProcessSwitchPageTable       NX_ProcessOpsInterface.switchPageTable
-#define NX_ProcessGetKernelPageTable    NX_ProcessOpsInterface.getKernelPageTable
-#define NX_ProcessExecuteUser           NX_ProcessOpsInterface.executeUser
+#define NX_ProcessInitUserSpace(process, virStart, size)         NX_ProcessOpsInterface.initUserSpace(process, virStart, size)
+#define NX_ProcessSwitchPageTable(pageTable)       NX_ProcessOpsInterface.switchPageTable(pageTable)
+#define NX_ProcessGetKernelPageTable()    NX_ProcessOpsInterface.getKernelPageTable()
+#define NX_ProcessExecuteUser(text, userStack, kernelStack, args)           NX_ProcessOpsInterface.executeUser(text, userStack, kernelStack, args)
 #define NX_ProcessExecuteUserThread(text, userStack, kernelStack, arg) \
         NX_ProcessOpsInterface.executeUserThread(text, userStack, kernelStack, arg)
-#define NX_ProcessFreePageTable         NX_ProcessOpsInterface.freePageTable
+#define NX_ProcessFreePageTable(vmspace)         NX_ProcessOpsInterface.freePageTable(vmspace)
 
 #define NX_ProcessSetTls(tls)           NX_ProcessOpsInterface.setTls(tls)
 #define NX_ProcessGetTls()              NX_ProcessOpsInterface.getTls()
