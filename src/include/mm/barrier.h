@@ -24,9 +24,9 @@ struct NX_MemBarrierOps
 
 NX_INTERFACE NX_IMPORT struct NX_MemBarrierOps NX_MemBarrierOpsInterface;
 
-#define NX_MemoryBarrier            NX_MemBarrierOpsInterface.barrier
-#define NX_MemoryBarrierRead        NX_MemBarrierOpsInterface.barrierRead
-#define NX_MemoryBarrierWrite       NX_MemBarrierOpsInterface.barrierWrite
-#define NX_MemoryBarrierInstruction NX_MemBarrierOpsInterface.barrierInstruction
+#define NX_MemoryBarrier()            NX_MemBarrierOpsInterface.barrier()
+#define NX_MemoryBarrierRead()        NX_MemBarrierOpsInterface.barrierRead()
+#define NX_MemoryBarrierWrite()       NX_MemBarrierOpsInterface.barrierWrite()
+#define NX_MemoryBarrierInstruction() NX_MemBarrierOpsInterface.barrierInstruction()
 
 #endif /* __MEMORY_BARRIER__ */

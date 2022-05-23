@@ -85,7 +85,7 @@
 
 
 #ifdef CONFIG_NX_DEBUG_TIMELINE
-#define NX_LOG_TIMELINE NX_Printf("[%10d.%03d] ", NX_ClockTickGetMillisecond() / 1000, NX_ClockTickGetMillisecond() % 1000);
+#define NX_LOG_TIMELINE NX_Printf("[%6d.%03d] ", NX_ClockTickGetMillisecond() / 1000, NX_ClockTickGetMillisecond() % 1000);
 #else
 #define NX_LOG_TIMELINE
 #endif

@@ -38,14 +38,14 @@ struct NX_MmuOps
 
 NX_INTERFACE NX_IMPORT struct NX_MmuOps NX_MmuOpsInterface; 
 
-#define NX_MmuSetPageTable          NX_MmuOpsInterface.setPageTable
-#define NX_MmuGetPageTable          NX_MmuOpsInterface.getPageTable
-#define NX_MmuEnable                NX_MmuOpsInterface.enable
-
-#define NX_MmuMapPage               NX_MmuOpsInterface.mapPage
-#define NX_MmuMapPageWithPhy        NX_MmuOpsInterface.mapPageWithPhy
-#define NX_MmuUnmapPage             NX_MmuOpsInterface.unmapPage
-#define NX_MmuVir2Phy               NX_MmuOpsInterface.vir2Phy
+#define NX_MmuSetPageTable(addr)                    NX_MmuOpsInterface.setPageTable(addr)
+#define NX_MmuGetPageTable()                        NX_MmuOpsInterface.getPageTable()
+#define NX_MmuEnable()                              NX_MmuOpsInterface.enable()
+#define NX_MmuMapPage(mmu, virAddr, size, attr)     NX_MmuOpsInterface.mapPage(mmu, virAddr, size, attr)
+#define NX_MmuMapPageWithPhy(mmu, virAddr, phyAddr, size, attr) \
+        NX_MmuOpsInterface.mapPageWithPhy(mmu, virAddr, phyAddr, size, attr)
+#define NX_MmuUnmapPage(mmu, virAddr, size)         NX_MmuOpsInterface.unmapPage(mmu, virAddr, size)
+#define NX_MmuVir2Phy(mmu, virAddr)                 NX_MmuOpsInterface.vir2Phy(mmu, virAddr)
 
 void NX_MmuInit(NX_Mmu *mmu, void *pageTable, NX_Addr virStart, NX_Size size, NX_Addr earlyEnd);
 
