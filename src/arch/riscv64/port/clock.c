@@ -36,7 +36,7 @@
 #error "no clock frequency"
 #endif
 
-NX_PRIVATE NX_U64 TickDelta = NX_TIMER_CLK_FREQ / NX_TICKS_PER_SECOND;
+NX_PRIVATE NX_U64 tickDelta = NX_TIMER_CLK_FREQ / NX_TICKS_PER_SECOND;
 
 NX_PRIVATE NX_U64 GetTimerCounter()
 {
@@ -49,7 +49,7 @@ void NX_HalClockHandler(void)
 {
     NX_ClockTickGo();
     /* update timer */
-    sbi_set_timer(GetTimerCounter() + TickDelta);
+    sbi_set_timer(GetTimerCounter() + tickDelta);
 }
 
 NX_INTERFACE NX_Error NX_HalInitClock(void)
@@ -58,7 +58,7 @@ NX_INTERFACE NX_Error NX_HalInitClock(void)
     ClearCSR(sie, SIE_STIE);
 
     /* Set timer */
-    sbi_set_timer(GetTimerCounter() + TickDelta);
+    sbi_set_timer(GetTimerCounter() + tickDelta);
 
     /* Enable the Supervisor-Timer bit in SIE */
     SetCSR(sie, SIE_STIE);

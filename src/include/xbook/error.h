@@ -34,7 +34,7 @@ enum NX_Error
 };
 typedef enum NX_Error NX_Error;
 
-NX_PRIVATE const char *__NX_ErrorString[] = 
+NX_PRIVATE const char *localErrorString[] = 
 {
     "ok",
     "normal error",
@@ -58,7 +58,7 @@ NX_INLINE const char *NX_ErrorToString(NX_Error err)
     {
         return "unknown error";
     }
-    return __NX_ErrorString[err];
+    return localErrorString[err];
 }
 
 #define NX_ErrorSet(errPtr, errVal) \

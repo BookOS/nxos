@@ -18,8 +18,8 @@
 #define NX_LOG_NAME "driver"
 #include <utils/log.h>
 
-NX_PRIVATE NX_LIST_HEAD(DriverListHead);
-NX_PRIVATE NX_SPIN_DEFINE_UNLOCKED(DriverLock);
+NX_PRIVATE NX_LIST_HEAD(driverListHead);
+NX_PRIVATE NX_SPIN_DEFINE_UNLOCKED(driverLock);
 
 NX_Driver *NX_DriverCreate(const char *name, NX_DeviceType type, NX_U32 flags, NX_DriverOps *ops)
 {
@@ -68,18 +68,18 @@ NX_Error NX_DriverRegister(NX_Driver *driver)
         return NX_EINVAL;
     }
     NX_UArch level;
-    NX_SpinLockIRQ(&DriverLock, &level);
+    NX_SpinLockIRQ(&driverLock, &level);
     
     NX_Driver *tmp;
-    NX_ListForEachEntry(tmp, &DriverListHead, list)
+    NX_ListForEachEntry(tmp, &driverListHead, list)
     {
         if (!NX_StrCmp(tmp->name, driver->name))
         {
             return NX_EAGAIN; /* meet same driver */
         }
     }
-    NX_ListAdd(&driver->list, &DriverListHead);
-    NX_SpinUnlockIRQ(&DriverLock, level);
+    NX_ListAdd(&driver->list, &driverListHead);
+    NX_SpinUnlockIRQ(&driverLock, level);
     return NX_EOK;
 }
 
@@ -91,9 +91,9 @@ NX_Error NX_DriverUnregister(NX_Driver *driver)
     }
 
     NX_UArch level;
-    NX_SpinLockIRQ(&DriverLock, &level);
+    NX_SpinLockIRQ(&driverLock, &level);
     NX_ListDel(&driver->list);
-    NX_SpinUnlockIRQ(&DriverLock, level);
+    NX_SpinUnlockIRQ(&driverLock, level);
     return NX_EOK;
 }
 
@@ -105,16 +105,16 @@ NX_Driver *NX_DriverSearch(const char *name)
     }
     NX_Driver *tmp;
     NX_UArch level;
-    NX_SpinLockIRQ(&DriverLock, &level);
-    NX_ListForEachEntry(tmp, &DriverListHead, list)
+    NX_SpinLockIRQ(&driverLock, &level);
+    NX_ListForEachEntry(tmp, &driverListHead, list)
     {
         if (!NX_StrCmp(tmp->name, name))
         {
-            NX_SpinUnlockIRQ(&DriverLock, level);
+            NX_SpinUnlockIRQ(&driverLock, level);
             return tmp;
         }
     }
-    NX_SpinUnlockIRQ(&DriverLock, level);
+    NX_SpinUnlockIRQ(&driverLock, level);
     return NX_NULL;
 }
 
@@ -262,7 +262,7 @@ NX_PRIVATE NX_Device *NX_DeviceSearchLocked(const char *name)
     NX_Device *device;
     NX_Driver *driver;
     
-    NX_ListForEachEntry(driver, &DriverListHead, list)
+    NX_ListForEachEntry(driver, &driverListHead, list)
     {
         NX_ListForEachEntry(device, &driver->deviceListHead, list)
         {
@@ -283,20 +283,20 @@ NX_Device *NX_DeviceEnum(NX_Offset offset)
     NX_Offset idx;
 
     idx = 0;
-    NX_SpinLockIRQ(&DriverLock, &level);
-    NX_ListForEachEntry(driver, &DriverListHead, list)
+    NX_SpinLockIRQ(&driverLock, &level);
+    NX_ListForEachEntry(driver, &driverListHead, list)
     {
         NX_ListForEachEntry(device, &driver->deviceListHead, list)
         {
             if (idx == offset)
             {
-                NX_SpinUnlockIRQ(&DriverLock, level);
+                NX_SpinUnlockIRQ(&driverLock, level);
                 return device;
             }
             idx++;
         }
     }
-    NX_SpinUnlockIRQ(&DriverLock, level);
+    NX_SpinUnlockIRQ(&driverLock, level);
     return NX_NULL;
 }
 
@@ -311,12 +311,12 @@ NX_Error NX_DeviceOpen(const char *name, NX_U32 flags, NX_Device **outDevice)
     NX_Driver *driver = NX_NULL;
     
     NX_UArch level;
-    NX_SpinLockIRQ(&DriverLock, &level);
+    NX_SpinLockIRQ(&driverLock, &level);
     device = NX_DeviceSearchLocked(name);
     if (device)
     {
         NX_AtomicInc(&device->reference);
-        NX_SpinUnlockIRQ(&DriverLock, level);
+        NX_SpinUnlockIRQ(&driverLock, level);
     
         driver = device->driver;
 
@@ -342,7 +342,7 @@ NX_Error NX_DeviceOpen(const char *name, NX_U32 flags, NX_Device **outDevice)
         }
         return NX_EOK;
     }
-    NX_SpinUnlockIRQ(&DriverLock, level);
+    NX_SpinUnlockIRQ(&driverLock, level);
     return NX_ENOSRCH;
 }
 
@@ -584,9 +584,9 @@ NX_Device *NX_DeviceSearch(const char *name)
 {
     NX_Device *device;
     NX_UArch level;
-    NX_SpinLockIRQ(&DriverLock, &level);
+    NX_SpinLockIRQ(&driverLock, &level);
     device = NX_DeviceSearchLocked(name);
-    NX_SpinUnlockIRQ(&DriverLock, level);
+    NX_SpinUnlockIRQ(&driverLock, level);
     return device;
 }
 
@@ -596,7 +596,7 @@ void NX_DriverDumpTree(void)
     NX_Device *device;
 
     NX_LOG_I("Driver Tree:");
-    NX_ListForEachEntry(driver, &DriverListHead, list)
+    NX_ListForEachEntry(driver, &driverListHead, list)
     {
         NX_LOG_I("    |- driver name: %s, flags: %x", driver->name, driver->flags);
         NX_ListForEachEntry(device, &driver->deviceListHead, list)

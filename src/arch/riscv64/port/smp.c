@@ -23,11 +23,11 @@
 #include <regs.h>
 #include <mm/mmu.h>
 
-NX_IMPORT NX_Addr TrapEntry0;
-NX_IMPORT NX_Addr TrapEntry1;
-NX_IMPORT NX_Addr TrapEntry2;
-NX_IMPORT NX_Addr TrapEntry3;
-NX_IMPORT NX_Addr TrapEntry4;
+NX_IMPORT NX_Addr gTrapEntry0;
+NX_IMPORT NX_Addr gTrapEntry1;
+NX_IMPORT NX_Addr gTrapEntry2;
+NX_IMPORT NX_Addr gTrapEntry3;
+NX_IMPORT NX_Addr gTrapEntry4;
 
 /**
  * Within SBI, we can't read mhartid, so I try to use `trap entry` to see who am I.
@@ -36,23 +36,23 @@ NX_PRIVATE NX_UArch NX_HalCoreGetIndex(void)
 {
     NX_Addr trapEntry = ReadCSR(stvec);
 
-    if (trapEntry == (NX_Addr)&TrapEntry0)
+    if (trapEntry == (NX_Addr)&gTrapEntry0)
     {
         return 0;
     }
-    else if (trapEntry == (NX_Addr)&TrapEntry1)
+    else if (trapEntry == (NX_Addr)&gTrapEntry1)
     {
         return 1;
     }
-    else if (trapEntry == (NX_Addr)&TrapEntry2)
+    else if (trapEntry == (NX_Addr)&gTrapEntry2)
     {
         return 2;
     }
-    else if (trapEntry == (NX_Addr)&TrapEntry3)
+    else if (trapEntry == (NX_Addr)&gTrapEntry3)
     {
         return 3;
     }
-    else if (trapEntry == (NX_Addr)&TrapEntry4)
+    else if (trapEntry == (NX_Addr)&gTrapEntry4)
     {
         return 4;
     }

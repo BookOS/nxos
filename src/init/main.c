@@ -26,14 +26,14 @@
  * see http://asciiarts.net
  * Text: "NXOS", Font: standard.flf
  */
-NX_PRIVATE char *LogString = \
+NX_PRIVATE char *logString = \
 "  _   ___  _____  ____  \n"\
 " | \\ | \\ \\/ / _ \\/ ___| \n"\
 " |  \\| |\\  / | | \\___ \\ \n"\
 " | |\\  |/  \\ |_| |___) |\n"\
 " |_| \\_/_/\\_\\___/|____/ \n";
 
-NX_IMPORT NX_Atomic NX_ActivedCoreCount;
+NX_IMPORT NX_Atomic gActivedCoreCount;
 
 /* Platform init */
 NX_INTERFACE NX_Error NX_HalPlatformInit(NX_UArch coreId);
@@ -52,7 +52,7 @@ NX_INTERFACE NX_WEAK_SYM NX_Error NX_HalPlatformStage2(void)
 
 NX_PRIVATE void ShowLogVersion(void)
 {
-    NX_Printf("%s\n", LogString);
+    NX_Printf("%s\n", logString);
     NX_Printf("Kernel    : %s\n", NX_SYSTEM_NAME);
     NX_Printf("Version   : %d.%d.%d\n", NX_VERSION_MAJOR, NX_VERSION_MINOR, NX_VERSION_REVISE);
     NX_Printf("Build     : %s\n", __DATE__);
@@ -62,9 +62,9 @@ NX_PRIVATE void ShowLogVersion(void)
 
 int NX_Main(NX_UArch coreId)
 {
-    if (NX_AtomicGet(&NX_ActivedCoreCount) == 0)
+    if (NX_AtomicGet(&gActivedCoreCount) == 0)
     {
-        NX_AtomicInc(&NX_ActivedCoreCount);
+        NX_AtomicInc(&gActivedCoreCount);
         /* init multi core before enter platform */
         NX_SMP_Preload(coreId);
         
@@ -112,7 +112,7 @@ int NX_Main(NX_UArch coreId)
     }
     else
     {
-        NX_AtomicInc(&NX_ActivedCoreCount);
+        NX_AtomicInc(&gActivedCoreCount);
         NX_SMP_Stage2(coreId);
     }
     /* start sched */

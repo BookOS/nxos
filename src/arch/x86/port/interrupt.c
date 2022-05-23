@@ -23,7 +23,7 @@
 
 #include <sched/thread.h>
 
-NX_PRIVATE char *ExceptionName[] = {
+NX_PRIVATE char *exceptionName[] = {
     "#DE Divide Error",
     "#DB Debug Exception",
     "NMI Interrupt",
@@ -75,7 +75,7 @@ void CPU_TrapFrameDump(NX_HalTrapFrame *frame)
 
 NX_PRIVATE void CPU_ExceptionDump(NX_HalTrapFrame *frame)
 {
-    NX_LOG_E("Stack frame: exception name %s", ExceptionName[frame->vectorNumber]);
+    NX_LOG_E("Stack frame: exception name %s", exceptionName[frame->vectorNumber]);
     if (frame->vectorNumber == 14)
     {
         NX_LOG_E("page fault addr: %x", CPU_ReadCR2());
@@ -150,7 +150,7 @@ void NX_HalInterruptDispatch(void *stackFrame)
     if (vector >= EXCEPTION_BASE && vector < EXCEPTION_BASE + MAX_EXCEPTION_NR)
     {
         /* exception */
-        NX_LOG_E("unhandled exception vector %x/%s", vector, ExceptionName[vector]);
+        NX_LOG_E("unhandled exception vector %x/%s", vector, exceptionName[vector]);
         NX_Thread *cur = NX_ThreadSelf();
         NX_LOG_E("thread:%s/%d", cur->name, cur->tid);
         NX_LOG_E("thread: tls:%p", cur->resource.tls);

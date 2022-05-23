@@ -16,32 +16,32 @@
 #define NX_IRQ_WORK_PENDING        0x80000000    /* work is pending */
 #define NX_IRQ_WORK_ON_QUEUED      0x40000000    /* work is on queue */
 
-NX_PRIVATE NX_List DelayIrqListTable[NX_IRQ_QUEUE_NR];
-NX_PRIVATE NX_VOLATILE NX_U32 DelayIrqEvent;
+NX_PRIVATE NX_List delayIrqListTable[NX_IRQ_QUEUE_NR];
+NX_PRIVATE NX_VOLATILE NX_U32 delayIrqEvent;
 
 void NX_IRQ_DelayQueueInit(void)
 {
     int i;
     for (i = 0; i < NX_IRQ_QUEUE_NR; i++)
     {
-        NX_ListInit(&DelayIrqListTable[i]);
+        NX_ListInit(&delayIrqListTable[i]);
     }
-    DelayIrqEvent = 0;
+    delayIrqEvent = 0;
 }
 
 NX_PRIVATE NX_U32 IRQ_DelayEventGet(void)
 {
-    return DelayIrqEvent;
+    return delayIrqEvent;
 }
 
 NX_PRIVATE void IRQ_DelayEventSet(NX_U32 event)
 {
-    DelayIrqEvent |= event;
+    delayIrqEvent |= event;
 }
 
 NX_PRIVATE void IRQ_DelayEventClear(void)
 {
-    DelayIrqEvent = 0;
+    delayIrqEvent = 0;
 }
 
 NX_Error NX_IRQ_DelayQueueEnter(NX_IRQ_DelayQueue queue, NX_IRQ_DelayWork *work)
@@ -51,7 +51,7 @@ NX_Error NX_IRQ_DelayQueueEnter(NX_IRQ_DelayQueue queue, NX_IRQ_DelayWork *work)
         return NX_EINVAL;
     }
     
-    if (NX_ListFind(&work->list, &DelayIrqListTable[queue]))
+    if (NX_ListFind(&work->list, &delayIrqListTable[queue]))
     {
         return NX_EAGAIN;
     }
@@ -59,7 +59,7 @@ NX_Error NX_IRQ_DelayQueueEnter(NX_IRQ_DelayQueue queue, NX_IRQ_DelayWork *work)
     NX_UArch level = NX_IRQ_SaveLevel();
     work->queue = queue;
     work->flags |= NX_IRQ_WORK_ON_QUEUED;
-    NX_ListAddTail(&work->list, &DelayIrqListTable[queue]);
+    NX_ListAddTail(&work->list, &delayIrqListTable[queue]);
     NX_IRQ_RestoreLevel(level);
     return NX_EOK;
 }
@@ -71,7 +71,7 @@ NX_Error NX_IRQ_DelayQueueLeave(NX_IRQ_DelayQueue queue, NX_IRQ_DelayWork *work)
         return NX_EINVAL;
     }
     
-    if (!NX_ListFind(&work->list, &DelayIrqListTable[queue]))
+    if (!NX_ListFind(&work->list, &delayIrqListTable[queue]))
     {
         return NX_ENOSRCH;
     }
@@ -193,7 +193,7 @@ NX_INTERFACE void NX_IRQ_DelayQueueCheck(void)
             }
 
             NX_IRQ_DelayWork *work;
-            NX_ListForEachEntry(work, &DelayIrqListTable[i], list)
+            NX_ListForEachEntry(work, &delayIrqListTable[i], list)
             {
                 IRQ_DelayWorkCheck(work);
             }

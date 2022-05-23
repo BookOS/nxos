@@ -29,7 +29,7 @@
 
 NX_Mmu KernelMMU;
 
-NX_PRIVATE NX_U64 KernelTable[NX_PAGE_SIZE / sizeof(NX_U64)] NX_CALIGN(NX_PAGE_SIZE);
+NX_PRIVATE NX_U64 kernelTable[NX_PAGE_SIZE / sizeof(NX_U64)] NX_CALIGN(NX_PAGE_SIZE);
 
 NX_PRIVATE void NX_HalEarlyMap(NX_Mmu *mmu, NX_Addr virStart, NX_Size size)
 {
@@ -93,14 +93,14 @@ void NX_HalPageZoneInit(void)
     NX_PageInitZone(NX_PAGE_ZONE_NORMAL, (void *)MEM_NORMAL_BASE, normalSize);
     NX_PageInitZone(NX_PAGE_ZONE_USER, (void *)userBase, userSize);
 
-    NX_MmuInit(&KernelMMU, KernelTable, MEM_KERNEL_BASE, MEM_KERNEL_TOP, MEM_NORMAL_BASE + normalSize);
+    NX_MmuInit(&KernelMMU, kernelTable, MEM_KERNEL_BASE, MEM_KERNEL_TOP, MEM_NORMAL_BASE + normalSize);
 
     NX_HalEarlyMap(&KernelMMU, KernelMMU.virStart, KernelMMU.earlyEnd - KernelMMU.virStart);
 
 #if defined(CONFIG_NX_PLATFORM_D1)
     /* Set the low 1GB MMIO area to no Cache and Strong Order fetch mode */
-    KernelTable[0] &= ~(PTE_CACHE | PTE_SHARE);
-    KernelTable[0] |= PTE_SO;
+    kernelTable[0] &= ~(PTE_CACHE | PTE_SHARE);
+    kernelTable[0] |= PTE_SO;
 #endif
 
     NX_LOG_I("set MMU table: %p", KernelMMU.table);

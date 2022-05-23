@@ -27,17 +27,17 @@
 
 #define VFS_GET_FILE_TABLE() NX_ThreadGetFileTable(NX_ThreadSelf())
 
-NX_PRIVATE NX_LIST_HEAD(FileSystemListHead);
+NX_PRIVATE NX_LIST_HEAD(fileSystemListHead);
 
-NX_PRIVATE NX_SPIN_DEFINE_UNLOCKED(FileSystemLock);
+NX_PRIVATE NX_SPIN_DEFINE_UNLOCKED(fileSystemLock);
 
-NX_PRIVATE NX_List NX_FileSystemMountList;
-NX_PRIVATE NX_Mutex NX_FileSystemMountLock;
-NX_PRIVATE NX_List NX_FileSystemNodeList[NX_VFS_NODE_HASH_SIZE];
-NX_PRIVATE NX_Mutex NX_FileSystemNodeLock[NX_VFS_NODE_HASH_SIZE];
+NX_PRIVATE NX_List fileSystemMountList;
+NX_PRIVATE NX_Mutex fileSystemMountLock;
+NX_PRIVATE NX_List fileSystemNodeList[NX_VFS_NODE_HASH_SIZE];
+NX_PRIVATE NX_Mutex fileSystemNodeLock[NX_VFS_NODE_HASH_SIZE];
 
 /* default file table for kernel thread */
-NX_PRIVATE NX_VfsFileTable DefaultFileTable;
+NX_PRIVATE NX_VfsFileTable defaultFileTable;
 
 NX_Error NX_VfsRegisterFileSystem(NX_VfsFileSystem * fs)
 {
@@ -47,9 +47,9 @@ NX_Error NX_VfsRegisterFileSystem(NX_VfsFileSystem * fs)
 		return NX_EINVAL;
     }
 
-	NX_SpinLockIRQ(&FileSystemLock, &level);
-	NX_ListAddTail(&fs->list, &FileSystemListHead);
-    NX_SpinUnlockIRQ(&FileSystemLock, level);
+	NX_SpinLockIRQ(&fileSystemLock, &level);
+	NX_ListAddTail(&fs->list, &fileSystemListHead);
+    NX_SpinUnlockIRQ(&fileSystemLock, level);
 	return NX_EOK;
 }
 
@@ -62,9 +62,9 @@ NX_Error NX_VfsUnregisterFileSystem(NX_VfsFileSystem * fs)
 		return NX_EINVAL;
     }
 
-	NX_SpinLockIRQ(&FileSystemLock, &level);
+	NX_SpinLockIRQ(&fileSystemLock, &level);
 	NX_ListDel(&fs->list);
-	NX_SpinUnlockIRQ(&FileSystemLock, level);
+	NX_SpinUnlockIRQ(&fileSystemLock, level);
 
 	return NX_EOK;
 }
@@ -78,7 +78,7 @@ NX_VfsFileSystem * NX_VfsSearchFileSystem(const char * name)
 		return NX_NULL;        
     }
 
-	NX_ListForEachEntrySafe(pos, n, &FileSystemListHead, list)
+	NX_ListForEachEntrySafe(pos, n, &fileSystemListHead, list)
 	{
 		if(NX_StrCmp(pos->name, name) == 0)
         {
@@ -90,7 +90,7 @@ NX_VfsFileSystem * NX_VfsSearchFileSystem(const char * name)
 
 NX_VfsFileTable *NX_VfsGetDefaultFileTable(void)
 {
-    return &DefaultFileTable;
+    return &defaultFileTable;
 }
 
 NX_PRIVATE int CountMatch(const char * path, char * mount_root)
@@ -136,8 +136,8 @@ NX_PRIVATE NX_Error VfsFindRoot(const char * path, NX_VfsMount ** mp, char ** ro
 		return NX_EINVAL;
     }
 
-	NX_MutexLock(&NX_FileSystemMountLock);
-	NX_ListForEachEntry(pos, &NX_FileSystemMountList, link)
+	NX_MutexLock(&fileSystemMountLock);
+	NX_ListForEachEntry(pos, &fileSystemMountList, link)
 	{
 		len = CountMatch(path, pos->path);
 		if(len > max_len)
@@ -146,7 +146,7 @@ NX_PRIVATE NX_Error VfsFindRoot(const char * path, NX_VfsMount ** mp, char ** ro
 			m = pos;
 		}
 	}
-	NX_MutexUnlock(&NX_FileSystemMountLock);
+	NX_MutexUnlock(&fileSystemMountLock);
 
 	if(!m)
     {
@@ -266,9 +266,9 @@ NX_PRIVATE NX_VfsNode * VfsNodeGet(NX_VfsMount * m, const char * path)
 	}
 
 	NX_AtomicAdd(&m->refcnt, 1);
-	NX_MutexLock(&NX_FileSystemNodeLock[hash]);
-	NX_ListAdd(&n->link, &NX_FileSystemNodeList[hash]);
-	NX_MutexUnlock(&NX_FileSystemNodeLock[hash]);
+	NX_MutexLock(&fileSystemNodeLock[hash]);
+	NX_ListAdd(&n->link, &fileSystemNodeList[hash]);
+	NX_MutexUnlock(&fileSystemNodeLock[hash]);
 
 	return n;
 }
@@ -279,8 +279,8 @@ NX_PRIVATE NX_VfsNode * VfsNodeLookup(NX_VfsMount * m, const char * path)
 	NX_U32 hash = VfsNodeHash(m, path);
 	int found = 0;
 
-	NX_MutexLock(&NX_FileSystemNodeLock[hash]);
-	NX_ListForEachEntry(n, &NX_FileSystemNodeList[hash], link)
+	NX_MutexLock(&fileSystemNodeLock[hash]);
+	NX_ListForEachEntry(n, &fileSystemNodeList[hash], link)
 	{
 		if((n->mount == m) && (!NX_StrCmpN(n->path, path, NX_VFS_MAX_PATH)))
 		{
@@ -288,7 +288,7 @@ NX_PRIVATE NX_VfsNode * VfsNodeLookup(NX_VfsMount * m, const char * path)
 			break;
 		}
 	}
-	NX_MutexUnlock(&NX_FileSystemNodeLock[hash]);
+	NX_MutexUnlock(&fileSystemNodeLock[hash]);
 
 	if(!found)
     {
@@ -316,9 +316,9 @@ NX_PRIVATE void VfsNodePut(NX_VfsNode * n)
     }
 
 	hash = VfsNodeHash(n->mount, n->path);
-	NX_MutexLock(&NX_FileSystemNodeLock[hash]);
+	NX_MutexLock(&fileSystemNodeLock[hash]);
 	NX_ListDel(&n->link);
-	NX_MutexUnlock(&NX_FileSystemNodeLock[hash]);
+	NX_MutexUnlock(&fileSystemNodeLock[hash]);
 
 	NX_MutexLock(&n->mount->lock);
 	n->mount->fs->vput(n->mount, n);
@@ -740,12 +740,12 @@ NX_Error NX_VfsMountFileSystem(const char * dev, const char * path, const char *
 		m->root->mode &= ~(NX_VFS_S_IWUSR | NX_VFS_S_IWGRP | NX_VFS_S_IWOTH);
     }
 
-	NX_MutexLock(&NX_FileSystemMountLock);
-	NX_ListForEachEntry(tm, &NX_FileSystemMountList, link)
+	NX_MutexLock(&fileSystemMountLock);
+	NX_ListForEachEntry(tm, &fileSystemMountList, link)
 	{
 		if(!NX_StrCmp(tm->path, absPath) || ((dev != NX_NULL) && (tm->dev == bdev)))
 		{
-			NX_MutexUnlock(&NX_FileSystemMountLock);
+			NX_MutexUnlock(&fileSystemMountLock);
 			NX_MutexLock(&m->lock);
 			m->fs->unmount(m);
 			NX_MutexUnlock(&m->lock);
@@ -758,8 +758,8 @@ NX_Error NX_VfsMountFileSystem(const char * dev, const char * path, const char *
 			return NX_EAGAIN;
 		}
 	}
-	NX_ListAdd(&m->link, &NX_FileSystemMountList);
-	NX_MutexUnlock(&NX_FileSystemMountLock);
+	NX_ListAdd(&m->link, &fileSystemMountList);
+	NX_MutexUnlock(&fileSystemMountLock);
 
 	return NX_EOK;
 }
@@ -776,9 +776,9 @@ NX_Error NX_VfsUnmountFileSystem(const char * path)
         return err;
     }
 
-	NX_MutexLock(&NX_FileSystemMountLock);
+	NX_MutexLock(&fileSystemMountLock);
 	found = 0;
-	NX_ListForEachEntry(m, &NX_FileSystemMountList, link)
+	NX_ListForEachEntry(m, &fileSystemMountList, link)
 	{
 		if(!NX_StrCmp(absPath, m->path))
 		{
@@ -788,16 +788,16 @@ NX_Error NX_VfsUnmountFileSystem(const char * path)
 	}
 	if(!found)
 	{
-		NX_MutexUnlock(&NX_FileSystemMountLock);
+		NX_MutexUnlock(&fileSystemMountLock);
 		return NX_ENOSRCH;
 	}
 	if(NX_AtomicGet(&m->refcnt) > 1)
 	{
-		NX_MutexUnlock(&NX_FileSystemMountLock);
+		NX_MutexUnlock(&fileSystemMountLock);
 		return NX_EBUSY;
 	}
 	NX_ListDel(&m->link);
-	NX_MutexUnlock(&NX_FileSystemMountLock);
+	NX_MutexUnlock(&fileSystemMountLock);
 
 	NX_MutexLock(&m->lock);
 	err = m->fs->msync(m);
@@ -825,8 +825,8 @@ NX_Error NX_VfsSync(void)
 {
 	NX_VfsMount * m;
     NX_Error err;
-	NX_MutexLock(&NX_FileSystemMountLock);
-	NX_ListForEachEntry(m, &NX_FileSystemMountList, link)
+	NX_MutexLock(&fileSystemMountLock);
+	NX_ListForEachEntry(m, &fileSystemMountList, link)
 	{
 		NX_MutexLock(&m->lock);
 		err = m->fs->msync(m);
@@ -836,7 +836,7 @@ NX_Error NX_VfsSync(void)
         }
         NX_MutexUnlock(&m->lock);
 	}
-	NX_MutexUnlock(&NX_FileSystemMountLock);
+	NX_MutexUnlock(&fileSystemMountLock);
 
 	return NX_EOK;
 }
@@ -849,8 +849,8 @@ NX_VfsMount * NX_VfsGetMount(int index)
 	if(index < 0)
 		return NX_NULL;
 
-	NX_MutexLock(&NX_FileSystemMountLock);
-	NX_ListForEachEntry(m, &NX_FileSystemMountList, link)
+	NX_MutexLock(&fileSystemMountLock);
+	NX_ListForEachEntry(m, &fileSystemMountList, link)
 	{
 		if(!index)
 		{
@@ -859,7 +859,7 @@ NX_VfsMount * NX_VfsGetMount(int index)
 		}
 		index--;
 	}
-	NX_MutexUnlock(&NX_FileSystemMountLock);
+	NX_MutexUnlock(&fileSystemMountLock);
 
 	if(!found)
     {
@@ -873,12 +873,12 @@ int NX_VfsGetMountCount(void)
 	NX_VfsMount * m;
 	int ret = 0;
 
-	NX_MutexLock(&NX_FileSystemMountLock);
-	NX_ListForEachEntry(m, &NX_FileSystemMountList, link)
+	NX_MutexLock(&fileSystemMountLock);
+	NX_ListForEachEntry(m, &fileSystemMountList, link)
 	{
 		ret++;
 	}
-	NX_MutexUnlock(&NX_FileSystemMountLock);
+	NX_MutexUnlock(&fileSystemMountLock);
 
 	return ret;
 }
@@ -2040,16 +2040,16 @@ NX_PRIVATE void NX_VfsInit(void)
 {
 	int i;
 
-	NX_ListInit(&NX_FileSystemMountList);
-	NX_MutexInit(&NX_FileSystemMountLock);
+	NX_ListInit(&fileSystemMountList);
+	NX_MutexInit(&fileSystemMountLock);
 
 	for(i = 0; i < NX_VFS_NODE_HASH_SIZE; i++)
 	{
-		NX_ListInit(&NX_FileSystemNodeList[i]);
-		NX_MutexInit(&NX_FileSystemNodeLock[i]);
+		NX_ListInit(&fileSystemNodeList[i]);
+		NX_MutexInit(&fileSystemNodeLock[i]);
 	}
 
-    NX_VfsFileTableInit(&DefaultFileTable);
+    NX_VfsFileTableInit(&defaultFileTable);
 }
 
 NX_MODS_INIT(NX_VfsInit);

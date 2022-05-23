@@ -24,7 +24,7 @@
 NX_IMPORT NX_U8 __NX_RomdiskStart[];
 NX_IMPORT NX_U8 __NX_RomdiskEnd[];
 
-NX_PRIVATE NX_Size RomdiskSize = 0;
+NX_PRIVATE NX_Size romdiskSize = 0;
 
 NX_PRIVATE NX_Error RomdiskReadEx(struct NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen)
 {
@@ -43,7 +43,7 @@ NX_PRIVATE NX_Error RomdiskControl(struct NX_Device *device, NX_U32 cmd, void *a
     {
     case NX_IO_BLOCK_INFO:
         info = (NX_IoBlockInfo *)arg;
-        info->capacity = RomdiskSize;
+        info->capacity = romdiskSize;
         info->blockSize = 512;
         info->blockCount = info->capacity / info->blockSize + 1;
         break;
@@ -86,8 +86,8 @@ NX_PRIVATE void RomdiskDriverInit(void)
         return;
     }
     
-    RomdiskSize = (NX_Size)(__NX_RomdiskEnd - __NX_RomdiskStart);
-    NX_LOG_I("romdisk size %x", RomdiskSize);
+    romdiskSize = (NX_Size)(__NX_RomdiskEnd - __NX_RomdiskStart);
+    NX_LOG_I("romdisk size %x", romdiskSize);
 
     NX_LOG_I("init %s driver success!", DRV_NAME);
 }

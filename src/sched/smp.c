@@ -21,22 +21,22 @@
 
 NX_IMPORT NX_Error NX_HalInitClock(void);
 
-NX_ATOMIC_DEFINE(NX_ActivedCoreCount, 0);
+NX_ATOMIC_DEFINE(gActivedCoreCount, 0);
 
 /* init as zero, avoid cleared by clear bss action */
-NX_PRIVATE NX_VOLATILE NX_UArch BootCoreId = 0;
+NX_PRIVATE NX_VOLATILE NX_UArch bootCoreId = 0;
 
-NX_PRIVATE NX_Cpu CpuArray[NX_MULTI_CORES_NR];
+NX_PRIVATE NX_Cpu cpuArray[NX_MULTI_CORES_NR];
 
 void NX_SMP_Preload(NX_UArch coreId)
 {
     /* recored boot core */
-    BootCoreId = coreId;
+    bootCoreId = coreId;
 }
 
 NX_UArch NX_SMP_GetBootCore(void)
 {
-    return BootCoreId;
+    return bootCoreId;
 }
 
 /**
@@ -48,16 +48,16 @@ void NX_SMP_Init(NX_UArch coreId)
     int i, j;
     for (i = 0; i < NX_MULTI_CORES_NR; i++)
     {
-        CpuArray[i].threadRunning = NX_NULL;
-        CpuArray[i].idleThread = NX_NULL;
-        CpuArray[i].idleElapsedTicks = 0;
-        CpuArray[i].idleTime = 0;
+        cpuArray[i].threadRunning = NX_NULL;
+        cpuArray[i].idleThread = NX_NULL;
+        cpuArray[i].idleElapsedTicks = 0;
+        cpuArray[i].idleTime = 0;
         for (j = 0; j < NX_THREAD_MAX_PRIORITY_NR; j++)
         {
-            NX_ListInit(&CpuArray[i].threadReadyList[j]);
+            NX_ListInit(&cpuArray[i].threadReadyList[j]);
         }
-        NX_SpinInit(&CpuArray[i].lock);
-        NX_AtomicSet(&CpuArray[i].threadCount, 0);
+        NX_SpinInit(&cpuArray[i].lock);
+        NX_AtomicSet(&cpuArray[i].threadCount, 0);
     }
 }
 
@@ -67,7 +67,7 @@ void NX_SMP_Init(NX_UArch coreId)
 NX_Cpu *NX_CpuGetIndex(NX_UArch coreId)
 {
     NX_ASSERT(coreId < NX_MULTI_CORES_NR);
-    return &CpuArray[coreId];
+    return &cpuArray[coreId];
 }
 
 void NX_SMP_Main(NX_UArch coreId)

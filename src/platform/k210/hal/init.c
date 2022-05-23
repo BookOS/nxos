@@ -26,8 +26,6 @@
 #define NX_LOG_NAME "INIT"
 #include <xbook/debug.h>
 
-NX_IMPORT char CPU_StackTop0[];
-
 NX_INTERFACE NX_Error NX_HalPlatformInit(NX_UArch coreId)
 {
     /* NOTE: init trap first before do anything */

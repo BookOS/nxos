@@ -133,8 +133,8 @@ struct DirectUart
     NX_U16 scratch;
 };
 
-NX_PRIVATE struct DirectUart DirectUart;
-NX_PRIVATE NX_IRQ_DelayWork UartWork;
+NX_PRIVATE struct DirectUart directUart;
+NX_PRIVATE NX_IRQ_DelayWork uartWork;
 
 NX_PRIVATE void UartSent(struct DirectUart *uart, char data)
 {
@@ -154,9 +154,9 @@ NX_PRIVATE void UartSent(struct DirectUart *uart, char data)
 void NX_HalDirectUartPutc(char ch)
 {
     if(ch == '\n') {
-        UartSent(&DirectUart, '\r');
+        UartSent(&directUart, '\r');
     }
-    UartSent(&DirectUart, ch);
+    UartSent(&directUart, ch);
 }
 
 NX_INTERFACE void NX_ConsoleSendData(char ch)
@@ -166,7 +166,7 @@ NX_INTERFACE void NX_ConsoleSendData(char ch)
 
 void NX_HalDirectUartInit(void)
 {
-    struct DirectUart *uart = &DirectUart;
+    struct DirectUart *uart = &directUart;
     NX_U16 iobase = UART0_BASE;
 
     uart->irqno = IRQ_SERIAL1;
@@ -218,7 +218,7 @@ NX_WEAK_SYM void NX_HalDirectUartGetcHandler(char data)
 
 int NX_HalDirectUartGetc(void)
 {
-    struct DirectUart *uart = &DirectUart;
+    struct DirectUart *uart = &directUart;
     
     int timeout = 100000;
     while (!(IO_In8(uart->lineStatus) & LINE_STATUS_DATA_READY) && timeout--)
@@ -246,16 +246,16 @@ NX_PRIVATE void UartWorkHandler(void *arg)
 
 NX_PRIVATE NX_Error UartIrqHandler(NX_IRQ_Number irqno, void *arg)
 {
-    NX_IRQ_DelayWorkHandle(&UartWork);
+    NX_IRQ_DelayWorkHandle(&uartWork);
     return NX_EOK;
 }
 
 void NX_HalDirectUartStage2(void)
 {
-    struct DirectUart *uart = &DirectUart;
+    struct DirectUart *uart = &directUart;
     
-    NX_ASSERT(NX_IRQ_DelayWorkInit(&UartWork, UartWorkHandler, NX_NULL, NX_IRQ_WORK_NOREENTER) == NX_EOK);
-    NX_ASSERT(NX_IRQ_DelayQueueEnter(NX_IRQ_NORMAL_QUEUE, &UartWork) == NX_EOK);
+    NX_ASSERT(NX_IRQ_DelayWorkInit(&uartWork, UartWorkHandler, NX_NULL, NX_IRQ_WORK_NOREENTER) == NX_EOK);
+    NX_ASSERT(NX_IRQ_DelayQueueEnter(NX_IRQ_NORMAL_QUEUE, &uartWork) == NX_EOK);
 
     NX_ASSERT(NX_IRQ_Bind(uart->irqno, UartIrqHandler, NX_NULL, "Uart", 0) == NX_EOK);
     NX_ASSERT(NX_IRQ_Unmask(uart->irqno) == NX_EOK);
