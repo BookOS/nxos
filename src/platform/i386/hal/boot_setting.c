@@ -11,7 +11,7 @@
 
 #include <multiboot2.h>
 #include <boot.h>
-#include <utils/string.h>
+#include <base/string.h>
 
 NX_INLINE void BootModInit(struct multiboot_tag *tag);
 NX_INLINE void BootMemModInit(struct multiboot_tag *tag);

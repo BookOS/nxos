@@ -10,10 +10,10 @@
  */
 
 #include <test/integration.h>
-#include <mm/page.h>
+#include <base/page.h>
 #define NX_LOG_NAME "Page"
-#include <utils/log.h>
-#include <utils/memory.h>
+#include <base/log.h>
+#include <base/memory.h>
 
 #ifdef CONFIG_NX_TEST_INTEGRATION_PAGE
 

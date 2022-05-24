@@ -9,7 +9,7 @@
  * 2021-10-3      JasonHu           Init
  */
 
-#include <utils/memory.h>
+#include <base/memory.h>
 
 void *NX_MemSet(void *dst, NX_U8 value, NX_Size sz)
 {

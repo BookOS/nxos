@@ -9,10 +9,10 @@
  * 2021-10-16     JasonHu           Init
  */
 
-#include <sched/context.h>
-#include <utils/memory.h>
-#include <utils/log.h>
-#include <io/irq.h>
+#include <base/context.h>
+#include <base/memory.h>
+#include <base/log.h>
+#include <base/irq.h>
 #include <context.h>
 #include <regs.h>
 

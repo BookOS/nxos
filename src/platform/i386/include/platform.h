@@ -12,7 +12,7 @@
 #ifndef __PLATFORM_I386__
 #define __PLATFORM_I386__
 
-#include <xbook.h>
+#include <nxos.h>
 
 #define MEM_KERNEL_BASE 0x00000000
 #define MEM_KERNEL_SZ (8 * NX_MB)

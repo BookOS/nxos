@@ -11,19 +11,19 @@
 
 #include <gate.h>
 #include <interrupt.h>
-#include <utils/string.h>
-#include <utils/memory.h>
+#include <base/string.h>
+#include <base/memory.h>
 #include <pic.h>
-#include <io/irq.h>
+#include <base/irq.h>
 #include <regs.h>
 
 #define NX_LOG_LEVEL NX_LOG_DBG
 #define NX_LOG_NAME "Interrupt"
-#include <utils/log.h>
+#include <base/log.h>
 
-#include <sched/thread.h>
+#include <base/thread.h>
 
-NX_PRIVATE char *ExceptionName[] = {
+NX_PRIVATE char *exceptionName[] = {
     "#DE Divide Error",
     "#DB Debug Exception",
     "NMI Interrupt",
@@ -75,7 +75,7 @@ void CPU_TrapFrameDump(NX_HalTrapFrame *frame)
 
 NX_PRIVATE void CPU_ExceptionDump(NX_HalTrapFrame *frame)
 {
-    NX_LOG_E("Stack frame: exception name %s", ExceptionName[frame->vectorNumber]);
+    NX_LOG_E("Stack frame: exception name %s", exceptionName[frame->vectorNumber]);
     if (frame->vectorNumber == 14)
     {
         NX_LOG_E("page fault addr: %x", CPU_ReadCR2());
@@ -150,7 +150,7 @@ void NX_HalInterruptDispatch(void *stackFrame)
     if (vector >= EXCEPTION_BASE && vector < EXCEPTION_BASE + MAX_EXCEPTION_NR)
     {
         /* exception */
-        NX_LOG_E("unhandled exception vector %x/%s", vector, ExceptionName[vector]);
+        NX_LOG_E("unhandled exception vector %x/%s", vector, exceptionName[vector]);
         NX_Thread *cur = NX_ThreadSelf();
         NX_LOG_E("thread:%s/%d", cur->name, cur->tid);
         NX_LOG_E("thread: tls:%p", cur->resource.tls);

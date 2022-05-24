@@ -9,12 +9,12 @@
  * 2022-05-03     JasonHu           Init
  */
 
-#include <process/process.h>
-#include <process/snapshot.h>
-#include <mm/alloc.h>
-#include <utils/memory.h>
-#include <utils/string.h>
-#include <utils/log.h>
+#include <base/process.h>
+#include <base/snapshot.h>
+#include <base/malloc.h>
+#include <base/memory.h>
+#include <base/string.h>
+#include <base/log.h>
 
 NX_PRIVATE NX_SnapshotHead * CreateSnapshotHead(void)
 {

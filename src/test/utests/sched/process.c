@@ -10,7 +10,7 @@
  */
 
 #include <test/utest.h>
-#include <process/process.h>
+#include <base/process.h>
 
 #ifdef CONFIG_NX_UTEST_SCHED_PROCESS
 

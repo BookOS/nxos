@@ -9,9 +9,9 @@
  * 2021-11-13     JasonHu           Init
  */
 
-#include <xbook.h>
-#include <utils/var_args.h>
-#include <utils/string.h>
+#include <nxos.h>
+#include <base/var_args.h>
+#include <base/string.h>
 
 #define ZEROPAD	1		/* pad with zero */
 #define SIGN	2		/* unsigned/signed long */

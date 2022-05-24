@@ -11,7 +11,7 @@
  * 
  */
 
-#include <xbook.h>
+#include <nxos.h>
 
 /**
  * compatiable for gcc compiler with optimize

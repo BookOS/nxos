@@ -12,7 +12,7 @@
 #ifndef __PLATFORM_PAGE_ZONE__
 #define __PLATFORM_PAGE_ZONE__
 
-#include <xbook.h>
+#include <nxos.h>
 
 /**
  * Must define & init PageZone in each paltfrom 

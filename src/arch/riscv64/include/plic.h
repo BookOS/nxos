@@ -12,9 +12,9 @@
 #ifndef __RISCV_PLIC__
 #define __RISCV_PLIC__
 
-#include <xbook.h>
+#include <nxos.h>
 #include <riscv.h>
-#include <io/irq.h>
+#include <base/irq.h>
 
 #define PLIC_ADDR               RISCV_PLIC_PADDR
 

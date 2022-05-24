@@ -12,7 +12,7 @@
 #ifndef __CONTEXT_HEADER__
 #define __CONTEXT_HEADER__
 
-#include <xbook.h>
+#include <nxos.h>
 #include <riscv.h>
 
 #define CONTEXT_REG_NR  33

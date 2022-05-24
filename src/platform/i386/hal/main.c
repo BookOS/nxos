@@ -9,9 +9,9 @@
  * 2021-11-18     JasonHu           Init
  */
 
-#include <xbook.h>
+#include <nxos.h>
 #define NX_LOG_NAME "Hal Main"
-#include <utils/log.h>
+#include <base/log.h>
 
 #ifdef CONFIG_NX_ENABLE_PLATFORM_MAIN
 NX_INTERFACE void NX_HalPlatformMain(void)

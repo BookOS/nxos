@@ -15,11 +15,11 @@
     .extern __firstBootMagic
     .extern __GetBootHartid
 
-    .globl CPU_StackTop0
-    .globl CPU_StackTop1
-    .globl CPU_StackTop2
-    .globl CPU_StackTop3
-    .globl CPU_StackTop4
+    .globl gStackTop0
+    .globl gStackTop1
+    .globl gStackTop2
+    .globl gStackTop3
+    .globl gStackTop4
 
     .global _Start
 _Start:
@@ -39,7 +39,7 @@ _Start:
 
     bne t1, t2, _SecondaryBoot
     
-    la sp, CPU_StackTop0 # temporary use sp0
+    la sp, gStackTop0 # temporary use sp0
     call __GetBootHartid # return hartid to a0
 
 _SecondaryBoot:
@@ -58,23 +58,23 @@ _SecondaryBoot:
     j _EnterMain
     
 _SetSP0:
-    la sp, CPU_StackTop0
+    la sp, gStackTop0
     j _EnterMain
 
 _SetSP1:
-    la sp, CPU_StackTop1
+    la sp, gStackTop1
     j _EnterMain
 
 _SetSP2:
-    la sp, CPU_StackTop2
+    la sp, gStackTop2
     j _EnterMain
 
 _SetSP3:
-    la sp, CPU_StackTop3
+    la sp, gStackTop3
     j _EnterMain
 
 _SetSP4:
-    la sp, CPU_StackTop4
+    la sp, gStackTop4
     j _EnterMain
 
 _EnterMain:
@@ -91,20 +91,20 @@ loop:
 
 CPU_Stack0:
     .space 8192
-CPU_StackTop0:
+gStackTop0:
 
 CPU_Stack1:
     .space 8192
-CPU_StackTop1:
+gStackTop1:
 
 CoreStack2:
     .space 8192
-CPU_StackTop2:
+gStackTop2:
 
 CoreStack3:
     .space 8192
-CPU_StackTop3:
+gStackTop3:
 
 CoreStack4:
     .space 8192
-CPU_StackTop4:
+gStackTop4:

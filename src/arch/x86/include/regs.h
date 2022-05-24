@@ -12,8 +12,8 @@
 #ifndef __PLATFORM_REGS__
 #define __PLATFORM_REGS__
 
-#include <xbook/types.h>
-#include <xbook/defines.h>
+#include <base/types.h>
+#include <base/defines.h>
 
 #define EFLAGS_MBS    (1 << 1)
 #define EFLAGS_IF_1   (1 << 9)

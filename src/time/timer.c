@@ -9,27 +9,27 @@
  * 2021-11-20     JasonHu           Init
  */
 
-#include <time/timer.h>
-#include <mm/alloc.h>
+#include <base/timer.h>
+#include <base/malloc.h>
 
-#include <utils/log.h>
-#include <xbook/debug.h>
-#include <sched/spin.h>
+#include <base/log.h>
+#include <base/debug.h>
+#include <base/spin.h>
 
 #define NX_IDLE_TIMER_TIMEOUT  NX_MAX_TIMER_TIMEOUT
 #define NX_IDLE_TIMER_TIMEOUT_TICKS  (NX_IDLE_TIMER_TIMEOUT / (1000 / NX_TICKS_PER_SECOND))
 
-NX_PRIVATE NX_LIST_HEAD(TimerListHead);
+NX_PRIVATE NX_LIST_HEAD(timerListHead);
 
 /* timer tick is different with clock tick */
-NX_PRIVATE NX_VOLATILE NX_ClockTick TimerTicks = 0;
+NX_PRIVATE NX_VOLATILE NX_ClockTick timerTicks = 0;
 
 /* next timeout tick */
-NX_PRIVATE NX_VOLATILE NX_ClockTick NextTimeoutTicks = 0;
+NX_PRIVATE NX_VOLATILE NX_ClockTick nextTimeoutTicks = 0;
 
-NX_PRIVATE NX_Timer IdleTimer;
+NX_PRIVATE NX_Timer idleTimer;
 
-NX_PRIVATE NX_Spin TimersSpin;
+NX_PRIVATE NX_Spin timersLock;
 
 NX_Error NX_TimerInit(NX_Timer *timer, NX_UArch milliseconds, 
                           NX_Bool (*handler)(struct NX_Timer *, void *arg), void *arg, 
@@ -85,14 +85,14 @@ NX_PRIVATE void NX_TimerRemove(NX_Timer *timer, NX_Bool onTimerList, NX_Bool des
 
         /* update next time */
         NX_Timer *next;
-        NX_ListForEachEntry(next, &TimerListHead, list)
+        NX_ListForEachEntry(next, &timerListHead, list)
         {
-            if (next->timeout > TimerTicks)
+            if (next->timeout > timerTicks)
             {
                 break;
             }
         }
-        NextTimeoutTicks = next->timeout;
+        nextTimeoutTicks = next->timeout;
     }
     if (destroy == NX_True)
     {
@@ -122,9 +122,9 @@ NX_Error NX_TimerDestroy(NX_Timer *timer)
     case NX_TIMER_INITED:
         {
             NX_UArch level;
-            NX_SpinLockIRQ(&TimersSpin, &level);
+            NX_SpinLockIRQ(&timersLock, &level);
             NX_TimerRemove(timer, NX_False, NX_True);
-            NX_SpinUnlockIRQ(&TimersSpin, level);
+            NX_SpinUnlockIRQ(&timersLock, level);
         }
         break;
     default:
@@ -142,47 +142,47 @@ NX_Error NX_TimerStart(NX_Timer *timer)
 
     NX_UArch level;
 
-    NX_SpinLockIRQ(&TimersSpin, &level);
+    NX_SpinLockIRQ(&timersLock, &level);
 
     /* calc timeout here */
-    timer->timeout = timer->timeTicks + TimerTicks;
+    timer->timeout = timer->timeTicks + timerTicks;
 
     /* timeout is invalid */
-    if (NX_IDLE_TIMER_TIMEOUT_TICKS - timer->timeTicks < TimerTicks)
+    if (NX_IDLE_TIMER_TIMEOUT_TICKS - timer->timeTicks < timerTicks)
     {
-        NX_SpinUnlockIRQ(&TimersSpin, level);
+        NX_SpinUnlockIRQ(&timersLock, level);
         return NX_EINVAL;
     }
 
     /* make sure not on the list */
-    if (NX_ListFind(&timer->list, &TimerListHead))
+    if (NX_ListFind(&timer->list, &timerListHead))
     {
-        NX_SpinUnlockIRQ(&TimersSpin, level);
+        NX_SpinUnlockIRQ(&timersLock, level);
         return NX_EAGAIN;
     }
     
     /* waiting timeout state */
     timer->state = NX_TIMER_WAITING;
-    if (NX_ListEmpty(&TimerListHead))
+    if (NX_ListEmpty(&timerListHead))
     {
         /* inseart at head */
-        NX_ListAdd(&timer->list, &TimerListHead);
-        NextTimeoutTicks = timer->timeout;
+        NX_ListAdd(&timer->list, &timerListHead);
+        nextTimeoutTicks = timer->timeout;
     }
     else
     {
-        NX_Timer *first = NX_ListFirstEntry(&TimerListHead, NX_Timer, list);
+        NX_Timer *first = NX_ListFirstEntry(&timerListHead, NX_Timer, list);
         if (timer->timeout < first->timeout)
         {
             /* insert at head */
-            NX_ListAdd(&timer->list, &TimerListHead);
-            NextTimeoutTicks = timer->timeout;
+            NX_ListAdd(&timer->list, &timerListHead);
+            nextTimeoutTicks = timer->timeout;
         }
         else
         {
             /* insert after nearly timer */
             NX_Timer *prev = NX_NULL;
-            NX_ListForEachEntryReverse(prev, &TimerListHead, list)
+            NX_ListForEachEntryReverse(prev, &timerListHead, list)
             {
                 if (timer->timeout >= prev->timeout)
                 {
@@ -193,7 +193,7 @@ NX_Error NX_TimerStart(NX_Timer *timer)
         }
     }
 
-    NX_SpinUnlockIRQ(&TimersSpin, level);
+    NX_SpinUnlockIRQ(&timersLock, level);
     return NX_EOK;
 }
 
@@ -238,11 +238,11 @@ NX_Error NX_TimerStop(NX_Timer *timer)
 
     NX_Error err;
     NX_UArch level;
-    NX_SpinLockIRQ(&TimersSpin, &level);
+    NX_SpinLockIRQ(&timersLock, &level);
 
     err = NX_TimerStopUnlocked(timer);
     
-    NX_SpinUnlockIRQ(&TimersSpin, level);
+    NX_SpinUnlockIRQ(&timersLock, level);
     return err;
 }
 
@@ -270,7 +270,7 @@ NX_PRIVATE void NX_TimerInvoke(NX_Timer *timer)
         if (timer->flags & NX_TIMER_PERIOD)
         {
             /* update timer timeout */
-            timer->timeout = TimerTicks + timer->timeTicks;
+            timer->timeout = timerTicks + timer->timeTicks;
             timer->state = NX_TIMER_WAITING;
         }
         else
@@ -290,37 +290,37 @@ void NX_TimerGo(void)
     NX_Timer *timer = NX_NULL;
     NX_Timer *next = NX_NULL;
     
-    TimerTicks++;
+    timerTicks++;
 
-    if (TimerTicks < NextTimeoutTicks)
+    if (timerTicks < nextTimeoutTicks)
     {
         return;
     }
 
     NX_UArch level;
     
-    NX_SpinLockIRQ(&TimersSpin, &level);
+    NX_SpinLockIRQ(&timersLock, &level);
 
-    NX_ListForEachEntrySafe(timer, next, &TimerListHead, list)
+    NX_ListForEachEntrySafe(timer, next, &timerListHead, list)
     {
-        if (timer->timeout > TimerTicks) /* not timeout */
+        if (timer->timeout > timerTicks) /* not timeout */
         {
             break;
         }
-        /* timeout == TimerTicks -> timeout! */
+        /* timeout == timerTicks -> timeout! */
         NX_TimerInvoke(timer);
     }
 
     /* find next timer */
-    NX_ListForEachEntry(timer, &TimerListHead, list)
+    NX_ListForEachEntry(timer, &timerListHead, list)
     {
-        if (timer->timeout > TimerTicks)
+        if (timer->timeout > timerTicks)
         {
             break;
         }
     }
-    NextTimeoutTicks = timer->timeout;
-    NX_SpinUnlockIRQ(&TimersSpin, level);
+    nextTimeoutTicks = timer->timeout;
+    NX_SpinUnlockIRQ(&timersLock, level);
 }
 
 void NX_TimerDump(NX_Timer *timer)
@@ -339,12 +339,12 @@ void NX_TimerDump(NX_Timer *timer)
  * recalc all timers timeout
  * this will called with interrupt disabled
  */
-NX_PRIVATE NX_Bool IdleTimerHandler(NX_Timer *timer, void *arg)
+NX_PRIVATE NX_Bool idleTimerHandler(NX_Timer *timer, void *arg)
 {
-    NX_ClockTick delta = IdleTimer.timeout;
-    TimerTicks -= delta;
+    NX_ClockTick delta = idleTimer.timeout;
+    timerTicks -= delta;
     NX_Timer *tmp;
-    NX_ListForEachEntry (tmp, &TimerListHead, list)
+    NX_ListForEachEntry (tmp, &timerListHead, list)
     {
         tmp->timeout -= delta;
     }
@@ -353,7 +353,7 @@ NX_PRIVATE NX_Bool IdleTimerHandler(NX_Timer *timer, void *arg)
 
 void NX_TimersInit(void)
 {
-    NX_SpinInit(&TimersSpin);
-    NX_ASSERT(NX_TimerInit(&IdleTimer, NX_IDLE_TIMER_TIMEOUT, IdleTimerHandler, NX_NULL, NX_True) == NX_EOK);
-    NX_ASSERT(NX_TimerStart(&IdleTimer) == NX_EOK);
+    NX_SpinInit(&timersLock);
+    NX_ASSERT(NX_TimerInit(&idleTimer, NX_IDLE_TIMER_TIMEOUT, idleTimerHandler, NX_NULL, NX_True) == NX_EOK);
+    NX_ASSERT(NX_TimerStart(&idleTimer) == NX_EOK);
 }

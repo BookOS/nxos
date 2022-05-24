@@ -9,10 +9,10 @@
  * 2021-11-13     JasonHu           Init
  */
 
-#include <sched/mutex.h>
-#include <sched/sched.h>
-#include <sched/thread.h>
-#include <io/irq.h>
+#include <base/mutex.h>
+#include <base/sched.h>
+#include <base/thread.h>
+#include <base/irq.h>
 
 #define MUTEX_MAGIC 0x10000002
 

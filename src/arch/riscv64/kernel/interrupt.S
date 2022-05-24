@@ -20,47 +20,48 @@
 .extern TrapSwitchStack
 .extern NX_ReSchedCheck
 
-.extern CPU_StackTop0
-.extern CPU_StackTop1
-.extern CPU_StackTop2
-.extern CPU_StackTop3
+.extern gStackTop0
+.extern gStackTop1
+.extern gStackTop2
+.extern gStackTop3
+.extern gStackTop4
 
-.globl TrapEntry0
-.globl TrapEntry1
-.globl TrapEntry2
-.globl TrapEntry3
-.globl TrapEntry4
+.globl gTrapEntry0
+.globl gTrapEntry1
+.globl gTrapEntry2
+.globl gTrapEntry3
+.globl gTrapEntry4
 
 .align 2 # TrapEntry must aligin with 4 byte
-TrapEntry0:
+gTrapEntry0:
     /* save sp to sscratch reg, sscratch saved old sp from user/kernel */
     csrrw sp, sscratch, sp    
     /* switch to cpu stack as temp stack */
-    la sp, CPU_StackTop0
+    la sp, gStackTop0
     j TrapEntry
 
 .align 2
-TrapEntry1:
+gTrapEntry1:
     csrrw sp, sscratch, sp    
-    la sp, CPU_StackTop1
+    la sp, gStackTop1
     j TrapEntry
 
 .align 2
-TrapEntry2:
+gTrapEntry2:
     csrrw sp, sscratch, sp    
-    la sp, CPU_StackTop2
+    la sp, gStackTop2
     j TrapEntry
 
 .align 2
-TrapEntry3:
+gTrapEntry3:
     csrrw sp, sscratch, sp    
-    la sp, CPU_StackTop3
+    la sp, gStackTop3
     j TrapEntry
 
 .align 2
-TrapEntry4:
+gTrapEntry4:
     csrrw sp, sscratch, sp    
-    la sp, CPU_StackTop4
+    la sp, gStackTop4
     j TrapEntry
 
 TrapEntry:

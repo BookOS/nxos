@@ -9,22 +9,22 @@
  * 2022-1-31      JasonHu           Init
  */
 
-#include <process/syscall.h>
-#include <sched/thread.h>
+#include <base/syscall.h>
+#include <base/thread.h>
 #define NX_LOG_NAME "syscall"
-#include <utils/log.h>
-#include <process/process.h>
-#include <xbook/debug.h>
-#include <sched/thread.h>
-#include <fs/vfs.h>
-#include <ipc/hub.h>
-#include <mm/vmspace.h>
-#include <process/uaccess.h>
-#include <mm/page.h>
-#include <utils/string.h>
-#include <process/snapshot.h>
-#include <time/time.h>
-#include <mm/alloc.h>
+#include <base/log.h>
+#include <base/process.h>
+#include <base/debug.h>
+#include <base/thread.h>
+#include <base/vfs.h>
+#include <base/hub.h>
+#include <base/vmspace.h>
+#include <base/uaccess.h>
+#include <base/page.h>
+#include <base/string.h>
+#include <base/snapshot.h>
+#include <base/time.h>
+#include <base/malloc.h>
 
 #include "process_impl.h"
 

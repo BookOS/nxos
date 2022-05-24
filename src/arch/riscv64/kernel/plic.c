@@ -9,12 +9,12 @@
  * 2021-12-4      JasonHu           Init
  */
 
-#include <xbook.h>
+#include <nxos.h>
 #include <plic.h>
 #include <regs.h>
 #include <sbi.h>
-#include <io/irq.h>
-#include <utils/log.h>
+#include <base/irq.h>
+#include <base/log.h>
 
 NX_PRIVATE NX_Error PLIC_SetPriority(NX_IRQ_Number irqno, NX_U32 priority)
 {

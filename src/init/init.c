@@ -9,11 +9,11 @@
  * 2021-11-15     JasonHu           Init
  */
 
-#include <xbook/init_call.h>
-#include <sched/thread.h>
+#include <base/initcall.h>
+#include <base/thread.h>
 #define NX_LOG_NAME "InitCall"
-#include <utils/log.h>
-#include <xbook/debug.h>
+#include <base/log.h>
+#include <base/debug.h>
 
 NX_IMPORT NX_InitCallHandler __NX_InitCallStart[];
 NX_IMPORT NX_InitCallHandler __NX_InitCallEnd[];

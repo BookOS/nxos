@@ -12,7 +12,7 @@
 #ifndef __PLATFORM_BOOT__
 #define __PLATFORM_BOOT__
 
-#include <xbook.h>
+#include <nxos.h>
 
 #define BOOT_INFO_ADDR 0x3F1000
 

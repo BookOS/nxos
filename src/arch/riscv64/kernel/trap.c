@@ -18,18 +18,18 @@
 
 #define NX_LOG_NAME "Trap"
 #define NX_LOG_LEVEL NX_LOG_INFO
-#include <utils/log.h>
-#include <xbook/debug.h>
+#include <base/log.h>
+#include <base/debug.h>
 
-#include <sched/thread.h>
-#include <sched/smp.h>
-#include <utils/memory.h>
+#include <base/thread.h>
+#include <base/smp.h>
+#include <base/memory.h>
 
  /* (syscall) Environment call from U-mode */
 #define RISCV_SYSCALL_EXCEPTION 8
 
 /* trap name for riscv */
-NX_PRIVATE const char *InterruptName[] =
+NX_PRIVATE const char *interruptName[] =
 {
     "User Software Interrupt",
     "Supervisor Software Interrupt",
@@ -45,7 +45,7 @@ NX_PRIVATE const char *InterruptName[] =
     "Reserved-11",
 };
 
-NX_PRIVATE const char *ExceptionName[] =
+NX_PRIVATE const char *exceptionName[] =
 {
     "Instruction Address Misaligned",
     "Instruction Access Fault",
@@ -142,11 +142,11 @@ void TrapFrameDump(NX_HalTrapFrame *frame)
     NX_LOG_RAW("------------ Trap frame Dump Done ------------\n");
 }
 
-NX_IMPORT NX_Addr TrapEntry0;
-NX_IMPORT NX_Addr TrapEntry1;
-NX_IMPORT NX_Addr TrapEntry2;
-NX_IMPORT NX_Addr TrapEntry3;
-NX_IMPORT NX_Addr TrapEntry4;
+NX_IMPORT NX_Addr gTrapEntry0;
+NX_IMPORT NX_Addr gTrapEntry1;
+NX_IMPORT NX_Addr gTrapEntry2;
+NX_IMPORT NX_Addr gTrapEntry3;
+NX_IMPORT NX_Addr gTrapEntry4;
 
 void CPU_InitTrap(NX_UArch coreId)
 {
@@ -154,19 +154,19 @@ void CPU_InitTrap(NX_UArch coreId)
     switch (coreId)
     {
     case 0:
-        trapEntry = &TrapEntry0;
+        trapEntry = &gTrapEntry0;
         break;
     case 1:
-        trapEntry = &TrapEntry1;
+        trapEntry = &gTrapEntry1;
         break;
     case 2:
-        trapEntry = &TrapEntry2;
+        trapEntry = &gTrapEntry2;
         break;
     case 3:
-        trapEntry = &TrapEntry3;
+        trapEntry = &gTrapEntry3;
         break;
     case 4:
-        trapEntry = &TrapEntry4;
+        trapEntry = &gTrapEntry4;
         break;
     default:
         return;
@@ -217,9 +217,9 @@ void TrapDispatch(NX_HalTrapFrame *frame)
     }
     else if (SCAUSE_INTERRUPT & cause)
     {
-        if(id < sizeof(InterruptName) / sizeof(const char *))
+        if(id < sizeof(interruptName) / sizeof(const char *))
         {
-            msg = InterruptName[id];
+            msg = interruptName[id];
         }
         else
         {
@@ -238,9 +238,9 @@ void TrapDispatch(NX_HalTrapFrame *frame)
             return;
         }
 
-        if(id < sizeof(ExceptionName) / sizeof(const char *))
+        if(id < sizeof(exceptionName) / sizeof(const char *))
         {
-            msg = ExceptionName[id];
+            msg = exceptionName[id];
         }
         else
         {

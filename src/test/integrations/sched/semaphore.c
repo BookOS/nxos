@@ -9,11 +9,11 @@
  * 2022-4-12      JasonHu           Init
  */
 
-#include <sched/semaphore.h>
-#include <sched/thread.h>
+#include <base/semaphore.h>
+#include <base/thread.h>
 #define NX_LOG_NAME "semaphore"
 #define NX_LOG_LEVEL NX_LOG_DBG
-#include <utils/log.h>
+#include <base/log.h>
 #include <test/integration.h>
 
 #ifdef CONFIG_NX_TEST_INTEGRATION_SEMAPHORE
@@ -29,7 +29,7 @@
 #if USE_SEM_MUTEX == 1
 NX_PRIVATE NX_Semaphore PC_Mutex;
 #else
-#include <sched/mutex.h>
+#include <base/mutex.h>
 NX_PRIVATE NX_Mutex PC_Mutex;
 #endif
 

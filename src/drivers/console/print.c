@@ -9,11 +9,11 @@
  * 2021-10-1      JasonHu           Init
  */
 
-#include <utils/memory.h>
-#include <utils/log.h>
-#include <utils/string.h>
-#include <utils/var_args.h>
-#include <drivers/console.h>
+#include <base/memory.h>
+#include <base/log.h>
+#include <base/string.h>
+#include <base/var_args.h>
+#include <base/console.h>
 
 #ifdef CONFIG_PRINT_BUF_LEN
 #define NX_PRINT_BUF_LEN CONFIG_PRINT_BUF_LEN

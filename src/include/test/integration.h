@@ -12,7 +12,7 @@
 #ifndef __MODS_TEST_INTEGRATION__
 #define __MODS_TEST_INTEGRATION__
 
-#include <xbook.h>
+#include <nxos.h>
 
 #ifdef CONFIG_NX_ENABLE_TEST_INTEGRATION
 

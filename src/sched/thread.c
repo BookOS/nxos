@@ -10,22 +10,22 @@
  */
 
 #define NX_LOG_NAME "Thread"
-#include <utils/log.h>
-#include <xbook/debug.h>
-#include <io/irq.h>
+#include <base/log.h>
+#include <base/debug.h>
+#include <base/irq.h>
 
-#include <sched/thread.h>
-#include <sched/thread_id.h>
-#include <sched/sched.h>
-#include <sched/mutex.h>
-#include <sched/smp.h>
-#include <sched/context.h>
-#include <mm/alloc.h>
-#include <mm/page.h>
-#include <utils/string.h>
-#include <time/timer.h>
+#include <base/thread.h>
+#include <base/thread_id.h>
+#include <base/sched.h>
+#include <base/mutex.h>
+#include <base/smp.h>
+#include <base/context.h>
+#include <base/malloc.h>
+#include <base/page.h>
+#include <base/string.h>
+#include <base/timer.h>
 
-NX_ThreadManager NX_ThreadManagerObject;
+NX_ThreadManager gThreadManagerObject;
 
 NX_PRIVATE NX_Error ThreadInit(NX_Thread *thread, 
     const char *name,
@@ -154,19 +154,19 @@ NX_PRIVATE void NX_ThreadAddToGlobalPendingList(NX_Thread *thread, int flags)
 {
     if (flags & NX_SCHED_HEAD)
     {
-        NX_ListAdd(&thread->list, &NX_ThreadManagerObject.pendingList);
+        NX_ListAdd(&thread->list, &gThreadManagerObject.pendingList);
     }
     else
     {
-        NX_ListAddTail(&thread->list, &NX_ThreadManagerObject.pendingList);
+        NX_ListAddTail(&thread->list, &gThreadManagerObject.pendingList);
     }
-    NX_AtomicInc(&NX_ThreadManagerObject.pendingThreadCount);
+    NX_AtomicInc(&gThreadManagerObject.pendingThreadCount);
 }
 
 NX_PRIVATE void NX_ThreadDelFromGlobalPendingList(NX_Thread *thread)
 {
     NX_ListDel(&thread->list);
-    NX_AtomicDec(&NX_ThreadManagerObject.pendingThreadCount);
+    NX_AtomicDec(&gThreadManagerObject.pendingThreadCount);
 }
 
 void NX_ThreadReadyRunLocked(NX_Thread *thread, int flags)
@@ -186,11 +186,11 @@ void NX_ThreadReadyRunLocked(NX_Thread *thread, int flags)
 void NX_ThreadReadyRunUnlocked(NX_Thread *thread, int flags)
 {
     NX_UArch level;
-    NX_SpinLockIRQ(&NX_ThreadManagerObject.lock, &level);
+    NX_SpinLockIRQ(&gThreadManagerObject.lock, &level);
 
     NX_ThreadReadyRunLocked(thread, flags);
     
-    NX_SpinUnlockIRQ(&NX_ThreadManagerObject.lock, level);
+    NX_SpinUnlockIRQ(&gThreadManagerObject.lock, level);
 }
 
 void NX_ThreadUnreadyRunLocked(NX_Thread *thread)
@@ -221,14 +221,14 @@ void NX_ThreadUnreadyRun(NX_Thread *thread)
 
 NX_INLINE void NX_ThreadEnququeGlobalListUnlocked(NX_Thread *thread)
 {
-    NX_ListAdd(&thread->globalList, &NX_ThreadManagerObject.globalList);    
-    NX_AtomicInc(&NX_ThreadManagerObject.activeThreadCount);
+    NX_ListAdd(&thread->globalList, &gThreadManagerObject.globalList);    
+    NX_AtomicInc(&gThreadManagerObject.activeThreadCount);
 }
 
 NX_INLINE void NX_ThreadDeququeGlobalListUnlocked(NX_Thread *thread)
 {
     NX_ListDel(&thread->globalList);
-    NX_AtomicDec(&NX_ThreadManagerObject.activeThreadCount);
+    NX_AtomicDec(&gThreadManagerObject.activeThreadCount);
 }
 
 NX_Error NX_ThreadStart(NX_Thread *thread)
@@ -239,14 +239,14 @@ NX_Error NX_ThreadStart(NX_Thread *thread)
     }
 
     NX_UArch level;
-    NX_SpinLockIRQ(&NX_ThreadManagerObject.lock, &level);
+    NX_SpinLockIRQ(&gThreadManagerObject.lock, &level);
 
     NX_ThreadEnququeGlobalListUnlocked(thread);
 
     /* add to ready list */
     NX_ThreadReadyRunLocked(thread, NX_SCHED_TAIL);
     
-    NX_SpinUnlockIRQ(&NX_ThreadManagerObject.lock, level);
+    NX_SpinUnlockIRQ(&gThreadManagerObject.lock, level);
     return NX_EOK;
 }
 
@@ -258,11 +258,11 @@ NX_Error NX_ThreadStartNotReady(NX_Thread *thread)
     }
 
     NX_UArch level;
-    NX_SpinLockIRQ(&NX_ThreadManagerObject.lock, &level);
+    NX_SpinLockIRQ(&gThreadManagerObject.lock, &level);
 
     NX_ThreadEnququeGlobalListUnlocked(thread);
 
-    NX_SpinUnlockIRQ(&NX_ThreadManagerObject.lock, level);
+    NX_SpinUnlockIRQ(&gThreadManagerObject.lock, level);
     return NX_EOK;
 }
 
@@ -336,11 +336,11 @@ void NX_ThreadExit(NX_U32 exitCode)
     ThreadReleaseResouce(thread);
 
     NX_UArch level;
-    NX_SpinLockIRQ(&NX_ThreadManagerObject.lock, &level);
+    NX_SpinLockIRQ(&gThreadManagerObject.lock, &level);
 
     NX_ThreadDeququeGlobalListUnlocked(thread);
 
-    NX_SpinUnlockIRQ(&NX_ThreadManagerObject.lock, level);
+    NX_SpinUnlockIRQ(&gThreadManagerObject.lock, level);
     
     NX_SchedExit();
     NX_PANIC("Thread Exit should never arrive here!");
@@ -515,54 +515,54 @@ NX_Error NX_ThreadSetAffinity(NX_Thread *thread, NX_UArch coreId)
 void NX_ThreadEnqueuePendingList(NX_Thread *thread)
 {
     NX_UArch level;
-    NX_SpinLockIRQ(&NX_ThreadManagerObject.lock, &level);
+    NX_SpinLockIRQ(&gThreadManagerObject.lock, &level);
     NX_ThreadAddToGlobalPendingList(thread, NX_SCHED_HEAD);
-    NX_SpinUnlockIRQ(&NX_ThreadManagerObject.lock, level);
+    NX_SpinUnlockIRQ(&gThreadManagerObject.lock, level);
 }
 
 void NX_ThreadDequeuePendingList(NX_Thread *thread)
 {
     NX_UArch level;
-    NX_SpinLockIRQ(&NX_ThreadManagerObject.lock, &level);
+    NX_SpinLockIRQ(&gThreadManagerObject.lock, &level);
     NX_ThreadDelFromGlobalPendingList(thread);
-    NX_SpinUnlockIRQ(&NX_ThreadManagerObject.lock, level);
+    NX_SpinUnlockIRQ(&gThreadManagerObject.lock, level);
 }
 
 NX_Thread *NX_ThreadPickPendingList(void)
 {
     NX_Thread *thread;
-    NX_SpinLock(&NX_ThreadManagerObject.lock);
-    thread = NX_ListFirstEntryOrNULL(&NX_ThreadManagerObject.pendingList, NX_Thread, list);
+    NX_SpinLock(&gThreadManagerObject.lock);
+    thread = NX_ListFirstEntryOrNULL(&gThreadManagerObject.pendingList, NX_Thread, list);
     if (thread != NX_NULL)
     {
         NX_ListDel(&thread->list);
-        NX_AtomicDec(&NX_ThreadManagerObject.pendingThreadCount);
+        NX_AtomicDec(&gThreadManagerObject.pendingThreadCount);
     }
-    NX_SpinUnlock(&NX_ThreadManagerObject.lock);
+    NX_SpinUnlock(&gThreadManagerObject.lock);
     return thread;
 }
 
 void NX_ThreadEnququeExitList(NX_Thread *thread)
 {
     NX_UArch level;
-    NX_SpinLockIRQ(&NX_ThreadManagerObject.exitLock, &level);
-    NX_ASSERT(!NX_ListFind(&thread->exitList, &NX_ThreadManagerObject.exitList));
-    NX_ListAdd(&thread->exitList, &NX_ThreadManagerObject.exitList);
-    NX_SpinUnlockIRQ(&NX_ThreadManagerObject.exitLock, level);
+    NX_SpinLockIRQ(&gThreadManagerObject.exitLock, &level);
+    NX_ASSERT(!NX_ListFind(&thread->exitList, &gThreadManagerObject.exitList));
+    NX_ListAdd(&thread->exitList, &gThreadManagerObject.exitList);
+    NX_SpinUnlockIRQ(&gThreadManagerObject.exitLock, level);
 }
 
 NX_Thread *NX_ThreadDeququeExitList(void)
 {
     NX_Thread *thread;
     NX_UArch level;
-    NX_SpinLockIRQ(&NX_ThreadManagerObject.exitLock, &level);
-    thread = NX_ListFirstEntryOrNULL(&NX_ThreadManagerObject.exitList, NX_Thread, exitList);
+    NX_SpinLockIRQ(&gThreadManagerObject.exitLock, &level);
+    thread = NX_ListFirstEntryOrNULL(&gThreadManagerObject.exitList, NX_Thread, exitList);
     if (thread != NX_NULL)
     {
         NX_ListDelInit(&thread->exitList);
-        NX_ASSERT(!NX_ListFind(&thread->exitList, &NX_ThreadManagerObject.exitList));
+        NX_ASSERT(!NX_ListFind(&thread->exitList, &gThreadManagerObject.exitList));
     }
-    NX_SpinUnlockIRQ(&NX_ThreadManagerObject.exitLock, level);
+    NX_SpinUnlockIRQ(&gThreadManagerObject.exitLock, level);
     return thread;
 }
 
@@ -571,9 +571,9 @@ NX_Thread *NX_ThreadFindById(NX_U32 tid)
     NX_Thread *thread = NX_NULL, *find = NX_NULL;
     NX_UArch level;
 
-    NX_SpinLockIRQ(&NX_ThreadManagerObject.lock, &level);
+    NX_SpinLockIRQ(&gThreadManagerObject.lock, &level);
 
-    NX_ListForEachEntry (thread, &NX_ThreadManagerObject.globalList, globalList)
+    NX_ListForEachEntry (thread, &gThreadManagerObject.globalList, globalList)
     {
         if (thread->tid == tid)
         {
@@ -582,7 +582,7 @@ NX_Thread *NX_ThreadFindById(NX_U32 tid)
         }
     }
 
-    NX_SpinUnlockIRQ(&NX_ThreadManagerObject.lock, level);
+    NX_SpinUnlockIRQ(&gThreadManagerObject.lock, level);
     return find;
 }
 
@@ -597,9 +597,9 @@ NX_Error NX_ThreadWalk(NX_ThreadWalkHandler handler, void * arg)
         return NX_EINVAL;
     }
 
-    NX_SpinLockIRQ(&NX_ThreadManagerObject.lock, &level);
+    NX_SpinLockIRQ(&gThreadManagerObject.lock, &level);
 
-    NX_ListForEachEntry (thread, &NX_ThreadManagerObject.globalList, globalList)
+    NX_ListForEachEntry (thread, &gThreadManagerObject.globalList, globalList)
     {
         if ((err = handler(thread, arg)) != NX_EOK)
         {
@@ -607,7 +607,7 @@ NX_Error NX_ThreadWalk(NX_ThreadWalkHandler handler, void * arg)
         }
     }
 
-    NX_SpinUnlockIRQ(&NX_ThreadManagerObject.lock, level);
+    NX_SpinUnlockIRQ(&gThreadManagerObject.lock, level);
 
     return err;
 }
@@ -641,15 +641,15 @@ NX_Error NX_ThreadWait(NX_Thread * thread, NX_U32 *exitCode)
 
 void NX_ThreadManagerInit(void)
 {
-    NX_AtomicSet(&NX_ThreadManagerObject.averageThreadThreshold, 0);
-    NX_AtomicSet(&NX_ThreadManagerObject.activeThreadCount, 0);
-    NX_AtomicSet(&NX_ThreadManagerObject.pendingThreadCount, 0);
-    NX_ListInit(&NX_ThreadManagerObject.exitList);
-    NX_ListInit(&NX_ThreadManagerObject.globalList);
-    NX_ListInit(&NX_ThreadManagerObject.pendingList);
+    NX_AtomicSet(&gThreadManagerObject.averageThreadThreshold, 0);
+    NX_AtomicSet(&gThreadManagerObject.activeThreadCount, 0);
+    NX_AtomicSet(&gThreadManagerObject.pendingThreadCount, 0);
+    NX_ListInit(&gThreadManagerObject.exitList);
+    NX_ListInit(&gThreadManagerObject.globalList);
+    NX_ListInit(&gThreadManagerObject.pendingList);
     
-    NX_SpinInit(&NX_ThreadManagerObject.lock);
-    NX_SpinInit(&NX_ThreadManagerObject.exitLock);
+    NX_SpinInit(&gThreadManagerObject.lock);
+    NX_SpinInit(&gThreadManagerObject.exitLock);
 }
 
 NX_IMPORT void NX_ThreadInitIdle(void);

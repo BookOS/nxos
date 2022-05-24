@@ -12,7 +12,7 @@
 #ifndef __I386_PIC__
 #define __I386_PIC__
 
-#include <xbook.h>
+#include <nxos.h>
 
 #define PIC_MASTER_CTL		0x20	// I/O port for interrupt controller         <Master>
 #define PIC_MASTER_CTLMASK  0x21	// setting bits in this port disables ints   <Master>

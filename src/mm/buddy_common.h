@@ -11,10 +11,10 @@
 
 #define NX_LOG_LEVEL NX_LOG_INFO
 #define NX_LOG_NAME "Buddy"
-#include <utils/log.h>
-#include <xbook/debug.h>
-#include <utils/bitops.h>
-#include <xbook.h>
+#include <base/log.h>
+#include <base/debug.h>
+#include <base/bitops.h>
+#include <nxos.h>
 
 #define BUDDY_ASSERT(x, msg) NX_ASSERT((x) && (msg))
 

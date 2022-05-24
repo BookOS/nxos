@@ -9,9 +9,9 @@
  * 2021-10-1      JasonHu           Init
  */
 
-#include <utils/log.h>
-#include <xbook/debug.h>
-#include <io/irq.h>
+#include <base/log.h>
+#include <base/debug.h>
+#include <base/irq.h>
 
 #ifdef CONFIG_NX_DEBUG
 void NX_DebugAssertionFailure(char *exp, char *file, char *baseFile, int line)

@@ -9,12 +9,12 @@
  * 2022-4-15      JasonHu           Init
  */
 
-#include <io/driver.h>
+#include <base/driver.h>
 
 #define NX_LOG_NAME "rtc driver"
-#include <utils/log.h>
-#include <utils/memory.h>
-#include <time/time.h>
+#include <base/log.h>
+#include <base/memory.h>
+#include <base/time.h>
 
 #include <io.h>
 

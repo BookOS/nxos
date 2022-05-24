@@ -9,12 +9,12 @@
  * 2022-3-15      JasonHu           Init
  */
 
-#include <io/driver.h>
+#include <base/driver.h>
 
 #ifdef CONFIG_NX_DRIVER_DUMMY
 
 #define NX_LOG_NAME "dummy driver"
-#include <utils/log.h>
+#include <base/log.h>
 
 #define DRV_NAME "dummy device"
 #define DEV0_NAME "dummy0"

@@ -9,9 +9,9 @@
  * 2022-4-30      JasonHu           Init
  */
 
-#include <xbook/exobj.h>
-#include <mm/alloc.h>
-#include <xbook/debug.h>
+#include <base/exobj.h>
+#include <base/malloc.h>
+#include <base/debug.h>
 
 NX_Error NX_ExposedObjectTableInit(NX_ExposedObjectTable * table, NX_Size count)
 {

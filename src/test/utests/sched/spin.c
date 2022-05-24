@@ -9,7 +9,7 @@
  * 2021-11-13     JasonHu           Init
  */
 
-#include <sched/spin.h>
+#include <base/spin.h>
 #include <test/utest.h>
 
 #ifdef CONFIG_NX_UTEST_SCHED_SPIN

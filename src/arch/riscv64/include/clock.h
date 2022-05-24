@@ -12,7 +12,7 @@
 #ifndef __PLATFORM_CLOCK__
 #define __PLATFORM_CLOCK__
 
-#include <xbook.h>
+#include <nxos.h>
 
 void NX_HalClockHandler(void);
 

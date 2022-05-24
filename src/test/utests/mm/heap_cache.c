@@ -10,8 +10,8 @@
  */
 
 #include <test/utest.h>
-#include <mm/heap_cache.h>
-#include <utils/memory.h>
+#include <base/heap_cache.h>
+#include <base/memory.h>
 
 #ifdef CONFIG_NX_UTEST_HEAP_CACHE
 

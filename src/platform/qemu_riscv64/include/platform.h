@@ -12,7 +12,7 @@
 #ifndef __PLATFORM_HEADER__
 #define __PLATFORM_HEADER__
 
-#include <xbook.h>
+#include <nxos.h>
 
 #define DRAM_SIZE_DEFAULT (256 * NX_MB)
 

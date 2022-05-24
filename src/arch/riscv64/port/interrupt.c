@@ -9,11 +9,11 @@
  * 2021-10-31     JasonHu           Init
  */
 
-#include <xbook.h>
+#include <nxos.h>
 #include <regs.h>
-#include <io/irq.h>
+#include <base/irq.h>
 #include <plic.h>
-#include <sched/smp.h>
+#include <base/smp.h>
 
 NX_PRIVATE NX_Error NX_HalIrqUnmask(NX_IRQ_Number irqno)
 {

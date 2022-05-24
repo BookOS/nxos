@@ -9,7 +9,7 @@
  * 2021-9-17      JasonHu           Init
  */
 
-#include <xbook.h>
+#include <nxos.h>
 #include <segment.h>
 #include <gate.h>
 #include <interrupt.h>
@@ -19,7 +19,7 @@
 
 #define NX_LOG_LEVEL NX_LOG_INFO
 #define NX_LOG_NAME "INIT"
-#include <utils/log.h>
+#include <base/log.h>
 
 #include <drivers/direct_uart.h>
 

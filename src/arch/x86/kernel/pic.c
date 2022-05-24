@@ -12,7 +12,7 @@
 #include <io.h>
 #include <pic.h>
 #include <interrupt.h>
-#include <io/irq.h>
+#include <base/irq.h>
 
 void PIC_Init(void)
 {

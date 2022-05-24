@@ -9,13 +9,13 @@
  * 2021-10-18     JasonHu           Init
  */
 
-#include <mm/buddy.h>
-#include <mm/page.h>
-#include <utils/log.h>
-#include <xbook/debug.h>
-#include <sched/spin.h>
+#include <base/buddy.h>
+#include <base/page.h>
+#include <base/log.h>
+#include <base/debug.h>
+#include <base/spin.h>
 
-NX_PRIVATE NX_BuddySystem *BuddySystemArray[NX_PAGE_ZONE_NR]; 
+NX_PRIVATE NX_BuddySystem *buddySystemArray[NX_PAGE_ZONE_NR]; 
 
 NX_PRIVATE NX_Spin buddyLock[NX_PAGE_ZONE_NR];
 
@@ -25,8 +25,8 @@ NX_PRIVATE NX_Spin buddyLock[NX_PAGE_ZONE_NR];
 void NX_PageInitZone(NX_PageZone zone, void *mem, NX_Size size)
 {
     NX_ASSERT(zone >= NX_PAGE_ZONE_NORMAL && zone < NX_PAGE_ZONE_NR && size > 0);
-    BuddySystemArray[zone] = NX_BuddyCreate(mem, size);
-    NX_ASSERT(BuddySystemArray[zone] != NX_NULL);
+    buddySystemArray[zone] = NX_BuddyCreate(mem, size);
+    NX_ASSERT(buddySystemArray[zone] != NX_NULL);
     NX_SpinInit(&buddyLock[zone]);
 }
 
@@ -36,7 +36,7 @@ void *NX_PageAllocInZone(NX_PageZone zone, NX_Size count)
     void *addr;
     NX_UArch level;
     NX_SpinLockIRQ(&buddyLock[zone], &level);
-    addr = NX_BuddyAllocPage(BuddySystemArray[zone], count);
+    addr = NX_BuddyAllocPage(buddySystemArray[zone], count);
     NX_SpinUnlockIRQ(&buddyLock[zone], level);
     return addr;
 }
@@ -47,7 +47,7 @@ NX_Error NX_PageFreeInZone(NX_PageZone zone, void *ptr)
     NX_Error err;
     NX_UArch level;
     NX_SpinLockIRQ(&buddyLock[zone], &level);
-    err = NX_BuddyFreePage(BuddySystemArray[zone], ptr);
+    err = NX_BuddyFreePage(buddySystemArray[zone], ptr);
     NX_SpinUnlockIRQ(&buddyLock[zone], level);
     return err;
 }
@@ -58,7 +58,7 @@ NX_Error NX_PageIncreaseInZone(NX_PageZone zone, void *ptr)
     NX_Error err;
     NX_UArch level;
     NX_SpinLockIRQ(&buddyLock[zone], &level);
-    err = NX_BuddyIncreasePage(BuddySystemArray[zone], ptr);
+    err = NX_BuddyIncreasePage(buddySystemArray[zone], ptr);
     NX_SpinUnlockIRQ(&buddyLock[zone], level);
     return err;
 }
@@ -69,7 +69,7 @@ void *NX_PageZoneGetBase(NX_PageZone zone)
     void *addr;
     NX_UArch level;
     NX_SpinLockIRQ(&buddyLock[zone], &level);
-    addr = BuddySystemArray[zone]->pageStart;
+    addr = buddySystemArray[zone]->pageStart;
     NX_SpinUnlockIRQ(&buddyLock[zone], level);
     return addr;
 }
@@ -80,7 +80,7 @@ NX_Size NX_PageZoneGetPages(NX_PageZone zone)
     NX_Size size;
     NX_UArch level;
     NX_SpinLockIRQ(&buddyLock[zone], &level);
-    size = (BuddySystemArray[zone]->maxPFN + 1);
+    size = (buddySystemArray[zone]->maxPFN + 1);
     NX_SpinUnlockIRQ(&buddyLock[zone], level);
     return size;
 }
@@ -91,7 +91,7 @@ void *NX_PageZoneGetBuddySystem(NX_PageZone zone)
     void *addr;
     NX_UArch level;
     NX_SpinLockIRQ(&buddyLock[zone], &level);
-    addr = BuddySystemArray[zone];
+    addr = buddySystemArray[zone];
     NX_SpinUnlockIRQ(&buddyLock[zone], level);
     return addr;
 }
@@ -102,7 +102,7 @@ NX_Size NX_PageGetTotal(void)
     NX_UArch level;
 
     NX_SpinLockIRQ(&buddyLock[NX_PAGE_ZONE_NORMAL], &level);
-    count = BuddySystemArray[NX_PAGE_ZONE_NORMAL]->maxPFN + 1;
+    count = buddySystemArray[NX_PAGE_ZONE_NORMAL]->maxPFN + 1;
     NX_SpinUnlockIRQ(&buddyLock[NX_PAGE_ZONE_NORMAL], level);
     return count;
 }
@@ -113,7 +113,7 @@ NX_Size NX_PageGetUsed(void)
     NX_UArch level;
 
     NX_SpinLockIRQ(&buddyLock[NX_PAGE_ZONE_NORMAL], &level);
-    count = BuddySystemArray[NX_PAGE_ZONE_NORMAL]->usedPage;
+    count = buddySystemArray[NX_PAGE_ZONE_NORMAL]->usedPage;
     NX_SpinUnlockIRQ(&buddyLock[NX_PAGE_ZONE_NORMAL], level);
     return count;
 }

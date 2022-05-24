@@ -9,9 +9,9 @@
  * 2022-4-26      JasonHu           Init
  */
 
-#include <process/env.h>
-#include <utils/string.h>
-#include <utils/memory.h>
+#include <base/env.h>
+#include <base/string.h>
+#include <base/memory.h>
 
 #define __CMD_DELIMITER ' '
 #define __ENV_DELIMITER ':'

@@ -9,7 +9,7 @@
  * 2021-10-1      JasonHu           Init
  */
 
-#include <xbook.h>
+#include <nxos.h>
 #include <trap.h>
 #include <clock.h>
 #include <page_zone.h>
@@ -18,15 +18,13 @@
 #include <sbi.h>
 #include <regs.h>
 #include <drivers/direct_uart.h>
-#include <sched/smp.h>
-#include <utils/log.h>
-#include <io/irq.h>
+#include <base/smp.h>
+#include <base/log.h>
+#include <base/irq.h>
 
 #define NX_LOG_LEVEL NX_LOG_INFO
 #define NX_LOG_NAME "INIT"
-#include <xbook/debug.h>
-
-NX_IMPORT char CPU_StackTop0[];
+#include <base/debug.h>
 
 NX_INTERFACE NX_Error NX_HalPlatformInit(NX_UArch coreId)
 {

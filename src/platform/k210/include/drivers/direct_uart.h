@@ -12,7 +12,7 @@
 #ifndef __DIRECT_UART_HEADER__
 #define __DIRECT_UART_HEADER__
 
-#include <xbook.h>
+#include <nxos.h>
 
 #define UART0_PHY_ADDR 0x38000000L
 #define UART0_IRQ 33

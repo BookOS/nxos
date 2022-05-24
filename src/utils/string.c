@@ -10,12 +10,12 @@
  * 2021-10-3      JasonHu           Init
  */
 
-#include <utils/string.h>
-#include <utils/log.h>
-#include <utils/memory.h>
-#include <utils/ctype.h>
-#include <utils/limits.h>
-#include <mm/alloc.h>
+#include <base/string.h>
+#include <base/log.h>
+#include <base/memory.h>
+#include <base/ctype.h>
+#include <base/limits.h>
+#include <base/malloc.h>
 
 char *NX_StrCopy(const char *dst, const char *src)
 {

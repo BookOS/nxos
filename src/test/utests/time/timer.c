@@ -11,28 +11,28 @@
 
 #include <test/utest.h>
 
-#include <time/timer.h>
+#include <base/timer.h>
 
 #ifdef CONFIG_NX_UTEST_MODS_TIMER
 
-NX_PRIVATE int TimerOneshotFlags = 0;
+NX_PRIVATE int timerOneshotFlags = 0;
 
 NX_PRIVATE NX_Bool NX_TimerHandler(NX_Timer *timer, void *arg)
 {
-    TimerOneshotFlags++;
+    timerOneshotFlags++;
     if (arg == (void *)0x1234abcd)
     {
-        TimerOneshotFlags++;    
+        timerOneshotFlags++;    
     }
     return NX_True;
 }
 
 #define NX_TIMER_PERIOD_COUNT 10
-NX_PRIVATE int TimerPeriodFlags = 0;
+NX_PRIVATE int timerPeriodFlags = 0;
 NX_PRIVATE NX_Bool NX_TimerHandler2(NX_Timer *timer, void *arg)
 {
-    TimerPeriodFlags++;
-    if (TimerPeriodFlags == NX_TIMER_PERIOD_COUNT)
+    timerPeriodFlags++;
+    if (timerPeriodFlags == NX_TIMER_PERIOD_COUNT)
     {
         return NX_False; /* no next timer */
     }
@@ -66,20 +66,20 @@ NX_TEST(TimerCreateAndDestroy)
 
 NX_TEST(TimerStart)
 {
-    TimerOneshotFlags = 0;
+    timerOneshotFlags = 0;
     NX_EXPECT_NE(NX_TimerStart(NX_NULL), NX_EOK);
     NX_Timer *timer0 = NX_TimerCreate(100, NX_TimerHandler, (void *)0x1234abcd, NX_TIMER_ONESHOT);
     NX_EXPECT_NOT_NULL(timer0);
     NX_EXPECT_EQ(NX_TimerStart(timer0), NX_EOK);
     NX_ClockTickDelayMillisecond(150);
-    NX_EXPECT_EQ(TimerOneshotFlags, 2);
+    NX_EXPECT_EQ(timerOneshotFlags, 2);
 
-    TimerPeriodFlags = 0;
+    timerPeriodFlags = 0;
     NX_Timer *timer1 = NX_TimerCreate(100, NX_TimerHandler2, (void *)0x1234abcd, NX_TIMER_PERIOD);
     NX_EXPECT_NOT_NULL(timer1);
     NX_EXPECT_EQ(NX_TimerStart(timer1), NX_EOK);
     NX_ClockTickDelayMillisecond(1100);
-    NX_EXPECT_EQ(TimerPeriodFlags, NX_TIMER_PERIOD_COUNT);
+    NX_EXPECT_EQ(timerPeriodFlags, NX_TIMER_PERIOD_COUNT);
 }
 
 NX_PRIVATE NX_Bool NX_TimerStopHandler(NX_Timer *timer, void *arg)
@@ -88,11 +88,11 @@ NX_PRIVATE NX_Bool NX_TimerStopHandler(NX_Timer *timer, void *arg)
     return NX_True;
 }
 
-NX_PRIVATE int StopTimerOccurTimes = 0;
+NX_PRIVATE int stopTimerOccurTimes = 0;
 NX_PRIVATE NX_Bool NX_TimerStopHandler2(NX_Timer *timer, void *arg)
 {
-    StopTimerOccurTimes++;
-    NX_EXPECT_EQ(StopTimerOccurTimes, 1);
+    stopTimerOccurTimes++;
+    NX_EXPECT_EQ(stopTimerOccurTimes, 1);
     return NX_False; /* no next timer */
 }
 
@@ -106,7 +106,7 @@ NX_TEST(TimerStop)
     NX_EXPECT_EQ(NX_TimerStop(timer1), NX_EOK);
     NX_EXPECT_EQ(NX_TimerDestroy(timer1), NX_EOK);
     
-    StopTimerOccurTimes = 0;
+    stopTimerOccurTimes = 0;
     NX_Timer *timer2 = NX_TimerCreate(100, NX_TimerStopHandler2, NX_NULL, NX_TIMER_PERIOD);
     NX_EXPECT_NOT_NULL(timer2);
     NX_EXPECT_EQ(NX_TimerStart(timer2), NX_EOK);

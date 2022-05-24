@@ -12,7 +12,7 @@
 #ifndef __PLATFORM_CONTEXT__
 #define __PLATFORM_CONTEXT__
 
-#include <xbook.h>
+#include <nxos.h>
 
 typedef void (*NX_HalThreadHandler)(void *);
 

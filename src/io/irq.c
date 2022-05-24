@@ -9,13 +9,13 @@
  * 2021-11-28     JasonHu           Init
  */
 
-#include <io/irq.h>
-#include <io/delay_irq.h>
-#include <utils/memory.h>
-#include <utils/string.h>
-#include <mm/alloc.h>
+#include <base/irq.h>
+#include <base/delay_irq.h>
+#include <base/memory.h>
+#include <base/string.h>
+#include <base/malloc.h>
 
-NX_PRIVATE NX_IRQ_Node IRQ_NodeTable[NX_NR_IRQS];
+NX_PRIVATE NX_IRQ_Node irqNodeTable[NX_NR_IRQS];
 
 void NX_IRQ_Init(void)
 {
@@ -23,7 +23,7 @@ void NX_IRQ_Init(void)
     NX_IRQ_Node *irq;
     for (i = 0; i < NX_NR_IRQS; i++)
     {
-        irq = &IRQ_NodeTable[i];
+        irq = &irqNodeTable[i];
         irq->flags = 0;
         irq->controller = NX_NULL;
         NX_AtomicSet(&irq->reference, 0);
@@ -35,7 +35,7 @@ void NX_IRQ_Init(void)
 NX_PRIVATE NX_IRQ_Node *IRQ_NodeGet(NX_IRQ_Number irq)
 {
     if (0 <= irq && irq < NX_NR_IRQS) {
-        return &IRQ_NodeTable[irq];
+        return &irqNodeTable[irq];
     }
     return NX_NULL;
 }

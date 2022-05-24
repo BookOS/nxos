@@ -9,12 +9,12 @@
  * 2022-2-18      JasonHu           Init
  */
 
-#include <sched/thread.h>
-#include <xbook/debug.h>
+#include <base/thread.h>
+#include <base/debug.h>
 
 #define NX_LOG_NAME "deamon"
 #define NX_LOG_LEVEL NX_LOG_WARNING
-#include <utils/log.h>
+#include <base/log.h>
 
 NX_IMPORT NX_Error NX_ProcessDestroyObject(NX_Process *process);
 

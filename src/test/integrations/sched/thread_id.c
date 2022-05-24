@@ -9,8 +9,8 @@
  * 2021-11-16     JasonHu           Init
  */
 
-#include <sched/thread_id.h>
-#include <utils/log.h>
+#include <base/thread_id.h>
+#include <base/log.h>
 #include <test/integration.h>
 
 #ifdef CONFIG_NX_TEST_INTEGRATION_THREAD_ID

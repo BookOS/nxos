@@ -13,126 +13,126 @@
 
 #ifdef CONFIG_NX_ENABLE_TEST_UTEST
 
-#include <utils/string.h>
-#include <utils/memory.h>
-#include <xbook/debug.h>
-#include <sched/thread.h>
-#include <xbook/init_call.h>
+#include <base/string.h>
+#include <base/memory.h>
+#include <base/debug.h>
+#include <base/thread.h>
+#include <base/initcall.h>
 
-NX_PRIVATE NX_UTestCase *TestCaseTable = NX_NULL;
-NX_PRIVATE NX_Size TestCaseCount;
-NX_PRIVATE NX_UTestSum LocalUtestSum = {NX_False, 0, 0};
-NX_PRIVATE NX_UTestSum UtestSum = {NX_False, 0, 0};
-NX_PRIVATE NX_UTestSum UtestCaseSum = {NX_False, 0, 0};
+NX_PRIVATE NX_UTestCase *testCaseTable = NX_NULL;
+NX_PRIVATE NX_Size testCaseCount;
+NX_PRIVATE NX_UTestSum localUtestSum = {NX_False, 0, 0};
+NX_PRIVATE NX_UTestSum utestSum = {NX_False, 0, 0};
+NX_PRIVATE NX_UTestSum utestCaseSum = {NX_False, 0, 0};
 
 NX_IMPORT const NX_Addr __NX_UTestCaseTableStart;
 NX_IMPORT const NX_Addr __NX_UTestCaseTableEnd;
 
 NX_PRIVATE void NX_UTestInvoke(void)
 {
-    UtestCaseSum.hasError = NX_False;
-    UtestCaseSum.passedNum = 0;
-    UtestCaseSum.failedNum = 0;
+    utestCaseSum.hasError = NX_False;
+    utestCaseSum.passedNum = 0;
+    utestCaseSum.failedNum = 0;
 
-    TestCaseTable = (NX_UTestCase *)&__NX_UTestCaseTableStart;
-    TestCaseCount = (NX_UTestCase *) &__NX_UTestCaseTableEnd - TestCaseTable;
-    NX_LOG_I("[==========] Total test case: %d", TestCaseCount);
+    testCaseTable = (NX_UTestCase *)&__NX_UTestCaseTableStart;
+    testCaseCount = (NX_UTestCase *) &__NX_UTestCaseTableEnd - testCaseTable;
+    NX_LOG_I("[==========] Total test case: %d", testCaseCount);
     int testCaseIndex = 0;
     int testIndex = 0;
-    for (testCaseIndex = 0; testCaseIndex < TestCaseCount; testCaseIndex++)
+    for (testCaseIndex = 0; testCaseIndex < testCaseCount; testCaseIndex++)
     {
-        NX_LOG_I("[==========] [ testcase ] Running %d tests from test case (%s).", TestCaseTable->unitCount, TestCaseTable->caseName);
-        if (TestCaseTable->setup != NX_NULL)
+        NX_LOG_I("[==========] [ testcase ] Running %d tests from test case (%s).", testCaseTable->unitCount, testCaseTable->caseName);
+        if (testCaseTable->setup != NX_NULL)
         {
-            NX_LOG_I("[----------] [ testcase ] Global test (%s) set-up.", TestCaseTable->caseName);
-            if (TestCaseTable->setup() != NX_EOK)
+            NX_LOG_I("[----------] [ testcase ] Global test (%s) set-up.", testCaseTable->caseName);
+            if (testCaseTable->setup() != NX_EOK)
             {
-                NX_LOG_E("[  FAILED  ] [ testcase ] Global test (%s) set-up.", TestCaseTable->caseName);
-                UtestCaseSum.failedNum++;
+                NX_LOG_E("[  FAILED  ] [ testcase ] Global test (%s) set-up.", testCaseTable->caseName);
+                utestCaseSum.failedNum++;
                 goto __TestCaseContinue;
             }
         }
 
-        if (TestCaseTable->unitTable != NX_NULL)
+        if (testCaseTable->unitTable != NX_NULL)
         {
-            UtestSum.hasError = NX_False;
-            UtestSum.passedNum = 0;
-            UtestSum.failedNum = 0;
-            for (testIndex = 0; testIndex < TestCaseTable->unitCount; testIndex++)
+            utestSum.hasError = NX_False;
+            utestSum.passedNum = 0;
+            utestSum.failedNum = 0;
+            for (testIndex = 0; testIndex < testCaseTable->unitCount; testIndex++)
             {
-                NX_UTest *utest = (NX_UTest *)&TestCaseTable->unitTable[testIndex];
+                NX_UTest *utest = (NX_UTest *)&testCaseTable->unitTable[testIndex];
 
                 if (utest->setup != NX_NULL)
                 {
-                    NX_LOG_I("[----------] [   test   ] Local test (%s.%s) set-up.", TestCaseTable->caseName, utest->testName);
+                    NX_LOG_I("[----------] [   test   ] Local test (%s.%s) set-up.", testCaseTable->caseName, utest->testName);
                     utest->setup();
                 }
                 if (utest->func != NX_NULL)
                 {
-                    NX_LOG_I("[ RUN      ] [   test   ] %s.%s", TestCaseTable->caseName, utest->testName);
-                    LocalUtestSum.hasError = NX_False;
-                    LocalUtestSum.passedNum = 0;
-                    LocalUtestSum.failedNum = 0;
+                    NX_LOG_I("[ RUN      ] [   test   ] %s.%s", testCaseTable->caseName, utest->testName);
+                    localUtestSum.hasError = NX_False;
+                    localUtestSum.passedNum = 0;
+                    localUtestSum.failedNum = 0;
                     utest->func();
-                    if (LocalUtestSum.failedNum == 0)
+                    if (localUtestSum.failedNum == 0)
                     {
-                        NX_LOG_I("[  PASSED  ] [   test   ] %s.%s", TestCaseTable->caseName, utest->testName);
-                        UtestSum.passedNum++;
+                        NX_LOG_I("[  PASSED  ] [   test   ] %s.%s", testCaseTable->caseName, utest->testName);
+                        utestSum.passedNum++;
                     }
                     else
                     {
-                        NX_LOG_E("[  FAILED  ] [   test   ] %s.%s", TestCaseTable->caseName, utest->testName);
-                        UtestSum.failedNum++;
+                        NX_LOG_E("[  FAILED  ] [   test   ] %s.%s", testCaseTable->caseName, utest->testName);
+                        utestSum.failedNum++;
                     }
                     NX_LOG_I("[   SUM    ] [   test   ] test finshed. %d are passed. %d are failed.", 
-                        LocalUtestSum.passedNum, LocalUtestSum.failedNum);
+                        localUtestSum.passedNum, localUtestSum.failedNum);
                 }
                 else
                 {            
-                    NX_LOG_E("[  FAILED  ] [   test   ] %s.%s", TestCaseTable->caseName, utest->testName);
+                    NX_LOG_E("[  FAILED  ] [   test   ] %s.%s", testCaseTable->caseName, utest->testName);
                 }
 
                 if (utest->clean != NX_NULL)
                 {
-                    NX_LOG_I("[----------] [   test   ] Local test (%s.%s) tear-down.", TestCaseTable->caseName, utest->testName);
+                    NX_LOG_I("[----------] [   test   ] Local test (%s.%s) tear-down.", testCaseTable->caseName, utest->testName);
                     utest->clean();
                 }
             }
-            if (UtestSum.failedNum == 0)
+            if (utestSum.failedNum == 0)
             {
-                UtestCaseSum.passedNum++;
+                utestCaseSum.passedNum++;
             }
             else
             {
-                UtestCaseSum.failedNum++;
+                utestCaseSum.failedNum++;
             }
             NX_LOG_I("[   SUM    ] [ testcase ] %d tests finshed. %d/%d are passed. %d/%d are failed.", 
-                TestCaseTable->unitCount, UtestSum.passedNum, TestCaseTable->unitCount, 
-                UtestSum.failedNum, TestCaseTable->unitCount);
+                testCaseTable->unitCount, utestSum.passedNum, testCaseTable->unitCount, 
+                utestSum.failedNum, testCaseTable->unitCount);
 
         }
         else
         {
-            NX_LOG_E("[  FAILED  ] [ testcase ] %s", TestCaseTable->caseName);
+            NX_LOG_E("[  FAILED  ] [ testcase ] %s", testCaseTable->caseName);
         }
 
-        if (TestCaseTable->clean != NX_NULL)
+        if (testCaseTable->clean != NX_NULL)
         {
-            NX_LOG_I("[----------] [ testcase ] Global test (%s) tear-down.", TestCaseTable->caseName);
-            if (TestCaseTable->clean() != NX_EOK)
+            NX_LOG_I("[----------] [ testcase ] Global test (%s) tear-down.", testCaseTable->caseName);
+            if (testCaseTable->clean() != NX_EOK)
             {
-                NX_LOG_E("[  FAILED  ] [ testcase ] Global test (%s) tear-down.", TestCaseTable->caseName);
-                UtestCaseSum.failedNum++;
+                NX_LOG_E("[  FAILED  ] [ testcase ] Global test (%s) tear-down.", testCaseTable->caseName);
+                utestCaseSum.failedNum++;
                 goto __TestCaseContinue;
             }
         }
 __TestCaseContinue:
         NX_LOG_I("[==========] [ testcase ] %d tests from test case (%s) ran.",
-            testIndex > 0 ? testIndex + 1 : 0, TestCaseTable->caseName);
-        TestCaseTable++;
+            testIndex > 0 ? testIndex + 1 : 0, testCaseTable->caseName);
+        testCaseTable++;
     }
     NX_LOG_I("[  FINAL   ] %d test cases finshed. %d/%d are passed. %d/%d are failed.",
-        TestCaseCount, UtestCaseSum.passedNum, TestCaseCount, UtestCaseSum.failedNum, TestCaseCount);
+        testCaseCount, utestCaseSum.passedNum, testCaseCount, utestCaseSum.failedNum, testCaseCount);
 
 }
 
@@ -140,14 +140,14 @@ void NX_UTestAssert(int value, const char *file, int line, const char *func, con
 {
     if (value)
     {
-        LocalUtestSum.hasError = NX_False;
-        LocalUtestSum.passedNum++;
+        localUtestSum.hasError = NX_False;
+        localUtestSum.passedNum++;
         NX_LOG_I("[       OK ] [   point  ] %s:%d", func, line);
     }
     else
     {
-        LocalUtestSum.hasError = NX_True;
-        LocalUtestSum.failedNum++;
+        localUtestSum.hasError = NX_True;
+        localUtestSum.failedNum++;
         NX_LOG_E("[  FAILED  ] [   point  ] Failure at:%s Line:%d Message:%s", file, line, msg);
         if (dieAction)
         {

@@ -10,18 +10,18 @@
  */
 
 #define NX_LOG_LEVEL NX_LOG_INFO
-#include <utils/log.h>
-#include <xbook/debug.h>
-#include <io/irq.h>
+#include <base/log.h>
+#include <base/debug.h>
+#include <base/irq.h>
 
-#include <sched/sched.h>
-#include <sched/thread.h>
-#include <sched/smp.h>
-#include <sched/context.h>
-#include <process/process.h>
+#include <base/sched.h>
+#include <base/thread.h>
+#include <base/smp.h>
+#include <base/context.h>
+#include <base/process.h>
 
-NX_IMPORT NX_ThreadManager NX_ThreadManagerObject;
-NX_IMPORT NX_Atomic NX_ActivedCoreCount;
+NX_IMPORT NX_ThreadManager gThreadManagerObject;
+NX_IMPORT NX_Atomic gActivedCoreCount;
 
 NX_INLINE void SchedSwithProcess(NX_Thread *thread)
 {
@@ -85,11 +85,11 @@ NX_PRIVATE void PullOrPushThread(NX_UArch coreId)
      * Adding 1 is to allow the processor core to do more pull operations instead of push operations.
      * Can avoid the threads of the pending queue not running.
      */
-    NX_UArch threadsPerCore = NX_AtomicGet(&NX_ThreadManagerObject.activeThreadCount) / NX_AtomicGet(&NX_ActivedCoreCount) + 1;
+    NX_UArch threadsPerCore = NX_AtomicGet(&gThreadManagerObject.activeThreadCount) / NX_AtomicGet(&gActivedCoreCount) + 1;
 
     NX_LOG_D("core#%d: core threads:%d", coreId, coreThreadCount);
-    NX_LOG_D("core#%d: active threads:%d", coreId, NX_AtomicGet(&NX_ThreadManagerObject.activeThreadCount));
-    NX_LOG_D("core#%d: pending threads:%d", coreId, NX_AtomicGet(&NX_ThreadManagerObject.pendingThreadCount));
+    NX_LOG_D("core#%d: active threads:%d", coreId, NX_AtomicGet(&gThreadManagerObject.activeThreadCount));
+    NX_LOG_D("core#%d: pending threads:%d", coreId, NX_AtomicGet(&gThreadManagerObject.pendingThreadCount));
     NX_LOG_D("core#%d: threads per core:%d", coreId, threadsPerCore);
 
     if (coreThreadCount < threadsPerCore)

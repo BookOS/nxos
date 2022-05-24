@@ -16,7 +16,7 @@
 #ifndef __RISCV_RUST_SBI__
 #define __RISCV_RUST_SBI__
 
-#include <xbook.h>
+#include <nxos.h>
 
 #define SBI_SET_TIMER 0
 #define SBI_CONSOLE_PUTCHAR 1

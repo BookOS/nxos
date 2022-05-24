@@ -10,17 +10,17 @@
  * 2022-3-29      JasonHu           fix bug on heap alloc
  */
 
-#include <mm/heap_cache.h>
-#include <utils/math.h>
-#include <utils/memory.h>
-#include <mm/buddy.h>
-#include <mm/page.h>
-#include <sched/mutex.h>
+#include <base/heap_cache.h>
+#include <base/math.h>
+#include <base/memory.h>
+#include <base/buddy.h>
+#include <base/page.h>
+#include <base/mutex.h>
 
 #define NX_LOG_LEVEL NX_LOG_INFO
 #define NX_LOG_NAME "HeapCache"
-#include <utils/log.h>
-#include <xbook/debug.h>
+#include <base/log.h>
+#include <base/debug.h>
 
 /**
  * size class -> span pages
@@ -50,8 +50,8 @@
 #define MAX_MIDDLE_OBJECT_SIZE (1 * NX_MB)
 #define MAX_MIDDLE_OBJECT_THRESOLD 32
 
-NX_PRIVATE struct NX_HeapSizeClass CacheSizeAarray[MAX_SIZE_CLASS_NR];
-NX_PRIVATE NX_HeapCache MiddleSizeCache;
+NX_PRIVATE struct NX_HeapSizeClass cacheSizeAarray[MAX_SIZE_CLASS_NR];
+NX_PRIVATE NX_HeapCache middleSizeCache;
 
 NX_PRIVATE NX_Size AlignDownToPow2(NX_Size size)
 {
@@ -105,27 +105,27 @@ NX_PRIVATE void HeapSizeClassInit(void)
 
     int i;
 
-    CacheSizeAarray[n].size = MIN_SIZE_CLASS_VALUE;
+    cacheSizeAarray[n].size = MIN_SIZE_CLASS_VALUE;
     n++;
 
     for (i = 32; i <= 128; i+=16)
     {
-        CacheSizeAarray[n].size = i;
+        cacheSizeAarray[n].size = i;
         n++;
     }
     for (i = 128 + 128 / 8; i <= MAX_SMALL_OBJECT_SIZE; )
     {
-        CacheSizeAarray[n].size = i;
+        cacheSizeAarray[n].size = i;
         i += AlignDownToPow2(i / 8);
         n++;
     }
 
     for (i = 0; i < MAX_SIZE_CLASS_NR; i++)
     {
-        HeapCacheInitOne(&CacheSizeAarray[i].cache, CacheSizeAarray[i].size);
+        HeapCacheInitOne(&cacheSizeAarray[i].cache, cacheSizeAarray[i].size);
     }
 
-    HeapCacheInitOne(&MiddleSizeCache, 0);
+    HeapCacheInitOne(&middleSizeCache, 0);
 }
 
 NX_INLINE NX_HeapCache *SizeToCache(NX_Size size)
@@ -136,10 +136,10 @@ NX_INLINE NX_HeapCache *SizeToCache(NX_Size size)
 
     for (index = 0; index < MAX_SIZE_CLASS_NR; index++)
     {
-        if (CacheSizeAarray[index].size >= size)
+        if (cacheSizeAarray[index].size >= size)
         {
             /* alloc in this cache */
-            cache = &CacheSizeAarray[index].cache;
+            cache = &cacheSizeAarray[index].cache;
             break;
         }
     }
@@ -257,7 +257,7 @@ NX_PRIVATE NX_Error AllocSpan(NX_HeapCache *cache, NX_Size pageCount, NX_Size ob
     NX_ListAdd(&spanNode->list, &cache->objectFreeList);
 
     /* build small cache system */
-    if (cache != &MiddleSizeCache)
+    if (cache != &middleSizeCache)
     {
         BuildSmallCacheSystem(spanNode, objectCount, size);
     }
@@ -352,7 +352,7 @@ void *NX_HeapAlloc(NX_Size size)
         }
         else    /* alloc from middle cache */
         {
-            cache = &MiddleSizeCache;
+            cache = &middleSizeCache;
             size = MAX_MIDDLE_OBJECT_SIZE; /* modify size to middle object size */
         }
     }
@@ -378,7 +378,7 @@ void *NX_HeapAlloc(NX_Size size)
     NX_ASSERT(!NX_ListEmpty(&cache->objectFreeList));
 
     /* get a object from list */
-    if (cache == &MiddleSizeCache)
+    if (cache == &middleSizeCache)
     {
         spanNode = NX_ListFirstEntry(&cache->objectFreeList, NX_PageSpan, list);
         --cache->objectFreeCount;
@@ -430,7 +430,7 @@ NX_Error NX_HeapFree(void *object)
         }
         else    /* free to middle cache */
         {
-            cache = &MiddleSizeCache;
+            cache = &middleSizeCache;
 
             NX_MutexLock(&cache->lock);
             /* if length is too long, free to page cache */

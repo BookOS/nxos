@@ -9,7 +9,7 @@
  * 2021-11-12     JasonHu           Init
  */
 
-#include <xbook/atomic.h>
+#include <base/atomic.h>
 #include <test/utest.h>
 
 #ifdef CONFIG_NX_UTEST_XBOOK_ATOMIC

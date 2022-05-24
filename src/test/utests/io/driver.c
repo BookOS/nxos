@@ -10,7 +10,7 @@
  */
 
 #include <test/utest.h>
-#include <io/driver.h>
+#include <base/driver.h>
 
 #ifdef CONFIG_NX_UTEST_IO_DRIVER
 
@@ -70,7 +70,7 @@ NX_PRIVATE NX_Error UtestControl(struct NX_Device *device, NX_U32 cmd, void *arg
     return NX_EOK;
 }
 
-NX_PRIVATE NX_DriverOps UtestOps = {
+NX_PRIVATE NX_DriverOps utestOps = {
     .open = UtestOpen,
     .close = UtestClose,
     .read = UtestRead,
@@ -81,14 +81,14 @@ NX_PRIVATE NX_DriverOps UtestOps = {
 NX_TEST(NX_DriverCreate)
 {
     NX_Driver *driver;
-    driver = NX_DriverCreate(NX_NULL, NX_DEVICE_TYPE_UNKNOWN, 0, &UtestOps);
+    driver = NX_DriverCreate(NX_NULL, NX_DEVICE_TYPE_UNKNOWN, 0, &utestOps);
     NX_ASSERT_NULL(driver);
     driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, NX_NULL);
     NX_ASSERT_NULL(driver);
-    driver = NX_DriverCreate(DRV_NAME, -1, 0, &UtestOps);
+    driver = NX_DriverCreate(DRV_NAME, -1, 0, &utestOps);
     NX_ASSERT_NULL(driver);
     
-    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &UtestOps);
+    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &utestOps);
     NX_ASSERT_NOT_NULL(driver);
     
     NX_ASSERT_EQ(NX_DriverDestroy(driver), NX_EOK);
@@ -97,7 +97,7 @@ NX_TEST(NX_DriverCreate)
 NX_TEST(NX_DriverDestroy)
 {
     NX_Driver *driver;
-    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &UtestOps);
+    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &utestOps);
     NX_ASSERT_NOT_NULL(driver);
 
     NX_ASSERT_NE(NX_DriverDestroy(NX_NULL), NX_EOK);
@@ -107,7 +107,7 @@ NX_TEST(NX_DriverDestroy)
 NX_TEST(NX_DriverRegister)
 {
     NX_Driver *driver;
-    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &UtestOps);
+    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &utestOps);
     NX_ASSERT_NOT_NULL(driver);
     
     NX_ASSERT_NE(NX_DriverRegister(NX_NULL), NX_EOK);
@@ -124,7 +124,7 @@ NX_TEST(NX_DriverRegister)
 NX_TEST(NX_DriverUnregister)
 {
     NX_Driver *driver;
-    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &UtestOps);
+    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &utestOps);
     NX_ASSERT_NOT_NULL(driver);
     
     NX_ASSERT_NE(NX_DriverUnregister(NX_NULL), NX_EOK);
@@ -143,7 +143,7 @@ NX_TEST(NX_DriverUnregister)
 NX_TEST(NX_DriverSearch)
 {
     NX_Driver *driver;
-    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &UtestOps);
+    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &utestOps);
     NX_ASSERT_NOT_NULL(driver);
     
     NX_ASSERT_EQ(NX_DriverRegister(driver), NX_EOK);
@@ -164,7 +164,7 @@ NX_TEST(NX_DriverSearch)
 NX_TEST(NX_DriverCleanup)
 {
     NX_Driver *driver;
-    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &UtestOps);
+    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &utestOps);
     NX_ASSERT_NOT_NULL(driver);
     
     NX_ASSERT_EQ(NX_DriverRegister(driver), NX_EOK);
@@ -178,7 +178,7 @@ NX_TEST(NX_DriverAttachDevice)
     NX_Driver *driver;
     NX_Device *device;
     
-    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &UtestOps);
+    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &utestOps);
     NX_ASSERT_NOT_NULL(driver);
 
     NX_Error err;
@@ -211,7 +211,7 @@ NX_TEST(NX_DriverAttachDevice)
 NX_TEST(NX_DriverDetachDevice)
 {
     NX_Driver *driver;
-    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &UtestOps);
+    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &utestOps);
     NX_ASSERT_NOT_NULL(driver);
 
     NX_Error err;
@@ -243,7 +243,7 @@ NX_TEST(NX_DeviceSearch)
 {
     NX_Driver *driver;
     NX_Device *device;
-    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &UtestOps);
+    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &utestOps);
     NX_ASSERT_NOT_NULL(driver);
 
     NX_Error err;
@@ -278,7 +278,7 @@ NX_TEST(NX_DeviceOpen)
 {
     NX_Driver *driver;
     NX_Device *device0, *device1, *device2;
-    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &UtestOps);
+    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &utestOps);
     NX_ASSERT_NOT_NULL(driver);
 
     NX_Error err;
@@ -325,7 +325,7 @@ NX_TEST(NX_DeviceClose)
 {
     NX_Driver *driver;
     NX_Device *device;
-    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &UtestOps);
+    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &utestOps);
     NX_ASSERT_NOT_NULL(driver);
 
     NX_Error err;
@@ -352,7 +352,7 @@ NX_TEST(NX_DeviceRead)
 {
     NX_Driver *driver;
     NX_Device *device;
-    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &UtestOps);
+    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &utestOps);
     NX_ASSERT_NOT_NULL(driver);
 
     NX_Error err;
@@ -402,7 +402,7 @@ NX_TEST(NX_DeviceWrite)
 {
     NX_Driver *driver;
     NX_Device *device;
-    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &UtestOps);
+    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &utestOps);
     NX_ASSERT_NOT_NULL(driver);
 
     NX_Error err;
@@ -452,7 +452,7 @@ NX_TEST(NX_DeviceControl)
 {
     NX_Driver *driver;
     NX_Device *device;
-    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &UtestOps);
+    driver = NX_DriverCreate(DRV_NAME, NX_DEVICE_TYPE_UNKNOWN, 0, &utestOps);
     NX_ASSERT_NOT_NULL(driver);
 
     NX_Error err;

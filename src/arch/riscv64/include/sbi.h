@@ -12,7 +12,7 @@
 #ifndef __RISCV_SBI__
 #define __RISCV_SBI__
 
-#include <xbook.h>
+#include <nxos.h>
 
 #ifdef CONFIG_NX_PLATFORM_K210
 #include <rustsbi.h>

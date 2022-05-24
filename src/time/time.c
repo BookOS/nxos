@@ -9,12 +9,12 @@
  * 2022-05-14     JasonHu           Init
  */
 
-#include <time/time.h>
+#include <base/time.h>
 #define NX_LOG_NAME "time"
-#include <utils/log.h>
+#include <base/log.h>
 
-#include <io/driver.h>
-#include <xbook/init_call.h>
+#include <base/driver.h>
+#include <base/initcall.h>
 
 NX_PRIVATE NX_TIME_DEFINE(systemTime);
 

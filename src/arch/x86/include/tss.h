@@ -12,7 +12,7 @@
 #ifndef __I386_TSS__
 #define __I386_TSS__
 
-#include <xbook.h>
+#include <nxos.h>
 
 #define KERNEL_STACK_TOP_PHY 0x9f000
 #define KERNEL_STACK_TOP (NX_KVADDR_OFFSET + KERNEL_STACK_TOP_PHY)

@@ -9,12 +9,12 @@
  * 2022-3-16      JasonHu           Init
  */
 
-#include <io/driver.h>
+#include <base/driver.h>
 
 #ifdef CONFIG_NX_DRIVER_NULL
 
 #define NX_LOG_NAME "null driver"
-#include <utils/log.h>
+#include <base/log.h>
 
 #define DRV_NAME "null device"
 #define DEV_NAME "null"

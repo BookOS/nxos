@@ -9,21 +9,21 @@
  * 2022-4-6       JasonHu           Init
  */
 
-#include <xbook.h>
-#include <ipc/hub.h>
-#include <mm/alloc.h>
-#include <mm/page.h>
-#include <utils/string.h>
-#include <xbook/debug.h>
-#include <utils/log.h>
-#include <utils/memory.h>
-#include <mm/vmspace.h>
-#include <process/uaccess.h>
+#include <nxos.h>
+#include <base/hub.h>
+#include <base/malloc.h>
+#include <base/page.h>
+#include <base/string.h>
+#include <base/debug.h>
+#include <base/log.h>
+#include <base/memory.h>
+#include <base/vmspace.h>
+#include <base/uaccess.h>
 
 #define NX_HUB_CLIENTS_MAX (-1UL)
 
-NX_PRIVATE NX_LIST_HEAD(HubSystemListHead);
-NX_PRIVATE NX_SPIN_DEFINE_UNLOCKED(HubSystemLock);
+NX_PRIVATE NX_LIST_HEAD(hubSystemListHead);
+NX_PRIVATE NX_SPIN_DEFINE_UNLOCKED(hubSystemLock);
 
 NX_PRIVATE void NX_HubReleaseMdl(NX_HubChannel *channel);
 
@@ -182,7 +182,7 @@ NX_PRIVATE NX_Hub *CreateHub(const char *name, NX_Size maxClient)
 NX_PRIVATE NX_Hub *SearchHub(const char *name)
 {
 	NX_Hub *hub;
-	NX_ListForEachEntry(hub, &HubSystemListHead, list)
+	NX_ListForEachEntry(hub, &hubSystemListHead, list)
 	{
 		if (!NX_StrCmpN(hub->name, name, NX_HUB_NAME_LEN))
 		{
@@ -267,9 +267,9 @@ NX_Error NX_HubRegister(const char *name, NX_Size maxClient, NX_Hub **outHub)
 		return NX_ENOMEM;
 	}
 
-	NX_SpinLockIRQ(&HubSystemLock, &level);
-	NX_ListAdd(&hub->list, &HubSystemListHead);
-	NX_SpinUnlockIRQ(&HubSystemLock, level);
+	NX_SpinLockIRQ(&hubSystemLock, &level);
+	NX_ListAdd(&hub->list, &hubSystemListHead);
+	NX_SpinUnlockIRQ(&hubSystemLock, level);
 
     self = NX_ThreadSelf();
 	self->resource.hub = hub;
@@ -313,9 +313,9 @@ NX_Error NX_HubUnregister(const char *name)
 
 	self->resource.hub = NX_NULL;
 
-	NX_SpinLockIRQ(&HubSystemLock, &level);
+	NX_SpinLockIRQ(&hubSystemLock, &level);
 	NX_ListDel(&hub->list);
-	NX_SpinUnlockIRQ(&HubSystemLock, level);
+	NX_SpinUnlockIRQ(&hubSystemLock, level);
 	
 	DestroyHub(hub);
 

@@ -10,9 +10,9 @@
  */
 
 #include <test/integration.h>
-#include <mm/heap_cache.h>
+#include <base/heap_cache.h>
 #define NX_LOG_NAME "TestHeapCache"
-#include <utils/log.h>
+#include <base/log.h>
 
 #ifdef CONFIG_NX_TEST_INTEGRATION_HEAP_CACHE
 

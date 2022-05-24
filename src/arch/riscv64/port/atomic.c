@@ -9,7 +9,7 @@
  * 2021-12-1      JasonHu           Init
  */
 
-#include <xbook/atomic.h>
+#include <base/atomic.h>
 
 NX_PRIVATE void NX_HalAtomicSet(NX_Atomic *atomic, long value)
 {

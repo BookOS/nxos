@@ -9,8 +9,8 @@
  * 2022-4-21      JasonHu           Init
  */
 
-#include <io/ioqueue.h>
-#include <mm/alloc.h>
+#include <base/ioqueue.h>
+#include <base/malloc.h>
 
 NX_Error NX_IoQueueInit(NX_IoQueue * queue, char *buf, NX_Size length)
 {

@@ -12,7 +12,7 @@
 #ifndef __I386_GATE__
 #define __I386_GATE__
 
-#include <xbook.h>
+#include <nxos.h>
 
 #define IDT_LIMIT       0x000007ff
 #define IDT_PADDR       0x003F0800

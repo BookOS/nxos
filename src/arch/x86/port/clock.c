@@ -11,12 +11,12 @@
 
 #include <io.h>
 #include <interrupt.h>
-#include <time/clock.h>
-#include <io/irq.h>
-#include <io/delay_irq.h>
+#include <base/clock.h>
+#include <base/irq.h>
+#include <base/delay_irq.h>
 
 #define NX_LOG_NAME "Clock"
-#include <utils/log.h>
+#include <base/log.h>
 
 /* PIT （Programmable Interval Timer）8253/8254 */
 
