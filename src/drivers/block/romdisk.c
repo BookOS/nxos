@@ -26,7 +26,7 @@ NX_IMPORT NX_U8 __NX_RomdiskEnd[];
 
 NX_PRIVATE NX_Size romdiskSize = 0;
 
-NX_PRIVATE NX_Error RomdiskReadEx(struct NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen)
+NX_PRIVATE NX_Error RomdiskRead(struct NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen)
 {
     NX_MemCopy((void *)buf, (const void *)(__NX_RomdiskStart + off), len);
     if (outLen)
@@ -57,7 +57,7 @@ NX_PRIVATE NX_Error RomdiskControl(struct NX_Device *device, NX_U32 cmd, void *a
 }
 
 NX_PRIVATE NX_DriverOps RomdiskDriverOps = {
-    .readEx = RomdiskReadEx,
+    .read = RomdiskRead,
     .control = RomdiskControl,
 };
 

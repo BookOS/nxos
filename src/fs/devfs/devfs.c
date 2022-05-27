@@ -55,29 +55,13 @@ NX_PRIVATE NX_U64 DevRead(NX_VfsNode * n, NX_I64 off, void * buf, NX_U64 len, NX
 	dev = n->data;
 
 	outLen = 0;
-	if (dev->driver->ops->readEx)
+	err = NX_DeviceRead(dev, buf, off, len, &outLen);
+	if (err != NX_EOK)
 	{
-		err = NX_DeviceReadEx(dev, buf, off, len, &outLen);
-		if (err != NX_EOK)
-		{
-			NX_ErrorSet(outErr, err);
-			return 0;
-		}
-	}
-	else if (dev->driver->ops->read)
-	{
-		err = NX_DeviceRead(dev, buf, len, &outLen);
-		if (err != NX_EOK)
-		{
-			NX_ErrorSet(outErr, err);
-			return 0;
-		}
-	}
-	else
-	{
-		NX_ErrorSet(outErr, NX_ENOFUNC);
+		NX_ErrorSet(outErr, err);
 		return 0;
 	}
+
 	NX_ErrorSet(outErr, NX_EOK);
 	return outLen;
 }
@@ -91,29 +75,14 @@ NX_PRIVATE NX_U64 DevWrite(NX_VfsNode * n, NX_I64 off, void * buf, NX_U64 len, N
 	dev = n->data;
 
 	outLen = 0;
-	if (dev->driver->ops->writeEx)
+
+	err = NX_DeviceWrite(dev, buf, off, len, &outLen);
+	if (err != NX_EOK)
 	{
-		err = NX_DeviceWriteEx(dev, buf, off, len, &outLen);
-		if (err != NX_EOK)
-		{
-			NX_ErrorSet(outErr, err);
-			return 0;
-		}
-	}
-	else if (dev->driver->ops->write)
-	{
-		err = NX_DeviceWrite(dev, buf, len, &outLen);
-		if (err != NX_EOK)
-		{
-			NX_ErrorSet(outErr, err);
-			return 0;
-		}
-	}
-	else
-	{
-		NX_ErrorSet(outErr, NX_ENOFUNC);
+		NX_ErrorSet(outErr, err);
 		return 0;
 	}
+	
 	NX_ErrorSet(outErr, NX_EOK);
 	return outLen;
 }
@@ -184,11 +153,11 @@ NX_PRIVATE NX_Error DevLookup(NX_VfsNode * dn, const char * name, NX_VfsNode * n
 
 	n->type = NX_VFS_NODE_TYPE_REG;
 	n->mode |= NX_VFS_S_IFREG;
-	if(dev->driver->ops->read || dev->driver->ops->readEx)
+	if(dev->driver->ops->read)
 	{
 		n->mode |= (NX_VFS_S_IRUSR | NX_VFS_S_IRGRP | NX_VFS_S_IROTH);
 	}
-	if(dev->driver->ops->write || dev->driver->ops->writeEx)
+	if(dev->driver->ops->write)
 	{
 		n->mode |= (NX_VFS_S_IWUSR | NX_VFS_S_IWGRP | NX_VFS_S_IWOTH);
 	}

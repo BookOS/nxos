@@ -29,7 +29,7 @@ typedef struct NX_CpuInfo
     NX_U32 usage[NX_MULTI_CORES_NR];
 } NX_CpuInfo;
 
-NX_PRIVATE NX_Error CpuInfoRead(struct NX_Device *device, void *buf, NX_Size len, NX_Size *outLen)
+NX_PRIVATE NX_Error CpuInfoRead(struct NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen)
 {
     NX_CpuInfo cpuinfo;
     int i;

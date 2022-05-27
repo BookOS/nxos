@@ -48,7 +48,7 @@ NX_PRIVATE NX_Error ConsoleClose(struct NX_Device *device)
     return NX_EOK;
 }
 
-NX_PRIVATE NX_Error ConsoleRead(struct NX_Device *device, void *buf, NX_Size len, NX_Size *outLen)
+NX_PRIVATE NX_Error ConsoleRead(struct NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen)
 {
     char *p;
     int i;
@@ -76,7 +76,7 @@ NX_PRIVATE NX_Error ConsoleRead(struct NX_Device *device, void *buf, NX_Size len
     return NX_EOK;
 }
 
-NX_PRIVATE NX_Error ConsoleWrite(struct NX_Device *device, void *buf, NX_Size len, NX_Size *outLen)
+NX_PRIVATE NX_Error ConsoleWrite(struct NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen)
 {
     char *p;
     int i;
