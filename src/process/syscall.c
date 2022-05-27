@@ -25,6 +25,7 @@
 #include <base/snapshot.h>
 #include <base/time.h>
 #include <base/malloc.h>
+#include <base/driver.h>
 
 #include "process_impl.h"
 
@@ -1210,6 +1211,159 @@ NX_PRIVATE NX_Error SysMutexAcquirable(NX_Solt solt)
     return NX_EOK;
 }
 
+NX_PRIVATE NX_Error DeviceCloseSolt(void * object, NX_ExposedObjectType type)
+{
+    NX_Device * dev;
+
+    if (type != NX_EXOBJ_DEVICE)
+    {
+        return NX_ENORES;
+    }
+
+    dev = (NX_Device *) object;
+    NX_ASSERT(dev);
+
+    return NX_DeviceClose(dev);
+}
+
+NX_PRIVATE NX_Error SysDeviceOpen(const char * name, NX_U32 flags, NX_Solt * outSolt)
+{
+    NX_Device * dev = NX_NULL;
+    NX_Error err;
+    NX_Solt solt = NX_SOLT_INVALID_VALUE;
+    NX_Process * process;
+    
+    if (!name || !outSolt)
+    {
+        return NX_EINVAL;
+    }
+
+    err = NX_DeviceOpen(name, flags, &dev);
+    if (err != NX_EOK)
+    {
+        return err;
+    }
+
+    process = NX_ProcessCurrent();
+    if ((err = NX_ProcessInstallSolt(process, dev, NX_EXOBJ_DEVICE, DeviceCloseSolt, &solt)) != NX_EOK)
+    {
+        NX_DeviceClose(dev);
+        return err;
+    }
+
+    NX_CopyToUser((char *)outSolt, (char *)&solt, sizeof(solt));
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error SysDeviceRead(NX_Solt solt, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen)
+{
+    NX_Device * dev = NX_NULL;
+    NX_Error err;
+    NX_Process * process;
+    NX_ExposedObject * exobj;
+    NX_Size readLen = 0;
+    
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_EINVAL;
+    }
+
+    process = NX_ProcessCurrent();
+    if ((exobj = NX_ProcessGetSolt(process, solt)) == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_DEVICE)
+    {
+        return NX_ENORES;
+    }
+
+    dev = (NX_Device *)exobj->object;
+    NX_ASSERT(dev);
+
+    if ((err = NX_DeviceRead(dev, buf, off, len, &readLen)) != NX_EOK)
+    {
+        return err;
+    }
+
+    NX_CopyToUser((char *)outLen, (char *)&readLen, sizeof(readLen));
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error SysDeviceWrite(NX_Solt solt, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen)
+{
+    NX_Device * dev = NX_NULL;
+    NX_Error err;
+    NX_Process * process;
+    NX_ExposedObject * exobj;
+    NX_Size writeLen = 0;
+    
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_EINVAL;
+    }
+
+    process = NX_ProcessCurrent();
+    if ((exobj = NX_ProcessGetSolt(process, solt)) == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_DEVICE)
+    {
+        return NX_ENORES;
+    }
+
+    dev = (NX_Device *)exobj->object;
+    NX_ASSERT(dev);
+
+    if ((err = NX_DeviceWrite(dev, buf, off, len, &writeLen)) != NX_EOK)
+    {
+        return err;
+    }
+
+    NX_CopyToUser((char *)outLen, (char *)&writeLen, sizeof(writeLen));
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error SysDeviceControl(NX_Solt solt, NX_U32 cmd, void *arg)
+{
+    NX_Device * dev = NX_NULL;
+    NX_Error err;
+    NX_Process * process;
+    NX_ExposedObject * exobj;
+    
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_EINVAL;
+    }
+
+    process = NX_ProcessCurrent();
+    if ((exobj = NX_ProcessGetSolt(process, solt)) == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_DEVICE)
+    {
+        return NX_ENORES;
+    }
+
+    dev = (NX_Device *)exobj->object;
+    NX_ASSERT(dev);
+
+    if ((err = NX_DeviceControl(dev, cmd, arg)) != NX_EOK)
+    {
+        return err;
+    }
+
+    return NX_EOK;
+}
+
 /* xbook env syscall table  */
 NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] = 
 {
@@ -1283,6 +1437,10 @@ NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] =
     SysMutexTryAcquire,
     SysMutexRelease,
     SysMutexAcquirable,
+    SysDeviceOpen,          /* 70 */
+    SysDeviceRead,
+    SysDeviceWrite,
+    SysDeviceControl,
 };
 
 /* posix env syscall table */
