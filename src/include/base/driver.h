@@ -46,10 +46,8 @@ struct NX_DriverOps
 {
     NX_Error (*open)(struct NX_Device *device, NX_U32 flags);
     NX_Error (*close)(struct NX_Device *device);
-    NX_Error (*read)(struct NX_Device *device, void *buf, NX_Size len, NX_Size *outLen);
-    NX_Error (*write)(struct NX_Device *device, void *buf, NX_Size len, NX_Size *outLen);
-    NX_Error (*readEx)(struct NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen);
-    NX_Error (*writeEx)(struct NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen);
+    NX_Error (*read)(struct NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen);
+    NX_Error (*write)(struct NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen);
     NX_Error (*control)(struct NX_Device *device, NX_U32 cmd, void *arg);
 };
 typedef struct NX_DriverOps NX_DriverOps;
@@ -92,10 +90,8 @@ NX_Error NX_DriverDetachDevice(NX_Driver *driver, const char *name);
 
 NX_Error NX_DeviceOpen(const char *name, NX_U32 flags, NX_Device **outDevice);
 NX_Error NX_DeviceClose(NX_Device *device);
-NX_Error NX_DeviceRead(NX_Device *device, void *buf, NX_Size len, NX_Size *outLen);
-NX_Error NX_DeviceWrite(NX_Device *device, void *buf, NX_Size len, NX_Size *outLen);
-NX_Error NX_DeviceReadEx(NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen);
-NX_Error NX_DeviceWriteEx(NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen);
+NX_Error NX_DeviceRead(NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen);
+NX_Error NX_DeviceWrite(NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen);
 NX_Error NX_DeviceControl(NX_Device *device, NX_U32 cmd, void *arg);
 NX_Device *NX_DeviceSearch(const char *name);
 NX_Device *NX_DeviceEnum(NX_Offset offset);

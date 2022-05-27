@@ -19,7 +19,7 @@
 #define DRV_NAME "null device"
 #define DEV_NAME "null"
 
-NX_PRIVATE NX_Error NullWrite(struct NX_Device *device, void *buf, NX_Size len, NX_Size *outLen)
+NX_PRIVATE NX_Error NullWrite(struct NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen)
 {
     /* do nothing for write */
 

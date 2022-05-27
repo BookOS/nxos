@@ -209,7 +209,7 @@ NX_PRIVATE void NX_TimeInit(void)
     }
     else
     {
-        err = NX_DeviceRead(timeDev, &time, sizeof(time), NX_NULL);
+        err = NX_DeviceRead(timeDev, &time, 0, sizeof(time), NX_NULL);
         if (err != NX_EOK)
         {
             NX_LOG_E("read rtc device error!");

@@ -94,7 +94,7 @@ NX_PRIVATE NX_U32 CMOS_GetYear(void)
 		BCD_HEX(ReadCMOS(CMOS_CUR_YEAR))+1980;
 }
 
-NX_PRIVATE NX_Error RTC_Read(struct NX_Device *device, void *buf, NX_Size len, NX_Size *outLen)
+NX_PRIVATE NX_Error RTC_Read(struct NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen)
 {
     NX_Time time;
 

@@ -29,7 +29,7 @@ typedef struct NX_MemInfo
     NX_Size usedPage;
 } NX_MemInfo;
 
-NX_PRIVATE NX_Error MemInfoRead(struct NX_Device *device, void *buf, NX_Size len, NX_Size *outLen)
+NX_PRIVATE NX_Error MemInfoRead(struct NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen)
 {
     NX_MemInfo meminfo;
     

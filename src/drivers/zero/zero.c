@@ -20,7 +20,7 @@
 #define DRV_NAME "zero device"
 #define DEV_NAME "zero"
 
-NX_PRIVATE NX_Error ZeroRead(struct NX_Device *device, void *buf, NX_Size len, NX_Size *outLen)
+NX_PRIVATE NX_Error ZeroRead(struct NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen)
 {
     /* write 0 to buf */
     NX_MemZero(buf, len);

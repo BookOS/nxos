@@ -386,7 +386,7 @@ NX_Error NX_DeviceClose(NX_Device *device)
     return NX_EOK;
 }
 
-NX_Error NX_DeviceRead(NX_Device *device, void *buf, NX_Size len, NX_Size *outLen)
+NX_Error NX_DeviceRead(NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen)
 {
     if (!device || !buf || !len)
     {
@@ -405,7 +405,7 @@ NX_Error NX_DeviceRead(NX_Device *device, void *buf, NX_Size len, NX_Size *outLe
         if (ops->read)
         {
             NX_Size readLen;
-            err = ops->read(device, buf, len, &readLen);
+            err = ops->read(device, buf, off, len, &readLen);
             if (err != NX_EOK)
             {
                 NX_MutexUnlock(&device->lock);
@@ -427,7 +427,7 @@ NX_Error NX_DeviceRead(NX_Device *device, void *buf, NX_Size len, NX_Size *outLe
     return err;
 }
 
-NX_Error NX_DeviceWrite(NX_Device *device, void *buf, NX_Size len, NX_Size *outLen)
+NX_Error NX_DeviceWrite(NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen)
 {
     if (!device || !buf || !len)
     {
@@ -446,89 +446,9 @@ NX_Error NX_DeviceWrite(NX_Device *device, void *buf, NX_Size len, NX_Size *outL
         if (ops->write)
         {
             NX_Size writeLen;
-            err = ops->write(device, buf, len, &writeLen);
-            if (err != NX_EOK)
-            {            
-                NX_MutexUnlock(&device->lock);
-                return err;
-            }
-            if (outLen)
-            {
-                *outLen = writeLen;
-            }
-        }
-        else
-        {
-            err = NX_ENOFUNC;
-        }
-    }
-    NX_MutexUnlock(&device->lock);
-    return err;
-}
-
-NX_Error NX_DeviceReadEx(NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen)
-{
-    if (!device || !buf || !len)
-    {
-        return NX_EINVAL;
-    }
-
-    NX_Driver *driver = device->driver;
-    NX_ASSERT(driver);
-
-    NX_MutexLock(&device->lock);
-
-    NX_DriverOps *ops = driver->ops;
-    NX_Error err = NX_EOK;
-    if (ops)
-    {
-        if (ops->readEx)
-        {
-            NX_Size readLen;
-            err = ops->readEx(device, buf, off, len, &readLen);
+            err = ops->write(device, buf, off, len, &writeLen);
             if (err != NX_EOK)
             {
-                NX_MutexUnlock(&device->lock);
-                return err;
-            }
-            if (outLen)
-            {
-                *outLen = readLen;
-            }
-        }
-        else
-        {
-            err = NX_ENOFUNC;
-        }
-
-    }
-
-    NX_MutexUnlock(&device->lock);
-    return err;
-}
-
-NX_Error NX_DeviceWriteEx(NX_Device *device, void *buf, NX_Offset off, NX_Size len, NX_Size *outLen)
-{
-    if (!device || !buf || !len)
-    {
-        return NX_EINVAL;
-    }
-
-    NX_Driver *driver = device->driver;
-    NX_ASSERT(driver);
-
-    NX_MutexLock(&device->lock);
-
-    NX_DriverOps *ops = driver->ops;
-    NX_Error err = NX_EOK;
-    if (ops)
-    {
-        if (ops->writeEx)
-        {
-            NX_Size writeLen;
-            err = ops->writeEx(device, buf, off, len, &writeLen);
-            if (err != NX_EOK)
-            {            
                 NX_MutexUnlock(&device->lock);
                 return err;
             }

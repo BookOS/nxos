@@ -77,7 +77,7 @@ NX_Size NX_IoBlockRead(NX_Device *blk, NX_U8 * buf, NX_Offset offset, NX_Size co
         return 0;
     }
     NX_Size ret = 0;
-    NX_Error err = NX_DeviceReadEx(blk, buf, offset, count, &ret);
+    NX_Error err = NX_DeviceRead(blk, buf, offset, count, &ret);
     if (err != NX_EOK)
     {
         NX_LOG_E("io block read failed! %s", NX_ErrorToString(err));
@@ -93,7 +93,7 @@ NX_Size NX_IoBlockWrite(NX_Device *blk, NX_U8 * buf, NX_Offset offset, NX_Size c
         return 0;
     }
     NX_Size ret = 0;
-    NX_Error err = NX_DeviceWriteEx(blk, buf, offset, count, &ret);
+    NX_Error err = NX_DeviceWrite(blk, buf, offset, count, &ret);
     if (err != NX_EOK)
     {
         NX_LOG_E("io block write failed! %s", NX_ErrorToString(err));
