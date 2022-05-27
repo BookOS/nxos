@@ -26,6 +26,7 @@
 #include <base/time.h>
 #include <base/malloc.h>
 #include <base/driver.h>
+#include <base/timer.h>
 
 #include "process_impl.h"
 
@@ -1364,6 +1365,101 @@ NX_PRIVATE NX_Error SysDeviceControl(NX_Solt solt, NX_U32 cmd, void *arg)
     return NX_EOK;
 }
 
+NX_PRIVATE NX_Error TimerCloseSolt(void * object, NX_ExposedObjectType type)
+{
+    NX_Timer * timer = NX_NULL;
+
+    if (type != NX_EXOBJ_TIMER)
+    {
+        return NX_ENORES;
+    }
+
+    timer = (NX_Timer *) object;
+    NX_ASSERT(timer);
+
+    NX_TimerStop(timer); /* stop timer before destory */
+    return NX_TimerDestroy(timer);
+}
+
+NX_PRIVATE NX_Bool SysTimerHandler(NX_Timer * timer, void * arg)
+{
+    /* active process utimer */
+    return NX_True;
+}
+
+NX_PRIVATE NX_Error SysTimerCreate(NX_UArch milliseconds,
+                                   NX_Bool (*handler)(struct NX_Timer *, void *arg), void *arg,
+                                   NX_U32 flags, NX_Solt * outSolt)
+{
+    NX_Timer * timer = NX_NULL;
+    NX_Error err;
+    NX_Solt solt = NX_SOLT_INVALID_VALUE;
+    NX_Process * process;
+    
+    if (!milliseconds || !handler || !outSolt)
+    {
+        return NX_EINVAL;
+    }
+
+    timer = NX_TimerCreate(milliseconds, SysTimerHandler, arg, flags);
+    if (timer == NX_NULL)
+    {
+        return NX_ENOMEM;
+    }
+
+    process = NX_ProcessCurrent();
+    if ((err = NX_ProcessInstallSolt(process, timer, NX_EXOBJ_TIMER, TimerCloseSolt, &solt)) != NX_EOK)
+    {
+        NX_TimerDestroy(timer);
+        return err;
+    }
+
+    if ((err = NX_TimerStart(timer)) != NX_EOK)
+    {
+        NX_ProcessUninstallSolt(process, solt);
+        NX_TimerDestroy(timer);
+        return err;
+    }
+
+    NX_CopyToUser((char *)outSolt, (char *)&solt, sizeof(solt));
+
+    return NX_EOK;
+}
+
+NX_PRIVATE NX_Error SysTimerKill(NX_Solt solt)
+{
+    NX_Timer * timer = NX_NULL;
+    NX_Error err;
+    NX_Process * process;
+    NX_ExposedObject * exobj;
+    
+    if (solt == NX_SOLT_INVALID_VALUE)
+    {
+        return NX_EINVAL;
+    }
+
+    process = NX_ProcessCurrent();
+    if ((exobj = NX_ProcessGetSolt(process, solt)) == NX_NULL)
+    {
+        return NX_ENOSRCH;
+    }
+
+    if (exobj->type != NX_EXOBJ_TIMER)
+    {
+        return NX_ENORES;
+    }
+
+    timer = (NX_Timer *)exobj->object;
+    NX_ASSERT(timer);
+
+    if ((err = NX_TimerStop(timer)) != NX_EOK)
+    {
+        return err;
+    }
+
+    return NX_EOK;
+}
+
 /* xbook env syscall table  */
 NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] = 
 {
@@ -1441,6 +1537,8 @@ NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] =
     SysDeviceRead,
     SysDeviceWrite,
     SysDeviceControl,
+    SysTimerCreate,
+    SysTimerKill,
 };
 
 /* posix env syscall table */

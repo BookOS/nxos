@@ -32,6 +32,7 @@ typedef enum NX_ExposedObjectType
     NX_EXOBJ_MUTEX,
     NX_EXOBJ_SEMAPHORE,
     NX_EXOBJ_DEVICE,
+    NX_EXOBJ_TIMER,
     NX_EXOBJ_TYPE_NR,
 } NX_ExposedObjectType;
 
