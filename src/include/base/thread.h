@@ -18,6 +18,7 @@
 #include <base/semaphore.h>
 #include <base/process.h>
 #include <base/vfs.h>
+#include <base/signal.h>
 
 #ifdef CONFIG_NX_THREAD_NAME_LEN
 #define NX_THREAD_NAME_LEN CONFIG_NX_THREAD_NAME_LEN
@@ -75,6 +76,7 @@ struct NX_ThreadResource
     NX_U32 waitExitCode;   /* exit code for this thread wait another thread */
     NX_Semaphore waiterSem; /* The semaphore of the thread waiting for this thread to exit */
     void * tls; /* thread local storage */
+    NX_SignalTable signals;
 };
 typedef struct NX_ThreadResource NX_ThreadResource;
 
@@ -146,6 +148,9 @@ typedef struct
 
 #define NX_ThreadSetFileTable(thread, fileTable) ((thread)->resource.fileTable = fileTable)
 #define NX_ThreadGetFileTable(thread) ((thread)->resource.fileTable)
+
+#define NX_ThreadSetProcess(thread, process) ((thread)->resource.process = process)
+#define NX_ThreadGetProcess(thread) ((thread)->resource.process)
 
 NX_Thread *NX_ThreadCreate(const char *name, NX_ThreadHandler handler, void *arg, NX_U32 priority);
 NX_Error NX_ThreadDestroy(NX_Thread *thread);

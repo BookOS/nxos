@@ -199,6 +199,10 @@ void NX_ReSchedCheck(void)
     NX_IRQ_Enable();
 
     NX_Thread *thread = NX_CurrentThread;
+
+    /* check signal */
+    
+
     if (thread->isTerminated)
     {
         NX_LOG_D("call terminate: %d", thread->tid);

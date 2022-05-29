@@ -81,6 +81,7 @@ NX_PRIVATE NX_Error ThreadInit(NX_Thread *thread,
     thread->resource.waitExitCode = 0;
     NX_SemaphoreInit(&thread->resource.waiterSem, 0);
     thread->resource.tls = NX_NULL;
+    NX_SignalTableInit(&thread->resource.signals);
 
     NX_SpinInit(&thread->lock);
     return NX_EOK;
