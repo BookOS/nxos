@@ -14,6 +14,7 @@
 #include <base/malloc.h>
 #include <base/debug.h>
 #include <base/log.h>
+#include <base/irq.h>
 
 NX_Error NX_SignalTableInit(NX_SignalTable * table)
 {
@@ -34,7 +35,7 @@ NX_Error NX_SignalTableInit(NX_SignalTable * table)
         entry->blocked = NX_False;
         NX_ListInit(&entry->signalInfoListHead);
         NX_SpinInit(&entry->lock);
-        entry->pendingSignals = 0;
+        NX_AtomicSet(&entry->pendingSignals, 0);    
     }
     NX_AtomicSet(&table->globalPendingSignals, 0);
     return NX_EOK;
@@ -164,7 +165,7 @@ NX_Error NX_SignalContorl(NX_Signal signalFirst, NX_Signal signalLast, NX_U32 cm
     return NX_EOK;
 }
 
-NX_PRIVATE NX_Error AddSignalEntry(NX_SignalTable * signalTable, NX_U32 tid, NX_Signal signal, void * signalVal)
+NX_PRIVATE NX_Error AddSignalEntry(NX_SignalTable * signalTable, NX_U32 tid, NX_Signal signal, void * signalValue)
 {
     NX_SignalInfoEntry * infoEntry;
     NX_SignalEntry * entry;
@@ -177,7 +178,7 @@ NX_PRIVATE NX_Error AddSignalEntry(NX_SignalTable * signalTable, NX_U32 tid, NX_
 
     infoEntry->info.signal = signal;
     infoEntry->info.tid = tid;
-    infoEntry->info.signalValue = signalVal;
+    infoEntry->info.signalValue = signalValue;
 
     entry = &signalTable->signalEntry[signal];
 
@@ -212,16 +213,18 @@ NX_PRIVATE void RemoveSignalEntry(NX_SignalTable * signalTable, NX_SignalEntry *
  *  
  * @param tid thread id
  * @param signal signal
- * @param signalVal signal value
+ * @param signalValue signal value
  * @return NX_Error 
  */
-NX_Error NX_SignalSend(NX_U32 tid, NX_Signal signal, void * signalVal)
+NX_Error NX_SignalSend(NX_U32 tid, NX_Signal signal, void * signalValue)
 {
     NX_Thread * thread;
     NX_Process * process;
     NX_SignalTable * signalTable;
     NX_SignalEntry * entry;
     NX_Error err;
+
+    NX_LOG_D("signal send, tid:%d, signal:%d, signal value:%p", tid, signal, signalValue);
 
     if (signal <= NX_SIGNAL_INVALID || signal >= NX_SIGNAL_MAX)
     {
@@ -244,7 +247,7 @@ NX_Error NX_SignalSend(NX_U32 tid, NX_Signal signal, void * signalVal)
     if (entry->blocked == NX_False)
     {
         /* send signal to signal info list */
-        if ((err = AddSignalEntry(signalTable, tid, signal, signalVal)) != NX_EOK)
+        if ((err = AddSignalEntry(signalTable, tid, signal, signalValue)) != NX_EOK)
         {
             return err;
         }
@@ -260,6 +263,7 @@ NX_PRIVATE void HandleSignal(NX_Thread * thread, NX_SignalTable * signalTable, N
     if ((entry->attr.handler == NX_SIGNAL_HANDLER_DEFAULT && info->signal == NX_SIGNAL_CONTINUE) || 
         entry->attr.handler == NX_SIGNAL_HANDLER_IGNORE)
     {
+        NX_LOG_D("IGNORE signal:%d", info->signal);
         return;
     }
 
@@ -273,9 +277,11 @@ NX_PRIVATE void HandleSignal(NX_Thread * thread, NX_SignalTable * signalTable, N
             NX_LOG_W("handle IRQ signal.");
             break;
         case NX_SIGNAL_STOP:
+            NX_LOG_D("STOP signal:%d", info->signal);
             NX_ThreadBlock(thread);
             break;
         default: /* kill thread */
+            NX_LOG_D("KILL signal:%d", info->signal);
             NX_ThreadExit(0);
             break;
         }
@@ -293,6 +299,7 @@ void NX_SignalCheck(void)
     NX_SignalEntry * entry;
     NX_Signal signal;
     NX_SignalInfo info;
+    NX_UArch level;
 
     self = NX_ThreadSelf();
 
@@ -303,14 +310,20 @@ void NX_SignalCheck(void)
         return;
     }
 
+    NX_LOG_D("thread:%d/%s has signal!", self->tid, self->name);
+
+    level = NX_IRQ_SaveLevel();
     for (signal = (NX_SIGNAL_INVALID + 1); signal < NX_SIGNAL_MAX; signal++)
     {
         entry = &signalTable->signalEntry[signal];
         if (NX_AtomicGet(&entry->pendingSignals) > 0)
         {
+            NX_LOG_D("handle signal:%d", signal);
+
             RemoveSignalEntry(signalTable, entry, &info);
             /* handle signal */
             HandleSignal(self, signalTable, entry, &info);
         }
     }
+    NX_IRQ_RestoreLevel(level);
 }

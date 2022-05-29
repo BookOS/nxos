@@ -14,6 +14,8 @@
 
 #include <nxos.h>
 #include <base/list.h>
+#include <base/atomic.h>
+#include <base/spin.h>
 
 #define NX_SIGNAL_INVALID       0 /* invalid signal */
 #define NX_SIGNAL_KILL          1 /* force kill thread (can not block) */
@@ -88,7 +90,7 @@ NX_Error NX_SignalSetAttr(NX_Signal signal, NX_SignalAttr * attr);
 
 NX_Error NX_SignalContorl(NX_Signal signalFirst, NX_Signal signalLast, NX_U32 cmd);
 
-NX_Error NX_SignalSend(NX_U32 tid, NX_Signal signal, void * signalVal);
+NX_Error NX_SignalSend(NX_U32 tid, NX_Signal signal, void * signalValue);
 
 void NX_SignalCheck(void);
 

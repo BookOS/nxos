@@ -1,2 +1,2 @@
 SRC += hub/
-SRC += *
+SRC += *.c

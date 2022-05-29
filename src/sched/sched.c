@@ -19,6 +19,7 @@
 #include <base/smp.h>
 #include <base/context.h>
 #include <base/process.h>
+#include <base/signal.h>
 
 NX_IMPORT NX_ThreadManager gThreadManagerObject;
 NX_IMPORT NX_Atomic gActivedCoreCount;
@@ -199,9 +200,6 @@ void NX_ReSchedCheck(void)
     NX_IRQ_Enable();
 
     NX_Thread *thread = NX_CurrentThread;
-
-    /* check signal */
-    
 
     if (thread->isTerminated)
     {

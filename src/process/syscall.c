@@ -26,6 +26,7 @@
 #include <base/time.h>
 #include <base/malloc.h>
 #include <base/driver.h>
+#include <base/signal.h>
 
 #include "process_impl.h"
 
@@ -1364,6 +1365,11 @@ NX_PRIVATE NX_Error SysDeviceControl(NX_Solt solt, NX_U32 cmd, void *arg)
     return NX_EOK;
 }
 
+NX_Error SysSignalSend(NX_U32 tid, NX_Signal signal, void * signalValue)
+{
+    return NX_SignalSend(tid, signal, signalValue);
+}
+
 /* xbook env syscall table  */
 NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] = 
 {
@@ -1441,6 +1447,7 @@ NX_PRIVATE const NX_SyscallHandler NX_SyscallTable[] =
     SysDeviceRead,
     SysDeviceWrite,
     SysDeviceControl,
+    SysSignalSend,
 };
 
 /* posix env syscall table */

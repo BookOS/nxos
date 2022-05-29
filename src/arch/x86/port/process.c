@@ -82,6 +82,7 @@ void NX_HalProcessSyscallDispatch(NX_HalTrapFrame *frame)
     frame->eax = handler(frame->ebx, frame->ecx, frame->edx, frame->esi, frame->edi, frame->ebp, arg6);
 
     NX_LOG_D("x86 syscall return: %x", frame->eax);
+    NX_SignalCheck(); /* call signal check after syscall dispatch done */
 }
 
 NX_PRIVATE void MakeUserTrapFrame(NX_HalTrapFrame *frame)
