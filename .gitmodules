@@ -1,0 +1,15 @@
+[submodule "src/platform/i386"]
+	path = src/platform/i386
+	url = https://gitee.com/BookOS/nxos-platform-i386
+[submodule "src/platform/qemu_riscv64"]
+	path = src/platform/qemu_riscv64
+	url = https://gitee.com/BookOS/nxos-platform-qemu_riscv64
+[submodule "src/platform/k210"]
+	path = src/platform/k210
+	url = https://gitee.com/BookOS/nxos-platform-k210
+[submodule "src/platform/d1"]
+	path = src/platform/d1
+	url = https://gitee.com/BookOS/nxos-platform-d1
+[submodule "src/platform/hifive_unmached"]
+	path = src/platform/hifive_unmached
+	url = https://gitee.com/BookOS/nxos-platform-hifive_unmached
