@@ -4,5 +4,8 @@
         "MD033": false,
         "MD036": false,
         "MD041": false
+    },
+    "files.associations": {
+        "log.h": "c"
     }
 }
