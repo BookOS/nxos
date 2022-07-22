@@ -56,4 +56,4 @@ In the mobile operating system, we will give more consideration to optimizing th
 
 ❤Thank every NXOS developer for their contributions and you who use NXOS!❤
 
--- NXOS kernel team
+                        -- NXOS kernel team
